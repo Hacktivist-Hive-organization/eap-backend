@@ -34,3 +34,17 @@ API versioning is enabled (`/api/v1/...`) and interactive docs are available via
  - Create the PostgreSQL database
  - run the project (uvicorn app.main:app --reload)
  - Check the health endpoint
+
+## Running Unit Tests
+
+Unit tests are located in the `tests/unit/` directory and are fully isolated
+from external infrastructure such as databases and external services.
+
+### Prerequisites
+- Python 3.11+
+- Virtual environment activated
+- Development dependencies installed
+
+### Install dependencies
+```bash
+pip install -r requirements-dev.txt
