@@ -22,9 +22,9 @@ Swagger UI: /docs
 OpenAPI JSON: /openapi.json
 
 ## Adding a New Endpoint
-Create a route in app/api/routes/Vx
-Define schemas in app/api/schemas
-Implement logic in app/services
-Use repositories for database access
-Register the router
+- Create a route in app/api/routes/Vx
+- Define schemas in app/api/schemas
+- Implement logic in app/services
+- Use repositories for database access
+- Register the router
 

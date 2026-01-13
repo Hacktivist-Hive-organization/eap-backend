@@ -7,9 +7,9 @@ Accepted
 2026-01-13
 
 ## Context
-The backend service requires a reliable relational database to persist
+- The backend service requires a reliable relational database to persist
 application data.
-The backend is built with FastAPI and SQLAlchemy and must support
+- The backend is built with FastAPI and SQLAlchemy and must support
 independent backend development and long-term maintainability.
 
 ## Decision
@@ -50,5 +50,5 @@ independent backend development and long-term maintainability.
 
 ## Notes
 
-Alembic must be used for all schema changes.
-Manual schema modifications are not permitted.
+- Alembic must be used for all schema changes.
+- Manual schema modifications are not permitted.
