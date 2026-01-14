@@ -1,0 +1,7 @@
+uvicorn
+fastapi~=0.120.1
+pydantic~=2.12.3
+SQLAlchemy~=2.0.44
+pydantic-settings~=2.11.0
+psycopg2-binary
+alembic
