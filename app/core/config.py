@@ -14,14 +14,21 @@ class Settings(BaseSettings):
     APP_VERSION: str = APP_VERSION
     API_V1_PREFIX: str = API_V1_PREFIX
 
-    DATABASE_ECHO: bool = False
-    # .env
+    # DATABASE
     DATABASE_TYPE: str
     DATABASE_HOST: str
     DATABASE_PORT: int
     DATABASE_USER: str
     DATABASE_PASSWORD: str
     DATABASE_SCHEMA: str
+    DATABASE_ECHO: bool = False
+
+
+    # CORS
+    CORS_ALLOWED_ORIGINS: list[str] = [
+        'http://localhost:3000',  # React dev server
+    ]
+    MIDDLEWARE_CORS: bool = True
 
 def get_settings() -> Settings:
     return Settings()
