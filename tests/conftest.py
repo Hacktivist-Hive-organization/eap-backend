@@ -2,13 +2,14 @@
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.pool import StaticPool
 
-from app.models.db_user import DbUser
 
 @pytest.fixture(scope="function")
 def db_session():
+    Base = declarative_base()
+
     engine = create_engine(
         "sqlite://",
         connect_args={"check_same_thread": False},
@@ -21,7 +22,7 @@ def db_session():
         bind=engine,
     )
 
-    DbUser.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
     session = testing_session_local()
 
@@ -29,3 +30,5 @@ def db_session():
         yield session
     finally:
         session.close()
+
+        Base.metadata.drop_all(bind=engine)
