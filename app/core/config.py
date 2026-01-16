@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     # CORS
     CORS_ALLOWED_ORIGINS: list[str] = [
         'http://localhost:3000',  # React dev server
+        'http://localhost:5173' # Vite server
     ]
     MIDDLEWARE_CORS: bool = True
 
