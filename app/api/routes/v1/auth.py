@@ -1,4 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.common.exceptions import (
+    UserAlreadyExists,
+    InvalidCredentials
+)
 from app.services.user_service import UserService
 from app.api.dependencies.service_dependency import get_user_service
 from app.api.schemas.user_schema import (
@@ -16,10 +21,16 @@ def register(
         service: UserService = Depends(get_user_service),
 ):
     try:
-        service.register(email=data.username, password=data.password)
+        service.register(
+            email=str(data.username),
+            password=data.password
+        )
         return {"message": "User registered successfully"}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except UserAlreadyExists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User already exists"
+        )
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -28,9 +39,10 @@ def login(
         service: UserService = Depends(get_user_service),
 ):
     try:
-        token = service.login(email=data.username, password=data.password)
+
+        token = service.login(email=str(data.username), password=data.password)
         return TokenResponse(access_token=token)
-    except ValueError:
+    except InvalidCredentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",

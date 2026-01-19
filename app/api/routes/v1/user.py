@@ -1,6 +1,10 @@
 from fastapi import Depends, APIRouter, HTTPException, status
 
-from app.common.exceptions import UserNotFoundError
+from app.common.exceptions import (
+    UserNotFound,
+    UserAlreadyExists,
+    InvalidCredentials,
+)
 from app.api.dependencies.service_dependency import get_user_service
 from app.api.schemas.user_schema import UserResponse
 from app.services.user_service import UserService
@@ -19,7 +23,7 @@ def get_userinfo(id: int, service: UserService = Depends(get_user_service)):
     try:
         data = service.get_user_by_id(user_id=id)
         return data
-    except UserNotFoundError:
+    except UserNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='User not found'

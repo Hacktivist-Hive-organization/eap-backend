@@ -5,6 +5,7 @@ class UserRegisterRequest(BaseModel):
     username: EmailStr
     password: str = Field(min_length=8)
 
+
 class UserResponse(BaseModel):
     id: int
     username: EmailStr
@@ -12,6 +13,7 @@ class UserResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class UserLoginRequest(BaseModel):
     username: EmailStr
