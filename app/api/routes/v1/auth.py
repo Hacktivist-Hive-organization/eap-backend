@@ -12,7 +12,7 @@ from app.api.schemas.user_schema import (
     TokenResponse,
 )
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter(prefix="", tags=["Authentication"])
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
