@@ -1,3 +1,5 @@
+
+from app.common.exceptions import UserNotFoundError
 from app.repositories.user_repository import UserRepository
 from app.models.db_user import DbUser
 from app.common.security import (
@@ -12,13 +14,13 @@ class UserService:
     def __init__(self, repo: UserRepository):
         self.repo = repo
 
-    def get_user_by_id(self, user_id: int) -> DbUser:
+    def get_user_by_id(self, user_id: int) -> DbUser | None:
         user = self.repo.get_user(user_id=user_id)
         if not user:
-            raise ValueError("User not found")
+            raise UserNotFoundError()
         return user
 
-    def get_all_users(self):
+    def get_all_users(self) -> list[DbUser]:
         return self.repo.get_all_users()
 
     def register(self, email: str, password: str) -> DbUser:
