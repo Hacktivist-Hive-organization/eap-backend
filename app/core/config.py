@@ -23,6 +23,8 @@ class Settings(BaseSettings):
     DATABASE_SCHEMA: str
     DATABASE_ECHO: bool = False
 
+    # JWT
+    JWT_SECRET_KEY: str
 
     # CORS
     CORS_ALLOWED_ORIGINS: list[str] = [
