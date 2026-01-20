@@ -17,7 +17,12 @@ async def lifespan(app: FastAPI):
     # application shutdown
 
 
-app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION, lifespan=lifespan)
+app = FastAPI(
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
+    lifespan=lifespan,
+    swagger_ui_parameters={"docExpansion": "none"},
+)
 
 if settings.MIDDLEWARE_CORS:
     app.add_middleware(
