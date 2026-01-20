@@ -1,2 +1,2 @@
 def test_ci_pipeline_runs():
-    assert True
+    assert False # Fail CI on purpose
