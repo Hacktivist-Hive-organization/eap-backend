@@ -9,7 +9,7 @@ class DbUser(TimestampMixin, Base):
 
     # Primary user fields
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False, index=True)
 
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)

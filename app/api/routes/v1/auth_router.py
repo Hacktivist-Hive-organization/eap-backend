@@ -25,7 +25,7 @@ def register(
 ):
     try:
         service.register(
-            email=str(data.username),
+            email=str(data.email),
             password=data.password
         )
         return {"message": "User registered successfully"}
@@ -48,7 +48,7 @@ def login(
 ):
     try:
 
-        token = service.login(email=str(data.username), password=data.password)
+        token = service.login(email=str(data.email), password=data.password)
         return TokenResponse(access_token=token)
     except InvalidCredentials:
         raise HTTPException(

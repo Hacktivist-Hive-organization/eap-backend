@@ -14,11 +14,11 @@ class UserRepository:
         return self.db.query(DbUser).all()
 
     def get_by_email(self, email: str):
-        return self.db.query(DbUser).filter(DbUser.username == email).first()
+        return self.db.query(DbUser).filter(DbUser.email == email).first()
 
     def create(self, email: str, hashed_password: str) -> DbUser:
         user = DbUser(
-            username=email,
+            email=email,
             hashed_password=hashed_password,
             is_active=True,
         )

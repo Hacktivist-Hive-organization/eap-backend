@@ -2,13 +2,13 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class UserRegisterRequest(BaseModel):
-    username: EmailStr
+    email: EmailStr
     password: str = Field(min_length=8)
 
 
 class UserResponse(BaseModel):
     id: int
-    username: EmailStr
+    email: EmailStr
     is_active: bool
 
     class Config:
@@ -16,7 +16,7 @@ class UserResponse(BaseModel):
 
 
 class UserLoginRequest(BaseModel):
-    username: EmailStr
+    email: EmailStr
     password: str
 
 
