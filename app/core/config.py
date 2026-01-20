@@ -1,12 +1,13 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from app.core.static_conf import *
 
-class Settings(BaseSettings):
 
+class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=ENV_FILE_PATH,
-        env_file_encoding='utf-8',
-        extra='ignore',
+        env_file_encoding="utf-8",
+        extra="ignore",
         case_sensitive=True,
     )
 
@@ -29,12 +30,14 @@ class Settings(BaseSettings):
 
     # CORS
     CORS_ALLOWED_ORIGINS: list[str] = [
-        'http://localhost:3000',  # React dev server
-        'http://localhost:5173' # Vite server
+        "http://localhost:3000",  # React dev server
+        "http://localhost:5173",  # Vite server
     ]
     MIDDLEWARE_CORS: bool = True
 
+
 def get_settings() -> Settings:
-    return Settings()
+    return Settings()  # noinspection PyArgumentList
+
 
 settings = get_settings()

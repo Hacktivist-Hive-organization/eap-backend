@@ -1,7 +1,9 @@
 from typing import Annotated
+
 from fastapi import Depends
-from sqlalchemy import create_engine, URL
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+from sqlalchemy import URL, create_engine
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
+
 from app.core.config import settings
 
 
@@ -14,6 +16,7 @@ def create_database_url() -> URL:
         port=settings.DATABASE_PORT,
         database=settings.DATABASE_NAME,
     )
+
 
 def create_engine_and_session(url: str | URL) -> tuple:
     try:
@@ -38,7 +41,9 @@ def create_engine_and_session(url: str | URL) -> tuple:
         )
         return engine, SessionLocal
 
+
 Base = declarative_base()
+
 
 def get_db():
     db = SessionLocal()
@@ -47,11 +52,14 @@ def get_db():
     finally:
         db.close()
 
+
 def create_tables() -> None:
     Base.metadata.create_all(bind=engine)
 
+
 def drop_tables() -> None:
     Base.metadata.drop_all(bind=engine)
+
 
 # SQLAlchemy DB URL
 SQLALCHEMY_DATABASE_URL = create_database_url()
@@ -60,4 +68,3 @@ SQLALCHEMY_DATABASE_URL = create_database_url()
 engine, SessionLocal = create_engine_and_session(SQLALCHEMY_DATABASE_URL)
 
 DBSession = Annotated[Session, Depends(get_db)]
-

@@ -1,9 +1,11 @@
 import re
 from datetime import datetime, timedelta, timezone
+
 from jose import jwt
 from passlib.context import CryptContext
-from app.core.config import settings
+
 from app.common.exceptions import InvalidPassword
+from app.core.config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = "HS256"
@@ -19,7 +21,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 def validate_password(password: str) -> None:
-    pattern = r'^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$'
+    pattern = r"^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$"
     if not re.match(pattern, password):
         raise InvalidPassword(
             "Password must be at least 8 characters long, "
@@ -27,7 +29,9 @@ def validate_password(password: str) -> None:
         )
 
 
-def create_access_token(data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES) -> str:
+def create_access_token(
+    data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES
+) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
     to_encode.update({"exp": expire})
