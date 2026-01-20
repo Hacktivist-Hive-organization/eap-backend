@@ -1,4 +1,3 @@
-
 from app.common.exceptions import (
     UserNotFound,
     UserAlreadyExists,

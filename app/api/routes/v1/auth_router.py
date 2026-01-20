@@ -31,7 +31,7 @@ def register(
         return {"message": "User registered successfully"}
     except UserAlreadyExists:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="User already exists"
         )
     except InvalidPassword as e:
