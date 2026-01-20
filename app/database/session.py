@@ -12,7 +12,7 @@ def create_database_url() -> URL:
         password=settings.DATABASE_PASSWORD,
         host=settings.DATABASE_HOST,
         port=settings.DATABASE_PORT,
-        database=settings.DATABASE_SCHEMA,
+        database=settings.DATABASE_NAME,
     )
 
 def create_engine_and_session(url: str | URL) -> tuple:

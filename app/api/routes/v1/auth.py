@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.common.exceptions import (
     UserAlreadyExists,
+    InvalidPassword,
     InvalidCredentials
 )
 from app.services.user_service import UserService
@@ -11,6 +12,8 @@ from app.api.schemas.user_schema import (
     UserLoginRequest,
     TokenResponse,
 )
+
+
 
 router = APIRouter(prefix="", tags=["Authentication"])
 
@@ -30,6 +33,11 @@ def register(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User already exists"
+        )
+    except InvalidPassword as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password does not meet security requirements"
         )
 
 

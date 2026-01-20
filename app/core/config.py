@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     DATABASE_PORT: int
     DATABASE_USER: str
     DATABASE_PASSWORD: str
+    DATABASE_NAME: str
     DATABASE_SCHEMA: str
     DATABASE_ECHO: bool = False
 

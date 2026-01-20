@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt
 from passlib.context import CryptContext
 from app.core.config import settings
+from app.common.exceptions import InvalidPassword
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = "HS256"
@@ -20,7 +21,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 def validate_password(password: str) -> None:
     pattern = r'^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$'
     if not re.match(pattern, password):
-        raise ValueError(
+        raise InvalidPassword(
             "Password must be at least 8 characters long, "
             "contain 1 uppercase letter, 1 number and 1 special character"
         )
