@@ -1,34 +1,65 @@
-# conftest.py
-
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy import text
+from fastapi.testclient import TestClient
+
+from app.main import app
+from app.database.session import engine, SessionLocal, get_db
+from app.core.config import settings
+
+
+@pytest.fixture(scope="session", autouse=True)
+def ensure_test_schema():
+    schema = getattr(settings, "DATABASE_SCHEMA", None)
+
+    if not schema:
+        return
+
+    with engine.connect() as conn:
+        conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
+        conn.execute(text(f'SET search_path TO "{schema}"'))
+        conn.commit()
+
+
+def truncate_all_tables(conn):
+    """Clear all tables in the current schema and reset identity."""
+    tables = conn.execute(
+        text(
+            """
+            SELECT tablename
+            FROM pg_tables
+            WHERE schemaname = current_schema()
+            """
+        )
+    ).all()
+    for (table_name,) in tables:
+        conn.execute(text(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE'))
 
 
 @pytest.fixture(scope="function")
 def db_session():
-    Base = declarative_base()
+    # 🔹 Clear all tables BEFORE test
+    with engine.begin() as conn:
+        truncate_all_tables(conn)
 
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-
-    testing_session_local = sessionmaker(
-        autocommit=False,
-        autoflush=False,
-        bind=engine,
-    )
-
-    Base.metadata.create_all(bind=engine)
-
-    session = testing_session_local()
-
+    session = SessionLocal()
     try:
         yield session
     finally:
+        session.rollback()
         session.close()
+        # 🔹 Clear all tables AFTER test
+        with engine.begin() as conn:
+            truncate_all_tables(conn)
 
-        Base.metadata.drop_all(bind=engine)
+
+@pytest.fixture(scope="function")
+def client(db_session):
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    with TestClient(app) as client:
+        yield client
+
+    app.dependency_overrides.clear()
