@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean
 from app.database.session import Base
-from app.models.mixins import TimestampMixin
+from app.models.db_mixins import TimestampMixin
 from app.core.config import settings
 
 class DbUser(TimestampMixin, Base):

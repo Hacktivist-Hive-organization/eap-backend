@@ -1,4 +1,4 @@
-# app/models/mixins.py
+# app/models/db_mixins.py
 
 from datetime import datetime, timezone
 from sqlalchemy import Column, DateTime
