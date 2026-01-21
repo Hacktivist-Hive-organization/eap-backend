@@ -1,10 +1,10 @@
 import pytest
-from sqlalchemy import text
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
-from app.main import app
-from app.database.session import engine, SessionLocal, get_db
 from app.core.config import settings
+from app.database.session import SessionLocal, engine, get_db
+from app.main import app
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -22,15 +22,11 @@ def ensure_test_schema():
 
 def truncate_all_tables(conn):
     """Clear all tables in the current schema and reset identity."""
-    tables = conn.execute(
-        text(
-            """
+    tables = conn.execute(text("""
             SELECT tablename
             FROM pg_tables
             WHERE schemaname = current_schema()
-            """
-        )
-    ).all()
+            """)).all()
     for (table_name,) in tables:
         conn.execute(text(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE'))
 
