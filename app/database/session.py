@@ -1,8 +1,9 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import URL, create_engine
+from sqlalchemy import URL, MetaData, create_engine, text
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy_utils import create_database, database_exists
 
 from app.core.config import settings
 
@@ -20,6 +21,12 @@ def create_database_url() -> URL:
 
 def create_engine_and_session(url: str | URL) -> tuple:
     try:
+        if not database_exists(url):
+            create_database(url)
+            print(f"Database '{settings.DATABASE_NAME}' created!")
+        else:
+            print(f"Database '{settings.DATABASE_NAME}' exists")
+
         engine = create_engine(
             url,
             echo=settings.DATABASE_ECHO,
@@ -30,8 +37,9 @@ def create_engine_and_session(url: str | URL) -> tuple:
             pool_pre_ping=True,
             future=True,
         )
+
     except Exception as e:
-        raise RuntimeError(f"Failed to create DB engine: {e}")
+        raise RuntimeError(f"Failed to create DB engine or schema: {e}")
     else:
         SessionLocal = sessionmaker(
             bind=engine,
@@ -42,7 +50,11 @@ def create_engine_and_session(url: str | URL) -> tuple:
         return engine, SessionLocal
 
 
+# metadata = MetaData(schema="public")
 Base = declarative_base()
+
+SQLALCHEMY_DATABASE_URL = create_database_url()
+engine, SessionLocal = create_engine_and_session(SQLALCHEMY_DATABASE_URL)
 
 
 def get_db():
@@ -53,18 +65,12 @@ def get_db():
         db.close()
 
 
+DBSession = Annotated[Session, Depends(get_db)]
+
+
 def create_tables() -> None:
     Base.metadata.create_all(bind=engine)
 
 
 def drop_tables() -> None:
     Base.metadata.drop_all(bind=engine)
-
-
-# SQLAlchemy DB URL
-SQLALCHEMY_DATABASE_URL = create_database_url()
-
-# engine + session
-engine, SessionLocal = create_engine_and_session(SQLALCHEMY_DATABASE_URL)
-
-DBSession = Annotated[Session, Depends(get_db)]
