@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.dependencies.service_dependency import get_user_service
-from app.api.schemas.user_schema import (TokenResponse, UserLoginRequest,
-                                         UserRegisterRequest)
-from app.common.exceptions import (InvalidCredentials, InvalidPassword,
-                                   UserAlreadyExists)
+from app.api.schemas.user_schema import (
+    TokenResponse,
+    UserLoginRequest,
+    UserRegisterRequest,
+)
+from app.common.exceptions import InvalidCredentials, InvalidPassword, UserAlreadyExists
 from app.services.user_service import UserService
 
 router = APIRouter(prefix="", tags=["Authentication"])

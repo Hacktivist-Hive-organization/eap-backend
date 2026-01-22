@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.routes import router
 from app.core.config import settings
-from app.database.session import create_tables
+from app.database.session import create_tables, drop_tables
 
 
 @asynccontextmanager
@@ -13,7 +13,7 @@ async def lifespan(app: FastAPI):
     create_tables()
     # application execution
     yield
-
+    drop_tables()
     # application shutdown
 
 
