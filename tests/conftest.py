@@ -1,54 +1,53 @@
-# tests/conftest.py
+# conftest.py
 
 import pytest
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
+from app.api.dependencies.service_dependency import get_user_service
 from app.database.session import Base, get_db
-from app.main import app as main_app
-
-
-@pytest.fixture(scope="session")
-def sqlite_connection():
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        future=True,
-    )
-    connection = engine.connect()
-    Base.metadata.create_all(bind=connection)
-    yield connection
-    Base.metadata.drop_all(bind=connection)
-    connection.close()
+from app.main import app
+from app.repositories.user_repository import UserRepository
+from app.services.user_service import UserService
 
 
 @pytest.fixture(scope="function")
-def db_session(sqlite_connection):
-    TestingSessionLocal = sessionmaker(
-        bind=sqlite_connection,
+def db_session():
+    engine = create_engine(
+        "sqlite+pysqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        future=True,
+    )
+
+    Base.metadata.create_all(bind=engine)
+
+    SessionLocal = sessionmaker(
+        bind=engine,
         autoflush=False,
         autocommit=False,
-        expire_on_commit=False,
+        future=True,
     )
-    session = TestingSessionLocal()
+
+    session = SessionLocal()
     try:
         yield session
     finally:
-        session.rollback()
         session.close()
+        Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(scope="function")
 def client(db_session):
-    def override_get_db():
-        yield db_session
+    mock_user_repository = UserRepository(db_session)
+    mock_user_service = UserService(mock_user_repository)
 
-    # создаём **новое приложение**, копию main_app без lifespan
-    app = FastAPI(title=main_app.title, version=main_app.version)
-    app.include_router(main_app.router)
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_user_service] = lambda: mock_user_service
+    app.dependency_overrides[get_db] = lambda: db_session
 
     with TestClient(app) as client:
         yield client
+
+    app.dependency_overrides.clear()

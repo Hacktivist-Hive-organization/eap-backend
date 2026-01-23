@@ -1,3 +1,5 @@
+# config.py
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.static_conf import *
