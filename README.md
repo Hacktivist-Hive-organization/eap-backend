@@ -24,14 +24,16 @@ API versioning is enabled (`/api/v1/...`) and interactive docs are available via
  - Create a Python virtual environment .venv (python -m venv .venv)
  - activate virtual environment
  - install dependencies (pip install -r requirements.txt)
+ - Install pgAdmin
+ - Run a Postgres container by following the tutorial: https://www.youtube.com/watch?v=Hs9Fh1fr5s8
  - Configure environment variables (Create a .env file (example)):
      DATABASE_TYPE=postgresql
      DATABASE_HOST=127.0.0.1
-     DATABASE_PORT=5432
-     DATABASE_USER=user1
-     DATABASE_PASSWORD=user123
+     DATABASE_PORT=5431 (Or whatever port in your host, which you mapped to the Postgres container's port, as explained in the tutorial)
+     DATABASE_USER=postgres (same as you used in the container)
+     DATABASE_PASSWORD=12345 (same as you used in the container)
      DATABASE_SCHEMA=eap
- - Create the PostgreSQL database
+     JWT_SECRET_KEY="i am a key"
  - run the project (uvicorn app.main:app --reload)
  - Check the health endpoint
 
