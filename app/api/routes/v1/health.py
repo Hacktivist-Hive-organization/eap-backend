@@ -3,7 +3,8 @@ from fastapi import Depends, APIRouter
 from app.api.dependencies.service_dependency import get_health_service
 from app.services.health import HealthService
 
-router = APIRouter(prefix="")
+router = APIRouter(tags=["App Health"])
+
 
 @router.get("/")
 def health_check(service: HealthService = Depends(get_health_service)):
