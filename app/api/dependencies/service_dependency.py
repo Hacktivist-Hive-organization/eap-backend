@@ -8,7 +8,8 @@ from app.api.dependencies.repository_dependency import (
     get_request_type_repository,
     get_request_subtype_repository,
 )
-from app.services import HealthService, UserService, RequestService
+from app.services import (HealthService, UserService, RequestService,
+                          RequestTypeService, RequestSubtypeService)
 
 
 def get_user_service(repo=Depends(get_user_repository)):
@@ -27,3 +28,13 @@ def get_request_service(
         type_repo,
         subtype_repo,
     )
+
+def get_request_type_service(
+    repo = Depends(get_request_type_repository)
+):
+    return RequestTypeService(repo)
+
+def get_request_subtype_service(
+    repo = Depends(get_request_subtype_repository)
+):
+    return RequestSubtypeService(repo)
