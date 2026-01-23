@@ -4,10 +4,11 @@ from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import URL, create_engine
-from sqlalchemy.orm import Session, declarative_base, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 
 from app.core.config import settings
+from app.database.base import Base
 
 
 def create_database_url() -> URL:
@@ -51,8 +52,6 @@ def create_engine_and_session(url: str | URL) -> tuple:
         )
         return engine, SessionLocal
 
-
-Base = declarative_base()
 
 SQLALCHEMY_DATABASE_URL = create_database_url()
 engine, SessionLocal = create_engine_and_session(SQLALCHEMY_DATABASE_URL)

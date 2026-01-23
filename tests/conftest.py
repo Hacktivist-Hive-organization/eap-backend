@@ -7,31 +7,29 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.service_dependency import get_user_service
-from app.database.session import Base, get_db
-from app.main import app
+from app.database.base import Base
+from app.database.session import get_db
+from app.main import app as fastapi_app
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
+
+engine = create_engine(
+    "sqlite+pysqlite://",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+
+TestingSessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
 
 
 @pytest.fixture(scope="function")
 def db_session():
-    engine = create_engine(
-        "sqlite+pysqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-        future=True,
-    )
-
     Base.metadata.create_all(bind=engine)
-
-    SessionLocal = sessionmaker(
-        bind=engine,
-        autoflush=False,
-        autocommit=False,
-        future=True,
-    )
-
-    session = SessionLocal()
+    session = TestingSessionLocal()
     try:
         yield session
     finally:
@@ -41,13 +39,16 @@ def db_session():
 
 @pytest.fixture(scope="function")
 def client(db_session):
-    mock_user_repository = UserRepository(db_session)
-    mock_user_service = UserService(mock_user_repository)
+    def override_get_db():
+        yield db_session
 
-    app.dependency_overrides[get_user_service] = lambda: mock_user_service
-    app.dependency_overrides[get_db] = lambda: db_session
+    user_repository = UserRepository(db_session)
+    user_service = UserService(user_repository)
 
-    with TestClient(app) as client:
-        yield client
+    fastapi_app.dependency_overrides[get_db] = override_get_db
+    fastapi_app.dependency_overrides[get_user_service] = lambda: user_service
 
-    app.dependency_overrides.clear()
+    with TestClient(fastapi_app) as test_client:
+        yield test_client
+
+    fastapi_app.dependency_overrides.clear()
