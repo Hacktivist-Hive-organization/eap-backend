@@ -66,4 +66,3 @@ def test_login_wrong_password(client):
         json={"email": "wrongpass@example.com", "password": "WrongP@ss1"},
     )
     assert response.status_code == 401
-git
