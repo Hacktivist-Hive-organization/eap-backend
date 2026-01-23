@@ -1,4 +1,4 @@
-# app/models/db_mixins.py
+# db_mixins.py
 
 from datetime import datetime, timezone
 
@@ -7,7 +7,6 @@ from sqlalchemy.orm import declared_attr
 
 
 class TimestampMixin:
-    """Mixin to add created and updated timestamps to a table."""
 
     @declared_attr
     def created(cls):

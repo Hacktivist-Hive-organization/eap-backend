@@ -1,3 +1,5 @@
+# main.py
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -11,10 +13,8 @@ from app.database.session import create_tables, drop_tables
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_tables()
-    # application execution
     yield
     drop_tables()
-    # application shutdown
 
 
 app = FastAPI(

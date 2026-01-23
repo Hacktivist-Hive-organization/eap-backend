@@ -1,7 +1,9 @@
+# session.py
+
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import URL, MetaData, create_engine, text
+from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 
@@ -50,7 +52,6 @@ def create_engine_and_session(url: str | URL) -> tuple:
         return engine, SessionLocal
 
 
-# metadata = MetaData(schema="public")
 Base = declarative_base()
 
 SQLALCHEMY_DATABASE_URL = create_database_url()

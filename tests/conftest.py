@@ -21,7 +21,7 @@ def ensure_test_schema():
 
 
 def truncate_all_tables(conn):
-    """Clear all tables in the current schema and reset identity."""
+
     tables = conn.execute(text("""
             SELECT tablename
             FROM pg_tables
