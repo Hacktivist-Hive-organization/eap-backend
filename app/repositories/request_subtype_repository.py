@@ -12,3 +12,6 @@ class RequestSubtypeRepository:
             DBRequestSubtype.id == subtype_id,
             DBRequestSubtype.type_id == type_id
         ).first()
+
+    def get_all(self):
+        return self.db.query(DBRequestSubtype).all()

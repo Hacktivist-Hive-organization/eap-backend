@@ -1,5 +1,5 @@
 # app/models/db_request_subtype.py
-
+from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, ForeignKey
 from app.database.session import Base
 
@@ -10,4 +10,4 @@ class DBRequestSubtype(Base):
     name = Column(String(100), nullable=False)
     type_id = Column(Integer, ForeignKey("request_types.id"), nullable=False)
 
-
+    type = relationship("DBRequestType", back_populates="subtypes")
