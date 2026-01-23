@@ -28,10 +28,10 @@ API versioning is enabled (`/api/v1/...`) and interactive docs are available via
  - Run a Postgres container by following the tutorial: https://www.youtube.com/watch?v=Hs9Fh1fr5s8
  - Configure environment variables (Create a .env file (example)):
      DATABASE_TYPE=postgresql
-     DATABASE_HOST=127.0.0.1
-     DATABASE_PORT=5431 (Or whatever port in your host, which you mapped to the Postgres container's port, as explained in the tutorial)
-     DATABASE_USER=postgres (same as you used in the container)
-     DATABASE_PASSWORD=12345 (same as you used in the container)
+     DATABASE_HOST=host.docker.internal (Docker containers can communicate with the host machine without changing anything in the settings, we just need to replace localhost with host.docker.internal Docker knows it needs to translate this to the IP address of our host machine as seen from inside the Docker container.)
+     DATABASE_PORT=5432
+     DATABASE_USER=postgres
+     DATABASE_PASSWORD=12345
      DATABASE_SCHEMA=eap
      JWT_SECRET_KEY="i am a key"
  - run the project (uvicorn app.main:app --reload)
