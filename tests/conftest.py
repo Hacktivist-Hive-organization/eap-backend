@@ -1,51 +1,43 @@
+# tests/conftest.py
+
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import text
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from app.core.config import settings
-from app.database.session import SessionLocal, engine, get_db
-from app.main import app
-
-
-@pytest.fixture(scope="session", autouse=True)
-def ensure_test_schema():
-    schema = getattr(settings, "DATABASE_SCHEMA", None)
-
-    if not schema:
-        return
-
-    with engine.connect() as conn:
-        conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
-        conn.execute(text(f'SET search_path TO "{schema}"'))
-        conn.commit()
+from app.database.session import Base, get_db
+from app.main import app as main_app
 
 
-def truncate_all_tables(conn):
-
-    tables = conn.execute(text("""
-            SELECT tablename
-            FROM pg_tables
-            WHERE schemaname = current_schema()
-            """)).all()
-    for (table_name,) in tables:
-        conn.execute(text(f'TRUNCATE TABLE "{table_name}" RESTART IDENTITY CASCADE'))
+@pytest.fixture(scope="session")
+def sqlite_connection():
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        future=True,
+    )
+    connection = engine.connect()
+    Base.metadata.create_all(bind=connection)
+    yield connection
+    Base.metadata.drop_all(bind=connection)
+    connection.close()
 
 
 @pytest.fixture(scope="function")
-def db_session():
-    # 🔹 Clear all tables BEFORE test
-    with engine.begin() as conn:
-        truncate_all_tables(conn)
-
-    session = SessionLocal()
+def db_session(sqlite_connection):
+    TestingSessionLocal = sessionmaker(
+        bind=sqlite_connection,
+        autoflush=False,
+        autocommit=False,
+        expire_on_commit=False,
+    )
+    session = TestingSessionLocal()
     try:
         yield session
     finally:
         session.rollback()
         session.close()
-        # 🔹 Clear all tables AFTER test
-        with engine.begin() as conn:
-            truncate_all_tables(conn)
 
 
 @pytest.fixture(scope="function")
@@ -53,9 +45,10 @@ def client(db_session):
     def override_get_db():
         yield db_session
 
+    # создаём **новое приложение**, копию main_app без lifespan
+    app = FastAPI(title=main_app.title, version=main_app.version)
+    app.include_router(main_app.router)
     app.dependency_overrides[get_db] = override_get_db
 
     with TestClient(app) as client:
         yield client
-
-    app.dependency_overrides.clear()
