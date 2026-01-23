@@ -1,15 +1,6 @@
 # conftest.py
 
 import pytest
-
-from tests.test_config import override_app_settings
-
-
-@pytest.fixture(autouse=True, scope="session")
-def override_settings():
-    yield from override_app_settings()
-
-
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
