@@ -14,7 +14,6 @@ from app.database.session import create_tables, drop_tables
 async def lifespan(app: FastAPI):
     create_tables()
     yield
-    drop_tables()
 
 
 app = FastAPI(
