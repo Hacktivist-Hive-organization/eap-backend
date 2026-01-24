@@ -1,3 +1,5 @@
+# auth_router.py
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 

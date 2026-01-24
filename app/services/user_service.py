@@ -27,7 +27,7 @@ class UserService:
 
         validate_password(password)
         hashed_password = hash_password(password)
-        return self.repo.create(email=email, hashed_password=hashed_password)
+        return self.repo.create(email=normalized_email, hashed_password=hashed_password)
 
     def login(self, email: str, password: str) -> str:
         normalized_email = email.lower()
