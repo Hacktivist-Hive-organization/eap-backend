@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 
 from app.api.dependencies.service_dependency import get_user_service
 from app.api.schemas.user_schema import (
@@ -28,6 +29,12 @@ def register(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password does not meet security requirements",
+        )
+    except IntegrityError:
+        service.repo.db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User already exists",
         )
 
 

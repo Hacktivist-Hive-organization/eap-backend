@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import URL, create_engine
+from sqlalchemy import URL, create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy_utils import create_database, database_exists
 
@@ -69,6 +69,8 @@ DBSession = Annotated[Session, Depends(get_db)]
 
 
 def create_tables() -> None:
+    with engine.begin() as conn:
+        conn.execute(text("CREATE SCHEMA IF NOT EXISTS public;"))
     Base.metadata.create_all(bind=engine)
 
 

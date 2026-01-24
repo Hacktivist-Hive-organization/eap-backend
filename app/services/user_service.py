@@ -1,10 +1,7 @@
-from app.common.exceptions import InvalidCredentials, UserAlreadyExists, UserNotFound
-from app.common.security import (
-    create_access_token,
-    hash_password,
-    validate_password,
-    verify_password,
-)
+from app.common.exceptions import (InvalidCredentials, UserAlreadyExists,
+                                   UserNotFound)
+from app.common.security import (create_access_token, hash_password,
+                                 validate_password, verify_password)
 from app.models.db_user import DbUser
 from app.repositories.user_repository import UserRepository
 
