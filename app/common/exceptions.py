@@ -18,9 +18,4 @@ class InvalidCredentials(DomainError):
 
 
 class InvalidPassword(DomainError):
-    """
-    Raised when a password does not meet security requirements.
-    E.g., less than 8 characters, missing uppercase, number, or special character.
-    """
-
     pass

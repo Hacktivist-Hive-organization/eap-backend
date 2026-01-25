@@ -19,12 +19,14 @@ class UserRepository:
     def get_by_email(self, email: str):
         return self.db.query(DbUser).filter(DbUser.email == email).first()  # type: ignore
 
-    def create(self, email: str, hashed_password: str, first_name: str, last_name: str) -> DbUser:
+    def create(
+        self, email: str, hashed_password: str, first_name: str, last_name: str
+    ) -> DbUser:
         user = DbUser(
             email=email,  # type: ignore
             hashed_password=hashed_password,  # type: ignore
-            first_name=first_name, # type: ignore
-            last_name=last_name, # type: ignore
+            first_name=first_name,  # type: ignore
+            last_name=last_name,  # type: ignore
             is_active=True,  # type: ignore
         )
         self.db.add(user)

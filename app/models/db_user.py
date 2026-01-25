@@ -1,6 +1,6 @@
 # db_user.py
-
-from sqlalchemy import Boolean, Column, Integer, String
+from pycparser.c_ast import Default
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 
 from app.database.session import Base
 from app.models.db_mixins import TimestampMixin
@@ -17,4 +17,4 @@ class DbUser(TimestampMixin, Base):
     hashed_password = Column(String, nullable=False)
     is_verified = Column(Boolean, nullable=False, default=False)
     is_active = Column(Boolean, default=True)
-    last_login = Column(String, nullable=False)
+    last_login = Column(DateTime(timezone=True), nullable=True)

@@ -15,8 +15,7 @@ class UserResponse(BaseModel):
     last_name: str
     is_active: bool
 
-    class UserResponse(BaseModel):
-        model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserLoginRequest(BaseModel):

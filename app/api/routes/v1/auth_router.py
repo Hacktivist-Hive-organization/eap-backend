@@ -30,7 +30,7 @@ def register(
         return {"message": "User registered successfully"}
     except InvalidPassword:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Password does not meet security requirements",
         )
 
