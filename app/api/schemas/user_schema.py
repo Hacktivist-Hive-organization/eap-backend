@@ -4,11 +4,15 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 class UserRegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
+    first_name: str
+    last_name: str
 
 
 class UserResponse(BaseModel):
     id: int
     email: EmailStr
+    first_name: str
+    last_name: str
     is_active: bool
 
     class UserResponse(BaseModel):

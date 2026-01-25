@@ -21,17 +21,25 @@ def register(
     service: UserService = Depends(get_user_service),
 ):
     try:
-        service.register(email=str(data.email), password=data.password)
-        return {"message": "User registered successfully"}
-    except UserAlreadyExists:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="User already exists"
+        service.register(
+            email=str(data.email),
+            password=data.password,
+            first_name=data.first_name,
+            last_name=data.last_name,
         )
+        return {"message": "User registered successfully"}
     except InvalidPassword:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password does not meet security requirements",
         )
+
+    except UserAlreadyExists:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User already exists",
+        )
+
     except IntegrityError:
         service.repo.db.rollback()
         raise HTTPException(

@@ -22,7 +22,9 @@ class UserService:
     def get_all_users(self) -> list[DbUser]:
         return self.repo.get_all_users()
 
-    def register(self, email: str, password: str) -> DbUser:
+    def register(
+        self, email: str, password: str, first_name: str, last_name: str
+    ) -> DbUser:
         normalized_email = email.lower()
 
         if self.repo.get_by_email(normalized_email):
@@ -30,7 +32,12 @@ class UserService:
 
         validate_password(password)
         hashed_password = hash_password(password)
-        return self.repo.create(email=normalized_email, hashed_password=hashed_password)
+        return self.repo.create(
+            email=normalized_email,
+            hashed_password=hashed_password,
+            first_name=first_name,
+            last_name=last_name,
+        )
 
     def login(self, email: str, password: str) -> str:
         normalized_email = email.lower()

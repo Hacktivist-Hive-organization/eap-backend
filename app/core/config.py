@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     DATABASE_USER = "user1"
     DATABASE_PASSWORD = "user123"
     DATABASE_NAME = "Motopp"
+    DATABASE_ECHO: bool = False
 
     JWT_SECRET_KEY = "G7v!fR2xQ9zL#pW6mS0kT8dJ3hU1yN4bV5aC2eM9qR7tY8wX0zP6jH4uL1oK3i"
 

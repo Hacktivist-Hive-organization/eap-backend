@@ -11,6 +11,10 @@ class DbUser(TimestampMixin, Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, nullable=False, index=True)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
 
     hashed_password = Column(String, nullable=False)
+    is_verified = Column(Boolean, nullable=False, default=False)
     is_active = Column(Boolean, default=True)
+    last_login = Column(String, nullable=False)
