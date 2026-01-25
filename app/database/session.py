@@ -1,12 +1,13 @@
 import os
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.database.base import Base
 from app.core.config import settings
+from app.database.base import Base
 
 IS_TESTING = os.getenv("TESTING") == "1"
 
@@ -62,6 +63,7 @@ else:
     SQLALCHEMY_DATABASE_URL = create_database_url()
     engine, SessionLocal = create_engine_and_session(SQLALCHEMY_DATABASE_URL)
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -69,12 +71,15 @@ def get_db():
     finally:
         db.close()
 
+
 DBSession = Annotated[Session, Depends(get_db)]
+
 
 def create_tables() -> None:
     with engine.begin() as conn:
         conn.execute(text("CREATE SCHEMA IF NOT EXISTS public;"))
     Base.metadata.create_all(bind=engine)
+
 
 def drop_tables() -> None:
     Base.metadata.drop_all(bind=engine)

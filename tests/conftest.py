@@ -23,6 +23,7 @@ TestingSessionLocal = sessionmaker(
     bind=engine,
 )
 
+
 @pytest.fixture(scope="function")
 def db_session():
     Base.metadata.create_all(bind=engine)
@@ -32,6 +33,7 @@ def db_session():
     finally:
         session.close()
         Base.metadata.drop_all(bind=engine)
+
 
 @pytest.fixture(scope="function")
 def client(db_session):
