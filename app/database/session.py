@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import URL, create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy_utils import create_database, database_exists
@@ -10,30 +10,21 @@ from app.core.config import settings
 
 Base = declarative_base()
 
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
-def create_database_url() -> URL:
-    return URL.create(
-        drivername="postgresql+psycopg2",
-        username=settings.DATABASE_USER,
-        password=settings.DATABASE_PASSWORD,
-        host=settings.DATABASE_HOST,
-        port=settings.DATABASE_PORT,
-        database=settings.DATABASE_NAME,
-    )
-
-
-SQLALCHEMY_DATABASE_URL = create_database_url()
-
-if not database_exists(SQLALCHEMY_DATABASE_URL):
+# Create Postgres DB only if needed
+if settings.DATABASE_TYPE.lower() != "sqlite" and not database_exists(
+    SQLALCHEMY_DATABASE_URL
+):
     create_database(SQLALCHEMY_DATABASE_URL)
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     echo=settings.DATABASE_ECHO,
-    pool_size=10,
-    max_overflow=20,
-    pool_timeout=30,
-    pool_recycle=3600,
+    pool_size=10 if settings.DATABASE_TYPE.lower() != "sqlite" else 0,
+    max_overflow=20 if settings.DATABASE_TYPE.lower() != "sqlite" else 0,
+    pool_timeout=30 if settings.DATABASE_TYPE.lower() != "sqlite" else 0,
+    pool_recycle=3600 if settings.DATABASE_TYPE.lower() != "sqlite" else 0,
     pool_pre_ping=True,
 )
 

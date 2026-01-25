@@ -26,6 +26,6 @@ jobs:
 
       - name: Run tests
         env:
-          ENV_FILE: ".env.test"   # <- automatically uses test DB
+          ENV_FILE: ".env.test"   # automatically uses test DB
         run: |
           pytest

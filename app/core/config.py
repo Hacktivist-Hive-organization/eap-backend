@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=os.getenv(
             "ENV_FILE", ".env"
-        ),  # Automatically uses .env.test if ENV_FILE set
+        ),  # automatically uses .env.test if ENV_FILE set
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=True,
@@ -37,6 +37,16 @@ class Settings(BaseSettings):
         "http://localhost:5173",
     ]
     MIDDLEWARE_CORS: bool = True
+
+    # Automatically compute DATABASE_URL based on type
+    @property
+    def DATABASE_URL(self) -> str:
+        if self.DATABASE_TYPE.lower() == "sqlite":
+            return f"sqlite+pysqlite:///{self.DATABASE_NAME}"
+        return (
+            f"postgresql+psycopg2://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}"
+            f"@{self.DATABASE_HOST}:{self.DATABASE_PORT}/{self.DATABASE_NAME}"
+        )
 
 
 def get_settings() -> Settings:
