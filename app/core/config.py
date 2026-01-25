@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     ]
     MIDDLEWARE_CORS: bool = True
 
-    # Automatically compute DATABASE_URL based on type
+    # DATABASE_URL computed automatically
     @property
     def DATABASE_URL(self) -> str:
         if self.DATABASE_TYPE.lower() == "sqlite":

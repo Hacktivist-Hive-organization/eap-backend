@@ -30,6 +30,7 @@ def test_register_success(client):
     )
     assert response.status_code == 201
 
+
 #
 # def test_register_existing_email(client):
 #     client.post(
