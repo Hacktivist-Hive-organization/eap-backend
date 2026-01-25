@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.routes import router
+from app.common.exception_handlers import register_exception_handlers
 from app.core.config import settings
 from app.database.session import create_tables, drop_tables
 
@@ -33,3 +34,4 @@ if settings.MIDDLEWARE_CORS:
     )
 
 app.include_router(router)
+register_exception_handlers(app)

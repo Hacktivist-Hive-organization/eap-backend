@@ -1,3 +1,5 @@
+# user_service.py
+
 from app.common.exceptions import InvalidCredentials, UserAlreadyExists, UserNotFound
 from app.common.security import (
     create_access_token,
