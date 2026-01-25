@@ -17,6 +17,17 @@ class Settings(BaseSettings):
     APP_VERSION: str = APP_VERSION
     API_V1_PREFIX: str = API_V1_PREFIX
 
+    # .env
+    DATABASE_TYPE = "postgresql"
+    DATABASE_HOST = "127.0.0.1"
+    DATABASE_PORT = 5432
+    DATABASE_USER = "user1"
+    DATABASE_PASSWORD = "user123"
+    DATABASE_NAME = "Motopp"
+    DATABASE_ECHO: bool = False
+
+    JWT_SECRET_KEY = "G7v!fR2xQ9zL#pW6mS0kT8dJ3hU1yN4bV5aC2eM9qR7tY8wX0zP6jH4uL1oK3i"
+
     # DATABASE
     DATABASE_TYPE: str
     DATABASE_HOST: str
