@@ -20,9 +20,7 @@ def register_payload(
     }
 
 
-# =========================
 # REGISTER
-# =========================
 
 
 def test_register_success(client):
@@ -31,6 +29,9 @@ def test_register_success(client):
         json=register_payload("test@example.com"),
     )
     assert response.status_code == 201
+    body = response.json()
+    assert "access_token" in body
+    assert body["token_type"] == "bearer"
 
 
 def test_register_existing_email(client):
@@ -100,9 +101,7 @@ def test_register_invalid_email(client):
     assert response.status_code == 422
 
 
-# =========================
 # LOGIN
-# =========================
 
 
 def test_login_success(client):
@@ -179,9 +178,7 @@ def test_login_invalid_email_format(client):
     assert response.status_code == 422
 
 
-# =========================
-# DATABASE STATE
-# =========================
+# DATABASE
 
 
 def test_email_saved_lowercase(client, db_session):

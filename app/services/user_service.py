@@ -26,7 +26,7 @@ class UserService:
 
     def register(
         self, email: str, password: str, first_name: str, last_name: str
-    ) -> DbUser:
+    ) -> str:
         normalized_email = email.lower()
 
         if self.repo.get_by_email(normalized_email):
@@ -34,12 +34,14 @@ class UserService:
 
         validate_password(password)
         hashed_password = hash_password(password)
-        return self.repo.create(
+
+        user = self.repo.create(
             email=normalized_email,
             hashed_password=hashed_password,
             first_name=first_name,
             last_name=last_name,
         )
+        return create_access_token({"sub": str(user.id)})
 
     def login(self, email: str, password: str) -> str:
         normalized_email = email.lower()

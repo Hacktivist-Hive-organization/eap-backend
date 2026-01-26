@@ -13,17 +13,19 @@ from app.services.user_service import UserService
 router = APIRouter(prefix="", tags=["Authentication"])
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
+)
 def register(
     data: UserRegisterRequest, service: UserService = Depends(get_user_service)
 ):
-    service.register(
+    token = service.register(
         email=str(data.email),
         password=data.password,
         first_name=data.first_name,
         last_name=data.last_name,
     )
-    return {"message": "User registered successfully"}
+    return TokenResponse(access_token=token)
 
 
 @router.post("/login", response_model=TokenResponse)
