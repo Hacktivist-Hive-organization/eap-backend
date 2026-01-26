@@ -26,7 +26,7 @@ class UserService:
 
     def register(
         self, email: str, password: str, first_name: str, last_name: str
-    ) -> str:
+    ) -> tuple[str, DbUser]:
         normalized_email = email.lower()
 
         if self.repo.get_by_email(normalized_email):
@@ -41,13 +41,16 @@ class UserService:
             first_name=first_name,
             last_name=last_name,
         )
-        return create_access_token({"sub": str(user.id)})
 
-    def login(self, email: str, password: str) -> str:
+        token = create_access_token({"sub": str(user.id)})
+        return token, user
+
+    def login(self, email: str, password: str) -> tuple[str, DbUser]:
         normalized_email = email.lower()
         user = self.repo.get_by_email(normalized_email)
 
         if not user or not verify_password(password, user.hashed_password):
             raise InvalidCredentials()
 
-        return create_access_token({"sub": str(user.id)})
+        token = create_access_token({"sub": str(user.id)})
+        return token, user

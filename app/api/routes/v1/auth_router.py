@@ -7,6 +7,7 @@ from app.api.schemas.user_schema import (
     TokenResponse,
     UserLoginRequest,
     UserRegisterRequest,
+    UserResponse,
 )
 from app.services.user_service import UserService
 
@@ -19,16 +20,22 @@ router = APIRouter(prefix="", tags=["Authentication"])
 def register(
     data: UserRegisterRequest, service: UserService = Depends(get_user_service)
 ):
-    token = service.register(
+    token, user = service.register(
         email=str(data.email),
         password=data.password,
         first_name=data.first_name,
         last_name=data.last_name,
     )
-    return TokenResponse(access_token=token)
+    return TokenResponse(
+        access_token=token,
+        user=UserResponse.model_validate(user),  # ← ВАЖНО
+    )
 
 
 @router.post("/login", response_model=TokenResponse)
 def login(data: UserLoginRequest, service: UserService = Depends(get_user_service)):
-    token = service.login(email=str(data.email), password=data.password)
-    return TokenResponse(access_token=token)
+    token, user = service.login(email=str(data.email), password=data.password)
+    return TokenResponse(
+        access_token=token,
+        user=UserResponse.model_validate(user),  # ← ВАЖНО
+    )
