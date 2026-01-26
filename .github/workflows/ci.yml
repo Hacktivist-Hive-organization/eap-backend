@@ -29,3 +29,5 @@ jobs:
 
       - name: Run tests
         run: pytest --disable-warnings -q
+        env:
+          ENV_FILE_PATH: .env.test

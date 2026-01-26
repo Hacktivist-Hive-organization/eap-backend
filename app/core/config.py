@@ -1,10 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from app.core.static_conf import *
+import os
 
 class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
-        env_file=ENV_FILE_PATH,
+        env_file=os.getenv("ENV_FILE_PATH", ".env"),  # Default to .env,
         env_file_encoding='utf-8',
         extra='ignore',
         case_sensitive=True,
