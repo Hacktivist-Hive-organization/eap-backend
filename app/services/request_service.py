@@ -1,8 +1,7 @@
 # app/services/request_service.py
 from app.common.exceptions import BusinessException
-from app.models import DBRequest
-from app.common.enums import Status
 from app.repositories import RequestSubtypeRepository ,RequestTypeRepository , RequestRepository
+from fastapi import status
 
 class RequestService:
 
@@ -25,24 +24,16 @@ class RequestService:
         """
         if not self.type_repo.get_by_id(type_id):
             raise BusinessException(
-                f'Request type not found: no type exists with id {type_id}')
+                message=f"Request type not found: no type exists with id {type_id}",
+                status_code=status.HTTP_404_NOT_FOUND)
 
         if not self.subtype_repo.get_by_id_and_type(subtype_id, type_id):
-            raise BusinessException(f'Request subtype mismatch: '
-                                    f'no subtype with id {subtype_id} belongs to type {type_id}')
+            raise BusinessException(
+                message=f"Request subtype mismatch: no subtype with id {subtype_id} belongs to type {type_id}",
+                status_code=status.HTTP_404_NOT_FOUND)
 
     def create_request(self, request_in):
 
         self._validate_type_and_subtype(request_in.type_id,
                                         request_in.subtype_id)
-        db_request = DBRequest(
-            type_id=request_in.type_id,
-            subtype_id=request_in.subtype_id,
-            title=request_in.title,
-            description=request_in.description,
-            business_justification=request_in.business_justification,
-            priority=request_in.priority,
-            status=Status.DRAFT,
-        )
-
-        return self.request_repo.create(db_request)
+        return self.request_repo.create(request_in)

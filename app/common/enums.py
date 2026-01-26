@@ -2,11 +2,11 @@
 from enum import Enum
 
 class Priority(str, Enum):
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
 
 
 class Status(str, Enum):
-    DRAFT = "DRAFT"
-    SUBMITTED = "SUBMITTED"
+    DRAFT = "draft"
+    SUBMITTED = "submitted"

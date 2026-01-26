@@ -1,6 +1,7 @@
 # app/services/request_subtype_service.py
 from app.repositories import RequestSubtypeRepository
 from app.common.exceptions import BusinessException
+from fastapi import status
 
 class RequestSubtypeService:
 
@@ -10,7 +11,5 @@ class RequestSubtypeService:
     def get_all(self):
         subtypes = self.repo.get_all()
         if not subtypes:
-            raise BusinessException("No subtypes found")
+            raise BusinessException(message="No subtypes found", status_code=status.HTTP_404_NOT_FOUND)
         return subtypes
-
-
