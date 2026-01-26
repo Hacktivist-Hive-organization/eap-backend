@@ -11,7 +11,7 @@ from app.main import app
 @pytest.fixture(scope="function")
 def db_session():
     engine = create_engine(
-        "sqlite://",
+        "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
