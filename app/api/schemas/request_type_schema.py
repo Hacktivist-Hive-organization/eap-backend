@@ -7,7 +7,7 @@ class RequestSubtypeResponseSchema(BaseModel):
     id: int
     name: str
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 class RequestTypeResponseSchema(BaseModel):
@@ -15,5 +15,5 @@ class RequestTypeResponseSchema(BaseModel):
     name: str
     subtypes:  List[RequestSubtypeResponseSchema]
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

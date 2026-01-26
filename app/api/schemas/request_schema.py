@@ -25,13 +25,13 @@ class RequestCreateSchema(BaseModel):
 class RequestTypeSchema(BaseModel):
     id: int
     name: str
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 class RequestSubtypeSchema(BaseModel):
     id: int
     name: str
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -47,5 +47,5 @@ class RequestResponseSchema(BaseModel):
     created_at: datetime
     updated_at: datetime | None
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

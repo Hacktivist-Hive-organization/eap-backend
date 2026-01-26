@@ -7,5 +7,5 @@ class RequestSubtypeResponseSchema(BaseModel):
     name: str
     type_id: int
 
-    class Config:
+    class ConfigDict:
         from_attributes = True

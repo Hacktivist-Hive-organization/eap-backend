@@ -25,12 +25,12 @@ class RequestService:
         if not self.type_repo.get_by_id(type_id):
             raise BusinessException(
                 message=f"Request type not found: no type exists with id {type_id}",
-                status_code=status.HTTP_404_NOT_FOUND)
+                status_code=status.HTTP_400_BAD_REQUEST)
 
         if not self.subtype_repo.get_by_id_and_type(subtype_id, type_id):
             raise BusinessException(
                 message=f"Request subtype mismatch: no subtype with id {subtype_id} belongs to type {type_id}",
-                status_code=status.HTTP_404_NOT_FOUND)
+                status_code=status.HTTP_400_BAD_REQUEST)
 
     def create_request(self, request_in):
 
