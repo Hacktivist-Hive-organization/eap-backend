@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     DATABASE_USER: str | None = None
     DATABASE_PASSWORD: str | None = None
     DATABASE_NAME: str
+    DATABASE_SCHEMA: str | None = None
     DATABASE_ECHO: bool = False
 
     # JWT
