@@ -1,7 +1,9 @@
 # app/models/db_request_subtype.py
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, ForeignKey
+
 from app.database.session import Base
+
 
 class DBRequestSubtype(Base):
     __tablename__ = "request_subtypes"

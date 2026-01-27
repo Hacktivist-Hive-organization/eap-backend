@@ -3,9 +3,9 @@
 import re
 from datetime import datetime, timedelta, timezone
 
+from fastapi import status
 from jose import jwt
 from passlib.context import CryptContext
-from fastapi import status
 
 from app.common.exceptions import BusinessException
 from app.core.config import settings
@@ -24,16 +24,6 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
-
-
-def validate_password(password: str) -> None:
-    pattern = r"^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$"
-    if not re.match(pattern, password):
-        raise BusinessException(
-            message="Password must be at least 8 characters long, "
-            "contain 1 uppercase letter, 1 number and 1 special character",
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
-        )
 
 
 def create_access_token(

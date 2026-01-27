@@ -28,7 +28,7 @@ def register(
     )
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),  # ← ВАЖНО
+        user=UserResponse.model_validate(user),
     )
 
 
@@ -37,5 +37,5 @@ def login(data: UserLoginRequest, service: UserService = Depends(get_user_servic
     token, user = service.login(email=str(data.email), password=data.password)
     return TokenResponse(
         access_token=token,
-        user=UserResponse.model_validate(user),  # ← ВАЖНО
+        user=UserResponse.model_validate(user),
     )

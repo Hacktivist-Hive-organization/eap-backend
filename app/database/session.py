@@ -1,11 +1,11 @@
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.engine import URL
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from app.core.config import settings
-
 
 Base = declarative_base()
 
@@ -105,7 +105,6 @@ def create_tables() -> None:
 def drop_tables() -> None:
     Base.metadata.drop_all(bind=engine)
 
+
 # SQLAlchemy DB URL
 SQLALCHEMY_DATABASE_URL = create_database_url()
-
-

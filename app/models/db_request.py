@@ -1,8 +1,9 @@
 # app/models/db_request.py
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, func
+from sqlalchemy.orm import relationship
+
 from app.common.enums import Priority, Status
 from app.database.session import Base
-from sqlalchemy.orm import relationship
 
 
 class DBRequest(Base):
@@ -17,9 +18,7 @@ class DBRequest(Base):
     priority = Column(Enum(Priority), nullable=False)
     status = Column(Enum(Status), nullable=False, default=Status.DRAFT)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True), onupdate=func.now(), nullable=True
-    )
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
     #  relationships
     type = relationship("DBRequestType")

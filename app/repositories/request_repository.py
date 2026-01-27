@@ -1,7 +1,8 @@
 # app/repositories/request_repository.py
 from sqlalchemy.orm import Session
-from app.models import DBRequest
+
 from app.common.enums import Status
+from app.models import DBRequest
 
 
 class RequestRepository:
