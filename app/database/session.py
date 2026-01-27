@@ -24,7 +24,7 @@ def create_database_url() -> str | URL:
         # Examples:
         #   sqlite:///:memory:
         #   sqlite:///./test.db
-        return f"sqlite:///{settings.DATABASE_SCHEMA}"
+        return f"sqlite:///{settings.DATABASE_NAME}"
 
     # PostgreSQL (default / production)
     return URL.create(
@@ -33,7 +33,7 @@ def create_database_url() -> str | URL:
         password=settings.DATABASE_PASSWORD,
         host=settings.DATABASE_HOST,
         port=settings.DATABASE_PORT,
-        database=settings.DATABASE_SCHEMA,
+        database=settings.DATABASE_NAME,
     )
 
 
