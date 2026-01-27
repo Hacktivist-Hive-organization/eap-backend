@@ -1,37 +1,8 @@
-# exceptions.py
+# app/common/exceptions.py
+from fastapi import status
 
-
-class DomainError(Exception):
-    pass
-
-
-class UserNotFound(DomainError):
-    pass
-
-
-class UserAlreadyExists(DomainError):
-    pass
-
-
-class InvalidCredentials(DomainError):
-    pass
-
-
-class InvalidPassword(DomainError):
-    pass
-
-
-class TokenExpired(DomainError):
-    pass
-
-
-class TokenInvalid(DomainError):
-    pass
-
-
-class PermissionDenied(DomainError):
-    pass
-
-
-class ResourceLocked(DomainError):
-    pass
+class BusinessException(Exception):
+    def __init__(self, message: str, status_code: int = status.HTTP_400_BAD_REQUEST):
+        self.message = message
+        self.status_code = status_code
+        super().__init__(message)

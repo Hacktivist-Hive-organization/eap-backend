@@ -1,6 +1,7 @@
 # user_service.py
+from fastapi import status
 
-from app.common.exceptions import InvalidCredentials, UserAlreadyExists, UserNotFound
+from app.common.exceptions import BusinessException
 from app.common.security import (
     create_access_token,
     hash_password,
@@ -18,7 +19,9 @@ class UserService:
     def get_user_by_id(self, user_id: int) -> DbUser | None:
         user = self.repo.get_user(user_id=user_id)
         if not user:
-            raise UserNotFound()
+            raise BusinessException(
+                message="User not found", status_code=status.HTTP_404_NOT_FOUND
+            )
         return user
 
     def get_all_users(self) -> list[DbUser]:
@@ -30,7 +33,9 @@ class UserService:
         normalized_email = email.lower()
 
         if self.repo.get_by_email(normalized_email):
-            raise UserAlreadyExists()
+            raise BusinessException(
+                message="User already exists", status_code=status.HTTP_409_CONFLICT
+            )
 
         validate_password(password)
         hashed_password = hash_password(password)
@@ -50,7 +55,10 @@ class UserService:
         user = self.repo.get_by_email(normalized_email)
 
         if not user or not verify_password(password, user.hashed_password):
-            raise InvalidCredentials()
+            raise BusinessException(
+                message="Invalid email or password",
+                status_code=status.HTTP_401_UNAUTHORIZED,
+            )
 
         token = create_access_token({"sub": str(user.id)})
         return token, user
