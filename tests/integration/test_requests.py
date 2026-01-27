@@ -14,7 +14,7 @@ def test_create_draft_request_success(client, db_session):
         "description": "Laptop does not start properly and needs repair.",
         "business_justification": "Employee cannot work without laptop.",
         "priority": "high",
-        "user_id": users["user1"].id,
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -37,7 +37,7 @@ def test_create_request_type_not_found(client, db_session):
         "description": "Printer broken and cannot print documents.",
         "business_justification": "Office cannot operate without printer.",
         "priority": "low",
-        "user_id": 1,
+        "requester_id": 1,
 
     }
 
@@ -61,7 +61,7 @@ def test_create_request_subtype_mismatch(client, db_session):
         "description": "Testing wrong subtype validation.",
         "business_justification": "Testing business rules.",
         "priority": "medium",
-        "user_id": users["user1"].id,
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -82,7 +82,7 @@ def test_create_request_invalid_priority(client, db_session):
         "description": "Laptop does not start properly and needs repair.",
         "business_justification": "Employee cannot work without laptop.",
         "priority": "URGENT",  # Invalid
-        "user_id": users["user1"].id,
+        "requester_id": users["user1"].id,
 
     }
 
@@ -103,7 +103,7 @@ def test_create_request_status_defaults_to_draft(client, db_session):
         "description": "Need Zoom installed on new laptop for remote meetings.",
         "business_justification": "Required for remote collaboration.",
         "priority": "medium",# Lowercase should still work because enum is string
-        "user_id": users["user1"].id,
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -126,7 +126,7 @@ def test_create_request_status_always_draft(client, db_session):
         "business_justification": "Required for remote collaboration.",
         "priority": "high",
         "status": "submitted" , # FE tries to override
-        "user_id": users["user1"].id,
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -148,7 +148,7 @@ def test_create_request_validation_error(client):
         "description": "Too short",
         "business_justification": "Too short",
         "priority": "low",
-        "user_id": 1
+        "requester_id": 1
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -172,7 +172,7 @@ def test_create_request_letters_validation(client, db_session):
         "description": "Need Zoom installed on new laptop for remote meetings.",
         "business_justification": "00011122222222222222222222222222222",
         "priority": "high",
-        "user_id": users["user1"].id,
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)

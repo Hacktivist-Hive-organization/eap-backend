@@ -20,10 +20,10 @@ class DBRequest(Base):
     updated_at = Column(
         DateTime(timezone=True), onupdate=func.now(), nullable=True
     )
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    requester_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
 
     #  relationships
     type = relationship("DBRequestType")
     subtype = relationship("DBRequestSubtype")
-    user = relationship("DbUser", foreign_keys=[user_id], back_populates='user_reqs')
+    requester = relationship("DbUser", foreign_keys=[requester_id], back_populates='user_reqs')

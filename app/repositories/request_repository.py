@@ -18,7 +18,7 @@ class RequestRepository:
             business_justification= request.business_justification,
             priority= request.priority,
             status= Status.DRAFT,
-            user_id = request.user_id
+            requester_id = request.requester_id
         )
         self.db.add(db_request)
         self.db.commit()
@@ -26,8 +26,8 @@ class RequestRepository:
         return db_request
 
     def get_requests_by_user(self, user_id: int, status: str):
-        return (self.db.query(DBRequest).filter(DBRequest.user_id == user_id,
-                                                DBRequest.status== status)
+        return (self.db.query(DBRequest).filter(DBRequest.requester_id == user_id,
+                                                DBRequest.status == status)
                 .order_by(DBRequest.created_at.desc())
                 .all()
                 )

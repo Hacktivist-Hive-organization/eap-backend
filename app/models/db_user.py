@@ -10,5 +10,5 @@ class DbUser(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String,unique=True, nullable=False)
 
-    user_reqs = relationship("DBRequest", foreign_keys="[DBRequest.user_id]", back_populates="user")
+    user_reqs = relationship("DBRequest", foreign_keys="[DBRequest.requester_id]", back_populates="requester")
 
