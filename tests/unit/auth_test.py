@@ -7,10 +7,10 @@ API_PREFIX = f"{settings.API_V1_PREFIX}/auth"
 
 
 def register_payload(
-    email: str,
-    password: str = "StrongP@ss1",
-    first_name: str = "John",
-    last_name: str = "Doe",
+        email: str,
+        password: str = "StrongP@ss1",
+        first_name: str = "John",
+        last_name: str = "Doe",
 ):
     return {
         "email": email,
@@ -65,6 +65,30 @@ def test_register_weak_password(client):
     response = client.post(
         f"{API_PREFIX}/register",
         json=register_payload("weak@example.com", password="weak"),
+    )
+    assert response.status_code == 422
+
+
+def test_register_without_email(client):
+    response = client.post(
+        f"{API_PREFIX}/register",
+        json={
+            "password": "StrongP@ss1",
+            "first_name": "John",
+            "last_name": "Doe",
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_register_without_password(client):
+    response = client.post(
+        f"{API_PREFIX}/register",
+        json={
+            "email": "nopassword@example.com",
+            "first_name": "John",
+            "last_name": "Doe",
+        },
     )
     assert response.status_code == 422
 

@@ -6,7 +6,7 @@ from app.api.dependencies.service_dependency import get_user_service
 from app.api.schemas.user_schema import UserResponse
 from app.services.user_service import UserService
 
-router = APIRouter(prefix="", tags=["Authentication"])
+router = APIRouter(prefix="", tags=["Users"])
 
 
 @router.get("/", response_model=list[UserResponse])
@@ -15,5 +15,5 @@ def get_all_users(service: UserService = Depends(get_user_service)):
 
 
 @router.get("/{id}", response_model=UserResponse)
-def get_userinfo(id: int, service: UserService = Depends(get_user_service)):
+def get_user_info(id: int, service: UserService = Depends(get_user_service)):
     return service.get_user_by_id(user_id=id)
