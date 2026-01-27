@@ -1,4 +1,5 @@
-from app.models import DBRequestType, DBRequestSubtype
+from app.models import DBRequestType, DBRequestSubtype, DbUser
+
 
 def seed_types_and_subtypes(db):
     hardware = DBRequestType(name="Hardware")
@@ -20,4 +21,14 @@ def seed_types_and_subtypes(db):
         "laptop": laptop,
         "desktop": desktop,
         "license": license,
+    }
+
+def seed_user(db):
+    user1 = DbUser(username= "user1")
+
+    db.add_all([user1])
+    db.commit()
+
+    return {
+        "user1": user1,
     }

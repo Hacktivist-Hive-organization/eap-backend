@@ -1,10 +1,11 @@
-from tests.integration.helpers import seed_types_and_subtypes
+from tests.integration.helpers import seed_types_and_subtypes, seed_user
 from app.common.enums import Status, Priority
 
 
 def test_create_draft_request_success(client, db_session):
 
     data = seed_types_and_subtypes(db_session)
+    users = seed_user(db_session)
 
     payload = {
         "type_id": data["hardware"].id,
@@ -12,7 +13,8 @@ def test_create_draft_request_success(client, db_session):
         "title": "Fix laptop",
         "description": "Laptop does not start properly and needs repair.",
         "business_justification": "Employee cannot work without laptop.",
-        "priority": "high"
+        "priority": "high",
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -34,7 +36,9 @@ def test_create_request_type_not_found(client, db_session):
         "title": "Fix printer",
         "description": "Printer broken and cannot print documents.",
         "business_justification": "Office cannot operate without printer.",
-        "priority": "low"
+        "priority": "low",
+        "requester_id": 1,
+
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -48,6 +52,7 @@ def test_create_request_type_not_found(client, db_session):
 def test_create_request_subtype_mismatch(client, db_session):
 
     data = seed_types_and_subtypes(db_session)
+    users = seed_user(db_session)
 
     payload = {
         "type_id": data["hardware"].id,
@@ -55,7 +60,8 @@ def test_create_request_subtype_mismatch(client, db_session):
         "title": "Wrong subtype",
         "description": "Testing wrong subtype validation.",
         "business_justification": "Testing business rules.",
-        "priority": "medium"
+        "priority": "medium",
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -67,6 +73,7 @@ def test_create_request_subtype_mismatch(client, db_session):
 def test_create_request_invalid_priority(client, db_session):
     """Test that invalid priority values are rejected by Pydantic validation"""
     data = seed_types_and_subtypes(db_session)
+    users = seed_user(db_session)
 
     payload = {
         "type_id": data["hardware"].id,
@@ -74,7 +81,9 @@ def test_create_request_invalid_priority(client, db_session):
         "title": "Fix laptop",
         "description": "Laptop does not start properly and needs repair.",
         "business_justification": "Employee cannot work without laptop.",
-        "priority": "URGENT"  # Invalid
+        "priority": "URGENT",  # Invalid
+        "requester_id": users["user1"].id,
+
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -85,6 +94,7 @@ def test_create_request_invalid_priority(client, db_session):
 def test_create_request_status_defaults_to_draft(client, db_session):
     """Test that status is defaulted to Draft if not provided"""
     data = seed_types_and_subtypes(db_session)
+    users = seed_user(db_session)
 
     payload = {
         "type_id": data["hardware"].id,
@@ -92,7 +102,8 @@ def test_create_request_status_defaults_to_draft(client, db_session):
         "title": "Install Zoom",
         "description": "Need Zoom installed on new laptop for remote meetings.",
         "business_justification": "Required for remote collaboration.",
-        "priority": "medium"  # Lowercase should still work because enum is string
+        "priority": "medium",# Lowercase should still work because enum is string
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -105,6 +116,7 @@ def test_create_request_status_defaults_to_draft(client, db_session):
 def test_create_request_status_always_draft(client, db_session):
     """Test that status is always Draft on create, even if FE sends another value"""
     data = seed_types_and_subtypes(db_session)
+    users = seed_user(db_session)
 
     payload = {
         "type_id": data["hardware"].id,
@@ -113,7 +125,8 @@ def test_create_request_status_always_draft(client, db_session):
         "description": "Need Zoom installed on new laptop for remote meetings.",
         "business_justification": "Required for remote collaboration.",
         "priority": "high",
-        "status": "submitted"  # FE tries to override
+        "status": "submitted" , # FE tries to override
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -134,7 +147,8 @@ def test_create_request_validation_error(client):
         "title": "Fix laptop",
         "description": "Too short",
         "business_justification": "Too short",
-        "priority": "low"
+        "priority": "low",
+        "requester_id": 1
     }
 
     response = client.post("/api/v1/requests", json=payload)
@@ -148,6 +162,7 @@ def test_create_request_letters_validation(client, db_session):
     # Seed types/subtypes
     from tests.integration.helpers import seed_types_and_subtypes
     data = seed_types_and_subtypes(db_session)
+    users = seed_user(db_session)
 
     # Payload with numbers only (invalid)
     payload = {
@@ -156,7 +171,8 @@ def test_create_request_letters_validation(client, db_session):
         "title": "Fix laptop",
         "description": "Need Zoom installed on new laptop for remote meetings.",
         "business_justification": "00011122222222222222222222222222222",
-        "priority": "high"
+        "priority": "high",
+        "requester_id": users["user1"].id,
     }
 
     response = client.post("/api/v1/requests", json=payload)
