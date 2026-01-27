@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     DATABASE_PORT: int | None = None
     DATABASE_USER: str | None = None
     DATABASE_PASSWORD: str | None = None
-    DATABASE_NAME: str
+    DATABASE_NAME: str | None = None
     DATABASE_SCHEMA: str | None = None
     DATABASE_ECHO: bool = False
 
