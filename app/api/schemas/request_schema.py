@@ -14,6 +14,7 @@ class RequestCreateSchema(BaseModel):
     description: str = Field(min_length=20, max_length=2000)
     business_justification: str = Field(min_length=20, max_length=1000)
     priority: Priority
+    requester_id: int
 
     @field_validator("title", "description", "business_justification")
     def must_contain_letters(cls, v, info):

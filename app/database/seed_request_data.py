@@ -1,4 +1,5 @@
-# pp/database/seed_request_data.py
+#pp/database/seed_request_data.py
+from app.models import DbUser
 from app.models.db_request_subtype import DBRequestSubtype
 from app.models.db_request_type import DBRequestType
 
@@ -10,8 +11,10 @@ def seed_request_data(db):
     hardware = DBRequestType(name="Hardware")
     software = DBRequestType(name="Software & Access")
     services = DBRequestType(name="Services & Facilities")
+    user1 = DbUser(username="user1")
 
     db.add_all([hardware, software, services])
+    db.add_all([user1])
     db.commit()
 
     db.add_all(
