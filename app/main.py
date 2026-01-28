@@ -13,7 +13,7 @@ from app.common.exception_handlers import (
 )
 from app.common.exceptions import BusinessException
 from app.core.config import settings
-from app.database.seed_request_data import seed_request_data
+# from app.database.seed_request_data import seed_request_data
 from app.database.session import create_tables, get_db, drop_tables
 
 
@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
     create_tables()
     # application execution
     db = next(get_db())
-    seed_request_data(db)
+    # seed_request_data(db)
     yield
 
     # application shutdown
