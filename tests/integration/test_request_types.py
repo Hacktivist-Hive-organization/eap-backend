@@ -1,5 +1,6 @@
 from tests.integration.helpers import seed_types_and_subtypes
 
+
 def test_get_all_types(client, db_session):
 
     seed_types_and_subtypes(db_session)

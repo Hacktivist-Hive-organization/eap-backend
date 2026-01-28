@@ -1,8 +1,14 @@
 # app/services/request_service.py
+from fastapi import status
+
 from app.common.enums import Status
 from app.common.exceptions import BusinessException
-from app.repositories import RequestSubtypeRepository ,RequestTypeRepository , RequestRepository
-from fastapi import status
+from app.repositories import (
+    RequestRepository,
+    RequestSubtypeRepository,
+    RequestTypeRepository,
+)
+
 
 class RequestService:
 
@@ -10,7 +16,7 @@ class RequestService:
         self,
         request_repo: RequestRepository,
         type_repo: RequestTypeRepository,
-        subtype_repo: RequestSubtypeRepository
+        subtype_repo: RequestSubtypeRepository,
     ):
         self.request_repo = request_repo
         self.type_repo = type_repo
@@ -26,19 +32,19 @@ class RequestService:
         if not self.type_repo.get_by_id(type_id):
             raise BusinessException(
                 message=f"Request type not found: no type exists with id {type_id}",
-                status_code=status.HTTP_400_BAD_REQUEST)
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
 
         if not self.subtype_repo.get_by_id_and_type(subtype_id, type_id):
             raise BusinessException(
                 message=f"Request subtype mismatch: no subtype with id {subtype_id} belongs to type {type_id}",
-                status_code=status.HTTP_400_BAD_REQUEST)
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
 
     def create_request(self, request_in):
 
-        self._validate_type_and_subtype(request_in.type_id,
-                                        request_in.subtype_id)
+        self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)
         return self.request_repo.create(request_in)
 
     def get_requests_by_user(self, user_id: int, status: str):
         return self.request_repo.get_requests_by_user(user_id, status)
-

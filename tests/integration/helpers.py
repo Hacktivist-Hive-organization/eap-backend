@@ -1,4 +1,4 @@
-from app.models import DBRequestType, DBRequestSubtype, DbUser
+from app.models import DBRequestSubtype, DBRequestType, DbUser
 
 
 def seed_types_and_subtypes(db):
@@ -23,8 +23,9 @@ def seed_types_and_subtypes(db):
         "license": license,
     }
 
+
 def seed_user(db):
-    user1 = DbUser(username= "user1")
+    user1 = DbUser(username="user1")
 
     db.add_all([user1])
     db.commit()

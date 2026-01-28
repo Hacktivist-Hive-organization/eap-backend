@@ -7,10 +7,10 @@ API_PREFIX = f"{settings.API_V1_PREFIX}/auth"
 
 
 def register_payload(
-        email: str,
-        password: str = "StrongP@ss1",
-        first_name: str = "John",
-        last_name: str = "Doe",
+    email: str,
+    password: str = "StrongP@ss1",
+    first_name: str = "John",
+    last_name: str = "Doe",
 ):
     return {
         "email": email,

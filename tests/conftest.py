@@ -5,17 +5,16 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import StaticPool
-
-from app.database.session import Base, get_db
-from app.main import app
 
 from app.api.dependencies.service_dependency import get_user_service
 from app.core.config import settings
 from app.database.session import Base, get_db
+from app.main import app
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
+
 
 @pytest.fixture(scope="function")
 def db_session():
