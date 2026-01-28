@@ -22,7 +22,10 @@ API versioning is enabled (`/api/v1/...`) and interactive docs are available via
 ## Setup
  - clone repository
  - Create a Python virtual environment .venv (python -m venv .venv)
- - activate virtual environment
+ - activate virtual environment 
+   - Windows (Command Prompt): .venv\Scripts\activate.bat
+   - Windows (PowerShell): .venv\Scripts\Activate.ps1
+   - macOS / Linux (Terminal, bash/zsh): source .venv/bin/activate
  - install dependencies (pip install -r requirements.txt)
  - Configure environment variables (Create a .env file (example)):
      DATABASE_TYPE=postgresql

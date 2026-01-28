@@ -3,6 +3,7 @@ from typing import List
 
 from pydantic import BaseModel
 
+
 class RequestSubtypeResponseSchema(BaseModel):
     id: int
     name: str
@@ -10,10 +11,11 @@ class RequestSubtypeResponseSchema(BaseModel):
     class ConfigDict:
         from_attributes = True
 
+
 class RequestTypeResponseSchema(BaseModel):
     id: int
     name: str
-    subtypes:  List[RequestSubtypeResponseSchema]
+    subtypes: List[RequestSubtypeResponseSchema]
 
     class ConfigDict:
         from_attributes = True

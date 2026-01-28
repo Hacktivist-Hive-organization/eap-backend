@@ -1,11 +1,19 @@
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
-from fastapi.testclient import TestClient
+# confest.py
 
+import os
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.api.dependencies.service_dependency import get_user_service
+from app.core.config import settings
 from app.database.session import Base, get_db
 from app.main import app
+from app.repositories.user_repository import UserRepository
+from app.services.user_service import UserService
 
 
 @pytest.fixture(scope="function")
@@ -23,15 +31,14 @@ def db_session():
         expire_on_commit=False,
     )
 
-    # Create tables
     Base.metadata.create_all(bind=engine)
-
     session = testing_session_local()
 
     try:
         yield session
     finally:
         session.close()
+
         Base.metadata.drop_all(bind=engine)
 
 
@@ -43,9 +50,13 @@ def client(db_session):
         finally:
             pass
 
-    app.dependency_overrides[get_db] = override_get_db
+    user_repository = UserRepository(db_session)
+    user_service = UserService(user_repository)
 
-    with TestClient(app) as c:
-        yield c
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_user_service] = lambda: user_service
+
+    with TestClient(app) as test_client:
+        yield test_client
 
     app.dependency_overrides.clear()

@@ -1,7 +1,9 @@
 # app/models/db_request_type.py
-from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
+
 from app.database.session import Base
+
 
 class DBRequestType(Base):
     __tablename__ = "request_types"

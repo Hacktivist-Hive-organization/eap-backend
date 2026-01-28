@@ -1,5 +1,7 @@
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+
 
 class HealthRepository:
     def __init__(self, db: Session):
@@ -9,6 +11,6 @@ class HealthRepository:
         try:
             self.db.execute(text("SELECT 1"))
             db_status = "connected"
-        except Exception:
+        except SQLAlchemyError:
             db_status = "disconnected"
         return db_status

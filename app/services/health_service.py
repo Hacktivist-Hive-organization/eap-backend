@@ -6,5 +6,5 @@ class HealthService:
         self.repo = repo
 
     def get_health(self):
-        db_status =  self.repo.get_health()
+        db_status = self.repo.get_health()
         return db_status

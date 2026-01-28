@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel
 
+
 class RequestSubtypeResponseSchema(BaseModel):
     id: int
     name: str

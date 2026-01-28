@@ -9,4 +9,3 @@ def test_get_all_subtypes(client, db_session):
 
     assert response.status_code == 200
     assert len(response.json()) >= 1
-

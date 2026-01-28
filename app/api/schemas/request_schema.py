@@ -1,8 +1,10 @@
 # app/api/schemas/request_schema.py
 import re
-from pydantic import BaseModel, Field ,field_validator
-from app.common.enums import Priority, Status
 from datetime import datetime
+
+from pydantic import BaseModel, Field, field_validator
+
+from app.common.enums import Priority, Status
 
 
 class RequestCreateSchema(BaseModel):
@@ -17,8 +19,7 @@ class RequestCreateSchema(BaseModel):
     @field_validator("title", "description", "business_justification")
     def must_contain_letters(cls, v, info):
         if not re.search(r"[A-Za-z]", v):
-            raise ValueError(
-                f"{info.field_name} must contain at least one letter")
+            raise ValueError(f"{info.field_name} must contain at least one letter")
         return v
 
 
@@ -26,12 +27,15 @@ class RequestCreateSchema(BaseModel):
 class RequestTypeSchema(BaseModel):
     id: int
     name: str
+
     class ConfigDict:
         from_attributes = True
+
 
 class RequestSubtypeSchema(BaseModel):
     id: int
     name: str
+
     class ConfigDict:
         from_attributes = True
 

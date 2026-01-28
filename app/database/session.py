@@ -1,11 +1,11 @@
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.engine import URL
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from app.core.config import settings
-
 
 Base = declarative_base()
 
@@ -24,7 +24,7 @@ def create_database_url() -> str | URL:
         # Examples:
         #   sqlite:///:memory:
         #   sqlite:///./test.db
-        return f"sqlite:///{settings.DATABASE_SCHEMA}"
+        return f"sqlite:///{settings.DATABASE_NAME}"
 
     # PostgreSQL (default / production)
     return URL.create(
@@ -33,7 +33,7 @@ def create_database_url() -> str | URL:
         password=settings.DATABASE_PASSWORD,
         host=settings.DATABASE_HOST,
         port=settings.DATABASE_PORT,
-        database=settings.DATABASE_SCHEMA,
+        database=settings.DATABASE_NAME,
     )
 
 
@@ -104,3 +104,7 @@ def create_tables() -> None:
 
 def drop_tables() -> None:
     Base.metadata.drop_all(bind=engine)
+
+
+# SQLAlchemy DB URL
+SQLALCHEMY_DATABASE_URL = create_database_url()
