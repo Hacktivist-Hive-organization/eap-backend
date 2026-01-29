@@ -27,16 +27,20 @@ API versioning is enabled (`/api/v1/...`) and interactive docs are available via
    - Windows (PowerShell): .venv\Scripts\Activate.ps1
    - macOS / Linux (Terminal, bash/zsh): source .venv/bin/activate
  - install dependencies (pip install -r requirements.txt)
- - Configure environment variables (Create a .env file (example)):
-     DATABASE_TYPE=postgresql
-     DATABASE_HOST=127.0.0.1
-     DATABASE_PORT=5432
-     DATABASE_USER=user1
-     DATABASE_PASSWORD=user123
-     DATABASE_SCHEMA=eap
+   - Configure environment variables (Create a .env file (example)):
+       - DATABASE_TYPE=postgresql  
+       - DATABASE_HOST=127.0.0.1  
+       - DATABASE_PORT=5432  
+       - DATABASE_USER=user1  
+       - DATABASE_PASSWORD=user123  
+       - DATABASE_NAME=eap  
  - Create the PostgreSQL database
  - run the project (uvicorn app.main:app --reload)
  - Check the health endpoint
+
+## Alternative setups
+
+For alternative setups, refer to the "deployment options" directory. 
 
 ## Running Unit Tests
 
