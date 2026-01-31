@@ -10,7 +10,7 @@ from app.api.routes.v1.user_router import router as user_router
 router = APIRouter()
 
 router.include_router(auth_router, prefix="/auth")
-router.include_router(user_router, prefix="/user")
+router.include_router(user_router, prefix="/users")
 router.include_router(request_router, prefix="/requests")
 router.include_router(type_router, prefix="/types")
 router.include_router(subtype_router, prefix="/subtypes")
