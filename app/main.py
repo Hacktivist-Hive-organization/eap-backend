@@ -21,9 +21,11 @@ from app.database.session import get_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
     # application execution
-    db = next(get_db())
-    seed_request_data(db)
+    ##seed request must be called after database migration
+    #db = next(get_db())
+    #seed_request_data(db)
     yield
 
     # application shutdown
