@@ -19,7 +19,6 @@ def validation_exception_handler(request, exc: RequestValidationError):
     """
 
     first_error = exc.errors()[0]
-    # loc example: ('description', 'String should have at least 20 characters')
     field_name = first_error["loc"][-1]
     message = first_error["msg"]
 
