@@ -10,6 +10,7 @@ from app.repositories import (
     RequestTypeRepository,
 )
 
+
 class RequestService:
 
     def __init__(
