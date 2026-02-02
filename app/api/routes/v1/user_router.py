@@ -17,6 +17,11 @@ router = APIRouter(
 )
 
 
+@router.get("/me", response_model=UserBaseResponse)
+def get_me(current_user: DbUser = Depends(get_current_user)):
+    return current_user
+
+
 @router.get("/", response_model=list[UserResponse])
 def get_all_users(
     service: UserService = Depends(get_user_service),
@@ -32,16 +37,11 @@ def get_all_users(
 def get_user_info(
     id: int,
     service: UserService = Depends(get_user_service),
-    # current_user: DbUser = Depends(get_current_user),
+    current_user: DbUser = Depends(get_current_user),
 ):
-    # if current_user.role != Role.ADMIN and current_user.id != id:
-    #     raise BusinessException(
-    #         message="You do not have permission to access this user",
-    #         status_code=status.HTTP_403_FORBIDDEN,
-    #     )
+    if current_user.role != Role.ADMIN and current_user.id != id:
+        raise BusinessException(
+            message="You do not have permission to access this user",
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
     return service.get_user_by_id(user_id=id)
-
-
-@router.get("/me", response_model=UserBaseResponse)
-def get_me(current_user: DbUser = Depends(get_current_user)):
-    return current_user

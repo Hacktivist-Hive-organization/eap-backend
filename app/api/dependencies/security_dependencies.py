@@ -8,7 +8,7 @@ from app.common.security import decode_token, validate_token_payload
 from app.services.user_service import UserService
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/v1/auth/login",
+    tokenUrl="/v1/auth/login-swagger",
     auto_error=False,
 )
 
