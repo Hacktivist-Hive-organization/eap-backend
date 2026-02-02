@@ -1,4 +1,6 @@
 # app/repositories/request_repository.py
+from typing import List
+
 from sqlalchemy.orm import Session
 
 from app.common.enums import Status
@@ -26,10 +28,8 @@ class RequestRepository:
         self.db.refresh(db_request)
         return db_request
 
-    def get_requests_by_user(self, user_id: int, status: str):
-        return (
-            self.db.query(DBRequest)
-            .filter(DBRequest.requester_id == user_id, DBRequest.status == status)
-            .order_by(DBRequest.created_at.desc())
-            .all()
-        )
+    def get_requests_by_user(self, user_id: int, statuses: List[str]):
+        query = self.db.query(DBRequest).filter(DBRequest.requester_id == user_id)
+        if statuses:
+            query = query.filter(DBRequest.status.in_(statuses))
+        return query.order_by(DBRequest.created_at.desc()).all()
