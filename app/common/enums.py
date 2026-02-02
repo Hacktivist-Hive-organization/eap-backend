@@ -1,4 +1,5 @@
 # app/common/enums.py
+
 from enum import Enum
 
 
@@ -11,3 +12,9 @@ class Priority(str, Enum):
 class Status(str, Enum):
     DRAFT = "draft"
     SUBMITTED = "submitted"
+
+
+class Role(str, Enum):
+    ADMIN = "admin"
+    APPROVER = "approver"
+    REQUESTER = "requester"

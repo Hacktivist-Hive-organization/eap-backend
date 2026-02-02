@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, status
 from app.api.dependencies.service_dependency import get_user_service
 from app.api.schemas.user_schema import (
     TokenResponse,
+    UserBaseResponse,
     UserLoginRequest,
     UserRegisterRequest,
     UserResponse,
@@ -15,7 +16,9 @@ router = APIRouter(prefix="", tags=["Authentication"])
 
 
 @router.post(
-    "/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
+    "/register",
+    response_model=TokenResponse,
+    status_code=status.HTTP_201_CREATED,
 )
 def register(
     data: UserRegisterRequest, service: UserService = Depends(get_user_service)

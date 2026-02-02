@@ -11,7 +11,9 @@ class TimestampMixin:
     @declared_attr
     def created(cls):
         return Column(
-            DateTime(timezone=True), default=datetime.now(timezone.utc), nullable=False
+            DateTime(timezone=True),
+            default=datetime.now(timezone.utc),
+            nullable=False,
         )
 
     @declared_attr

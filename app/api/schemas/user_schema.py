@@ -1,6 +1,9 @@
 # user_schema.py
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from app.common.enums import Role
 
 
 class UserRegisterRequest(BaseModel):
@@ -15,19 +18,33 @@ class UserRegisterRequest(BaseModel):
     last_name: str | None = None
 
 
+class UserLoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+class UserBaseResponse(BaseModel):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+    is_active: bool
+    role: Role
+    created: datetime
+    updated: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserResponse(BaseModel):
     id: int
     email: str
     first_name: str
     last_name: str
     is_active: bool
+    role: Role
 
     model_config = ConfigDict(from_attributes=True)
-
-
-class UserLoginRequest(BaseModel):
-    email: str
-    password: str
 
 
 class TokenResponse(BaseModel):
