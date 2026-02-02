@@ -1,8 +1,8 @@
+from app.common.enums import Priority, Status
 from app.models import DbUser
 from app.models.db_request import DBRequest
 from app.models.db_request_subtype import DBRequestSubtype
 from app.models.db_request_type import DBRequestType
-from app.common.enums import Priority, Status
 
 
 def seed_request_data(db):
@@ -42,14 +42,12 @@ def seed_request_data(db):
         DBRequestSubtype(name="Peripherals", type_id=hardware.id),
         DBRequestSubtype(name="Mobile device", type_id=hardware.id),
         DBRequestSubtype(name="Other", type_id=hardware.id),
-
         # Software
         DBRequestSubtype(name="Software license", type_id=software.id),
         DBRequestSubtype(name="System access", type_id=software.id),
         DBRequestSubtype(name="Application access", type_id=software.id),
         DBRequestSubtype(name="VPN access", type_id=software.id),
         DBRequestSubtype(name="Other", type_id=software.id),
-
         # Services
         DBRequestSubtype(name="Parking spot", type_id=services.id),
         DBRequestSubtype(name="Office equipment", type_id=services.id),
@@ -102,7 +100,6 @@ def seed_request_data(db):
             status=Status.DRAFT,
             requester_id=user1.id,
         ),
-
         # Submitted / non-draft (2)
         DBRequest(
             type_id=software.id,
