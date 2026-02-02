@@ -23,8 +23,9 @@ async def lifespan(app: FastAPI):
 
     # application execution
     ##seed request must be called after database migration
-    #db = next(get_db())
-    #seed_request_data(db)
+    if settings.DEVELOPMENT_ENVIRONMENT:
+        db = next(get_db())
+        seed_request_data(db)
     yield
 
     # application shutdown
