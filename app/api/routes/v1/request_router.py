@@ -1,11 +1,11 @@
 # app/api/routes/v1/request_router.py
+from typing import List, Optional
 
-from typing import List
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from app.api.dependencies.service_dependency import get_request_service
 from app.api.schemas.request_schema import RequestCreateSchema, RequestResponseSchema
+from app.common.enums import Status
 
 router = APIRouter(tags=["Requests"])
 
@@ -24,6 +24,10 @@ def create_request(
     description="Get all user requests by status order by creation date",
     response_model=List[RequestResponseSchema],
 )
-def get_requests_by_user(status: str, service=Depends(get_request_service)):
+def get_requests_by_user(
+    statuses: Optional[List[Status]] = Query(None), service=Depends(get_request_service)
+):
     user_id = 1  # here we should assign the current user id
-    return service.get_requests_by_user(user_id, status)
+    return service.get_requests_by_user(
+        user_id, [s.value for s in statuses] if statuses else None
+    )
