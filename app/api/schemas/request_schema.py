@@ -43,8 +43,6 @@ class RequestSubtypeSchema(BaseModel):
 class RequestResponseSchema(BaseModel):
     id: int
     title: str
-    description: str
-    business_justification: str
     priority: Priority
     status: Status
     type: RequestTypeSchema

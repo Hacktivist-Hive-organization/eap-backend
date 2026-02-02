@@ -13,7 +13,6 @@ from app.common.exception_handlers import (
 )
 from app.common.exceptions import BusinessException
 from app.core.config import settings
-
 from app.database.seed_request_data import seed_request_data
 from app.database.session import get_db
 
