@@ -3,4 +3,4 @@
 pytest
 pytest-mock
 
-pre-commit==3.6.0
+pre_commit==4.5.1
