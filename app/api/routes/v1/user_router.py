@@ -25,7 +25,6 @@ def get_all_users(
     if current_user.role == Role.ADMIN:
         return service.get_all_users()
     return [current_user]
-    return service.get_all_users()
 
 
 @router.get("/me", response_model=UserBaseResponse)
