@@ -17,20 +17,20 @@ router = APIRouter(
 )
 
 
-@router.get("/me", response_model=UserBaseResponse)
-def get_me(current_user: DbUser = Depends(get_current_user)):
-    return current_user
-
-
 @router.get("/", response_model=list[UserResponse])
 def get_all_users(
     service: UserService = Depends(get_user_service),
-    # current_user: DbUser = Depends(get_current_user),
+    current_user: DbUser = Depends(get_current_user),
 ):
-    # if current_user.role == Role.ADMIN:
-    #     return service.get_all_users()
-    # return [current_user]
+    if current_user.role == Role.ADMIN:
+        return service.get_all_users()
+    return [current_user]
     return service.get_all_users()
+
+
+@router.get("/me", response_model=UserBaseResponse)
+def get_me(current_user: DbUser = Depends(get_current_user)):
+    return current_user
 
 
 @router.get("/{id}", response_model=UserBaseResponse)

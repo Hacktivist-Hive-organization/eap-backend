@@ -1,5 +1,5 @@
 from fastapi import Depends, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.api.dependencies.service_dependency import get_user_service
 from app.common.enums import Role
@@ -7,22 +7,20 @@ from app.common.exceptions import BusinessException
 from app.common.security import decode_token, validate_token_payload
 from app.services.user_service import UserService
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/v1/auth/login-swagger",
-    auto_error=False,
-)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     user_service: UserService = Depends(get_user_service),
 ):
-    if not token:
+    if not credentials or credentials.scheme.lower() != "bearer":
         raise BusinessException(
             message="Authentication required",
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
 
+    token = credentials.credentials
     payload = decode_token(token)
     user_id = validate_token_payload(payload)
     return user_service.get_user_by_id(user_id)
