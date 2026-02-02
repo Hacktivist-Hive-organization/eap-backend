@@ -1,28 +1,33 @@
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
+from app.database.session import SQLALCHEMY_DATABASE_URL
+from app.database.base import Base
+from app.models import *
 
 from alembic import context
+import os
+import sys
+
+# Add project root to PYTHONPATH
+sys.path.append(os.getcwd())
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
+# Override DB URL from app config
+config.set_main_option(
+    "sqlalchemy.url",
+    str(SQLALCHEMY_DATABASE_URL.render_as_string(hide_password=False))
+)
+
+target_metadata = Base.metadata
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
-import app.models
-from app.core.config import settings
-from app.database.session import Base, create_database_url
-
-target_metadata = Base.metadata
-
-
-def get_database_url():
-    return create_database_url()
-
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -43,7 +48,7 @@ def run_migrations_offline() -> None:
 
     """
     context.configure(
-        url=get_database_url(),
+        url=str(SQLALCHEMY_DATABASE_URL.render_as_string(hide_password=False)),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -62,7 +67,7 @@ def run_migrations_online() -> None:
 
     """
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = get_database_url()
+    configuration["sqlalchemy.url"] = str(SQLALCHEMY_DATABASE_URL.render_as_string(hide_password=False))
 
     connectable = engine_from_config(
         configuration,
