@@ -1,5 +1,3 @@
-import os
-
 from app.common.enums import Priority, Status, UserRole
 from app.common.security import hash_password
 from app.models import DbUser
@@ -21,44 +19,42 @@ def seed_request_data(db):
     services = DBRequestType(name="Services & Facilities")
 
     # -----------------------
-    # Users (Admin + Approvers)
+    # Seed Users (Admin + Approvers)
     # -----------------------
     if db.query(DbUser).count() == 0:
-        users = [
-            DbUser(
-                email="admin@eap.local",
-                first_name="System",
-                last_name="Admin",
-                hashed_password=hash_password("admin123"),
-                role=UserRole.ADMIN,
-                is_active=True,
-            ),
-            DbUser(
-                email="approver-hardware@eap.local",
-                first_name="Hardware",
-                last_name="Approver",
-                hashed_password=hash_password("hardware123"),
-                role=UserRole.APPROVER,
-                is_active=True,
-            ),
-            DbUser(
-                email="approver-software@eap.local",
-                first_name="Software",
-                last_name="Approver",
-                hashed_password=hash_password("software123"),
-                role=UserRole.APPROVER,
-                is_active=True,
-            ),
-            DbUser(
-                email="approver-services@eap.local",
-                first_name="Services",
-                last_name="Approver",
-                hashed_password=hash_password("services123"),
-                role=UserRole.APPROVER,
-                is_active=True,
-            ),
-        ]
-        db.add_all(users)
+        admin = DbUser()
+        admin.email = "admin@eap.local"
+        admin.first_name = "System"
+        admin.last_name = "Admin"
+        admin.hashed_password = hash_password("admin123")
+        admin.role = UserRole.ADMIN
+        admin.is_active = True
+
+        approver_hardware = DbUser()
+        approver_hardware.email = "approver-hardware@eap.local"
+        approver_hardware.first_name = "Hardware"
+        approver_hardware.last_name = "Approver"
+        approver_hardware.hashed_password = hash_password("hardware123")
+        approver_hardware.role = UserRole.APPROVER
+        approver_hardware.is_active = True
+
+        approver_software = DbUser()
+        approver_software.email = "approver-software@eap.local"
+        approver_software.first_name = "Software"
+        approver_software.last_name = "Approver"
+        approver_software.hashed_password = hash_password("software123")
+        approver_software.role = UserRole.APPROVER
+        approver_software.is_active = True
+
+        approver_services = DbUser()
+        approver_services.email = "approver-services@eap.local"
+        approver_services.first_name = "Services"
+        approver_services.last_name = "Approver"
+        approver_services.hashed_password = hash_password("services123")
+        approver_services.role = UserRole.APPROVER
+        approver_services.is_active = True
+
+        db.add_all([admin, approver_hardware, approver_software, approver_services])
         db.commit()
 
     # -----------------------
