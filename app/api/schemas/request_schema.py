@@ -54,6 +54,8 @@ class RequestResponseSchema(BaseModel):
     title: str
     priority: Priority
     status: Status
+    description: str
+    business_justification: str
     type: RequestTypeSchema
     subtype: RequestSubtypeSchema
     requester: UserResponseSchema
