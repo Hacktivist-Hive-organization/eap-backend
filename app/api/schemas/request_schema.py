@@ -40,13 +40,41 @@ class RequestSubtypeSchema(BaseModel):
         from_attributes = True
 
 
+class UserResponseSchema(BaseModel):
+    id: int
+    email: str
+    first_name: str
+    last_name: str
+
+    class ConfigDict:
+        from_attributes = True
+
+
 class RequestResponseSchema(BaseModel):
+    id: int
+    title: str
+    priority: Priority
+    status: Status
+    description: str
+    business_justification: str
+    type: RequestTypeSchema
+    subtype: RequestSubtypeSchema
+    requester: UserResponseSchema
+    created_at: datetime
+    updated_at: datetime | None
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class RequestResponseListSchema(BaseModel):
     id: int
     title: str
     priority: Priority
     status: Status
     type: RequestTypeSchema
     subtype: RequestSubtypeSchema
+    requester: UserResponseSchema
     created_at: datetime
     updated_at: datetime | None
 

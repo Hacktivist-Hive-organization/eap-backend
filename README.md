@@ -39,7 +39,12 @@ API versioning is enabled (`/api/v1/...`) and interactive docs are available via
 
 - install dependencies
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-dev.txt 
+``` 
+- Install the Git pre-commit hook to automatically run formatters before each commit
+  - Formatters run in the following order: isort → black 
+```bash
+pre-commit install  
 ``` 
    - Configure environment variables (Create a .env file (example)):
        - DATABASE_TYPE=postgresql  
