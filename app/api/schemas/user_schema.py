@@ -3,7 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.common.enums import Role
+from app.common.enums import UserRole
 
 
 class UserRegisterRequest(BaseModel):
@@ -29,7 +29,7 @@ class UserBaseResponse(BaseModel):
     first_name: str
     last_name: str
     is_active: bool
-    role: Role
+    role: UserRole
     created: datetime
     updated: datetime
 
@@ -42,7 +42,7 @@ class UserResponse(BaseModel):
     first_name: str
     last_name: str
     is_active: bool
-    role: Role
+    role: UserRole
 
     model_config = ConfigDict(from_attributes=True)
 

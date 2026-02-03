@@ -1,4 +1,7 @@
-from app.common.enums import Priority, Status
+import os
+
+from app.common.enums import Priority, Status, UserRole
+from app.common.security import hash_password
 from app.models import DbUser
 from app.models.db_request import DBRequest
 from app.models.db_request_subtype import DBRequestSubtype
@@ -16,6 +19,47 @@ def seed_request_data(db):
     hardware = DBRequestType(name="Hardware")
     software = DBRequestType(name="Software & Access")
     services = DBRequestType(name="Services & Facilities")
+
+    # -----------------------
+    # Users (Admin + Approvers)
+    # -----------------------
+    if db.query(DbUser).count() == 0:
+        users = [
+            DbUser(
+                email="admin@eap.local",
+                first_name="System",
+                last_name="Admin",
+                hashed_password=hash_password("admin123"),
+                role=UserRole.ADMIN,
+                is_active=True,
+            ),
+            DbUser(
+                email="approver-hardware@eap.local",
+                first_name="Hardware",
+                last_name="Approver",
+                hashed_password=hash_password("hardware123"),
+                role=UserRole.APPROVER,
+                is_active=True,
+            ),
+            DbUser(
+                email="approver-software@eap.local",
+                first_name="Software",
+                last_name="Approver",
+                hashed_password=hash_password("software123"),
+                role=UserRole.APPROVER,
+                is_active=True,
+            ),
+            DbUser(
+                email="approver-services@eap.local",
+                first_name="Services",
+                last_name="Approver",
+                hashed_password=hash_password("services123"),
+                role=UserRole.APPROVER,
+                is_active=True,
+            ),
+        ]
+        db.add_all(users)
+        db.commit()
 
     # -----------------------
     # Demo user

@@ -14,7 +14,7 @@ class Status(str, Enum):
     SUBMITTED = "submitted"
 
 
-class Role(str, Enum):
+class UserRole(str, Enum):
     ADMIN = "admin"
     APPROVER = "approver"
     REQUESTER = "requester"

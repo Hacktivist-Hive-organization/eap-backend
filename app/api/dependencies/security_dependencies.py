@@ -2,7 +2,7 @@ from fastapi import Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.api.dependencies.service_dependency import get_user_service
-from app.common.enums import Role
+from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
 from app.common.security import decode_token, validate_token_payload
 from app.services.user_service import UserService
@@ -26,7 +26,7 @@ def get_current_user(
     return user_service.get_user_by_id(user_id)
 
 
-def require_role(role: Role):
+def require_role(role: UserRole):
     def checker(user=Depends(get_current_user)):
         if user.role != role:
             raise BusinessException(
@@ -38,7 +38,7 @@ def require_role(role: Role):
     return checker
 
 
-def require_roles(*roles: Role):
+def require_roles(*roles: UserRole):
     def checker(user=Depends(get_current_user)):
         if user.role not in roles:
             raise BusinessException(

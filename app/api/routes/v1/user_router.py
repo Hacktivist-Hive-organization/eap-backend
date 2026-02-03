@@ -6,7 +6,7 @@ from starlette import status
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import get_user_service
 from app.api.schemas.user_schema import UserBaseResponse, UserResponse
-from app.common.enums import Role
+from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
 from app.models import DbUser
 from app.services.user_service import UserService
@@ -22,7 +22,7 @@ def get_all_users(
     service: UserService = Depends(get_user_service),
     current_user: DbUser = Depends(get_current_user),
 ):
-    if current_user.role == Role.ADMIN:
+    if current_user.role == UserRole.ADMIN:
         return service.get_all_users()
     return [current_user]
 
@@ -38,7 +38,7 @@ def get_user_info(
     service: UserService = Depends(get_user_service),
     current_user: DbUser = Depends(get_current_user),
 ):
-    if current_user.role != Role.ADMIN and current_user.id != id:
+    if current_user.role != UserRole.ADMIN and current_user.id != id:
         raise BusinessException(
             message="You do not have permission to access this user",
             status_code=status.HTTP_403_FORBIDDEN,
