@@ -93,17 +93,5 @@ def get_db():
 
 DBSession = Annotated[Session, Depends(get_db)]
 
-
-# -------------------------------------------------
-# Helpers for app lifecycle
-# -------------------------------------------------
-def create_tables() -> None:
-    Base.metadata.create_all(bind=engine)
-
-
-def drop_tables() -> None:
-    Base.metadata.drop_all(bind=engine)
-
-
 # SQLAlchemy DB URL
 SQLALCHEMY_DATABASE_URL = create_database_url()
