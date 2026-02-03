@@ -17,7 +17,6 @@ from app.database.seed_request_data import seed_request_data
 from app.database.session import get_db
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 

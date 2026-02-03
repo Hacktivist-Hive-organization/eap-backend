@@ -1,13 +1,13 @@
+import os
+import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
-from app.database.session import SQLALCHEMY_DATABASE_URL
-from app.database.base import Base
-from app.models import *
 
 from alembic import context
-import os
-import sys
+from app.database.base import Base
+from app.database.session import SQLALCHEMY_DATABASE_URL
+from app.models import *
 
 # Add project root to PYTHONPATH
 sys.path.append(os.getcwd())
@@ -18,8 +18,7 @@ config = context.config
 
 # Override DB URL from app config
 config.set_main_option(
-    "sqlalchemy.url",
-    str(SQLALCHEMY_DATABASE_URL.render_as_string(hide_password=False))
+    "sqlalchemy.url", str(SQLALCHEMY_DATABASE_URL.render_as_string(hide_password=False))
 )
 
 target_metadata = Base.metadata
@@ -67,7 +66,9 @@ def run_migrations_online() -> None:
 
     """
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = str(SQLALCHEMY_DATABASE_URL.render_as_string(hide_password=False))
+    configuration["sqlalchemy.url"] = str(
+        SQLALCHEMY_DATABASE_URL.render_as_string(hide_password=False)
+    )
 
     connectable = engine_from_config(
         configuration,

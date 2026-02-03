@@ -1,6 +1,7 @@
 import sys
-from alembic.config import Config
+
 from alembic import command
+from alembic.config import Config
 
 alembic_cfg = Config("alembic.ini")
 ## this script is to be run from dokker before starting up the application server (uvicorn)

@@ -7,8 +7,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.service_dependency import get_user_service
-from app.database.session import get_db
 from app.database.base import Base
+from app.database.session import get_db
 from app.main import app
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService

@@ -19,7 +19,6 @@ class DbUser(TimestampMixin, Base):
     is_active = Column(Boolean, default=True)
     last_login = Column(DateTime(timezone=True), nullable=True)
 
-
     user_reqs = relationship(
         "DBRequest", foreign_keys="[DBRequest.requester_id]", back_populates="requester"
     )
