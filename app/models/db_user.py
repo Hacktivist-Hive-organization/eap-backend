@@ -3,7 +3,7 @@
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 
-from app.database.session import Base
+from app.database.base import Base
 from app.models.db_mixins import TimestampMixin
 
 
