@@ -25,12 +25,12 @@ def seed_types_and_subtypes(db):
 
 
 def seed_user(db):
-
     user1 = DbUser(
-        email="John.Doe@gmail.com",
-        hashed_password="StrongP@ss1",
-        first_name="John",
-        last_name="Doe",
+        email="user1@example.com",
+        first_name="User",
+        last_name="One",
+        hashed_password="not_a_real_hash",
+        is_active=True,
     )
 
     db.add_all([user1])
