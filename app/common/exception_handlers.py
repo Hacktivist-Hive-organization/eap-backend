@@ -14,12 +14,7 @@ def business_exception_handler(request, exc: BusinessException):
 
 
 def validation_exception_handler(request, exc: RequestValidationError):
-    """
-    Convert Pydantic validation errors to a simple message
-    """
-
     first_error = exc.errors()[0]
-    # loc example: ('description', 'String should have at least 20 characters')
     field_name = first_error["loc"][-1]
     message = first_error["msg"]
 

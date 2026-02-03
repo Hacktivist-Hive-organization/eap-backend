@@ -1,9 +1,11 @@
 # db_user.py
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String
 from sqlalchemy.orm import relationship
 
+from app.common.enums import UserRole
 from app.database.base import Base
+from app.database.session import Base
 from app.models.db_mixins import TimestampMixin
 
 
@@ -16,6 +18,8 @@ class DbUser(TimestampMixin, Base):
     last_name = Column(String, nullable=False)
 
     hashed_password = Column(String, nullable=False)
+
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.REQUESTER)
     is_active = Column(Boolean, default=True)
     last_login = Column(DateTime(timezone=True), nullable=True)
 

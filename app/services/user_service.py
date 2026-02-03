@@ -30,10 +30,12 @@ class UserService:
         self, email: str, password: str, first_name: str, last_name: str
     ) -> tuple[str, "DbUser"]:
 
+        normalized_email = email.strip().lower()
+
         checks = [
             {
                 "func": lambda: is_required_fields_filled(
-                    email=email,
+                    email=normalized_email,
                     password=password,
                     first_name=first_name,
                     last_name=last_name,
@@ -42,12 +44,12 @@ class UserService:
                 "status": status.HTTP_422_UNPROCESSABLE_CONTENT,
             },
             {
-                "func": lambda: is_email_valid(email),
-                "message": "Invalid email address",
+                "func": lambda: is_email_valid(normalized_email),
+                "message": "Invalid email or password",
                 "status": status.HTTP_422_UNPROCESSABLE_CONTENT,
             },
             {
-                "func": lambda: not self.repo.get_by_email(email.lower()),
+                "func": lambda: not self.repo.get_by_email(normalized_email),
                 "message": "User already exists",
                 "status": status.HTTP_409_CONFLICT,
             },
@@ -65,7 +67,6 @@ class UserService:
                     status_code=check["status"],
                 )
 
-        normalized_email = email.lower()
         hashed_password = hash_password(password)
 
         user = self.repo.create(
@@ -79,13 +80,15 @@ class UserService:
         return token, user
 
     def login(self, email: str, password: str) -> tuple[str, DbUser]:
-        if not is_email_valid(email):
+
+        normalized_email = email.strip().lower()
+
+        if not is_email_valid(normalized_email):
             raise BusinessException(
-                message="Invalid email address",
+                message="Invalid email or password",
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             )
 
-        normalized_email = email.lower()
         user = self.repo.get_by_email(normalized_email)
 
         if not user or not verify_password(password, user.hashed_password):

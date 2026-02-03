@@ -1,4 +1,7 @@
-from app.common.enums import Priority, Status
+# seed_request_data.py
+
+from app.common.enums import Priority, Status, UserRole
+from app.common.security import hash_password
 from app.models import DbUser
 from app.models.db_request import DBRequest
 from app.models.db_request_subtype import DBRequestSubtype
@@ -16,6 +19,45 @@ def seed_request_data(db):
     hardware = DBRequestType(name="Hardware")
     software = DBRequestType(name="Software & Access")
     services = DBRequestType(name="Services & Facilities")
+
+    # -----------------------
+    # Seed Users (Admin + Approvers)
+    # -----------------------
+    if db.query(DbUser).count() == 0:
+        admin = DbUser()
+        admin.email = "admin@eap.local"
+        admin.first_name = "System"
+        admin.last_name = "Admin"
+        admin.hashed_password = hash_password("admin123!")
+        admin.role = UserRole.ADMIN
+        admin.is_active = True
+
+        approver_hardware = DbUser()
+        approver_hardware.email = "approver-hardware@eap.local"
+        approver_hardware.first_name = "Hardware"
+        approver_hardware.last_name = "Approver"
+        approver_hardware.hashed_password = hash_password("hardware123!")
+        approver_hardware.role = UserRole.APPROVER
+        approver_hardware.is_active = True
+
+        approver_software = DbUser()
+        approver_software.email = "approver-software@eap.local"
+        approver_software.first_name = "Software"
+        approver_software.last_name = "Approver"
+        approver_software.hashed_password = hash_password("software123!")
+        approver_software.role = UserRole.APPROVER
+        approver_software.is_active = True
+
+        approver_services = DbUser()
+        approver_services.email = "approver-services@eap.local"
+        approver_services.first_name = "Services"
+        approver_services.last_name = "Approver"
+        approver_services.hashed_password = hash_password("services123!")
+        approver_services.role = UserRole.APPROVER
+        approver_services.is_active = True
+
+        db.add_all([admin, approver_hardware, approver_software, approver_services])
+        db.commit()
 
     # -----------------------
     # Demo user
