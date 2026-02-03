@@ -53,16 +53,16 @@ class RequestService:
     def get_request_details(self, request_id: int, user_id: int):
         request = self.request_repo.get_request_details(request_id)
 
-        if request.requester_id != user_id:
-            raise BusinessException(
-                message="Not authorized to view this request",
-                status_code=status.HTTP_403_FORBIDDEN
-            )
-
         if not request:
             raise BusinessException(
                 message="Request not found",
                 status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.requester_id != user_id:
+            raise BusinessException(
+                message="Not authorized to view this request",
+                status_code=status.HTTP_403_FORBIDDEN,
             )
 
         return request

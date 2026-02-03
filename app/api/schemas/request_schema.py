@@ -39,6 +39,7 @@ class RequestSubtypeSchema(BaseModel):
     class ConfigDict:
         from_attributes = True
 
+
 class UserResponseSchema(BaseModel):
     id: int
     email: str
@@ -64,5 +65,3 @@ class RequestResponseSchema(BaseModel):
 
     class ConfigDict:
         from_attributes = True
-
-

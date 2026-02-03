@@ -14,7 +14,7 @@ router = APIRouter(tags=["Requests"])
 def create_request(
     request_in: RequestCreateSchema, service=Depends(get_request_service)
 ):
-    request_in.requester_id = 1  #TODO:  here we should assign the current
+    request_in.requester_id = 1  # TODO:  here we should assign the current
     # user id
     return service.create_request(request_in)
 
@@ -32,6 +32,7 @@ def get_requests_by_user(
     return service.get_requests_by_user(
         user_id, [s.value for s in statuses] if statuses else None
     )
+
 
 @router.get(
     "/{request_id}",

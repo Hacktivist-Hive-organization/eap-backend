@@ -1,8 +1,8 @@
 # app/repositories/request_repository.py
 from typing import List
 
-from sqlalchemy.orm import Session
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session, selectinload
+
 from app.common.enums import Status
 from app.models import DBRequest
 
