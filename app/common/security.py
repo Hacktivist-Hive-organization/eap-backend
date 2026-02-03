@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timedelta, timezone
 
 from fastapi import status
-from jose import JWTError, jwt
+from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 
 from app.common.exceptions import BusinessException
@@ -35,9 +35,14 @@ def create_access_token(
     return jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=ALGORITHM)
 
 
-def decode_token(token: str) -> dict:
+def verify_token(token: str) -> dict:
     try:
         return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[ALGORITHM])
+    except ExpiredSignatureError:
+        raise BusinessException(
+            message="Token expired",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
     except JWTError:
         raise BusinessException(
             message="Invalid token",

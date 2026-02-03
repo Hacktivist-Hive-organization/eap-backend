@@ -4,7 +4,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.api.dependencies.service_dependency import get_user_service
 from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
-from app.common.security import decode_token, validate_token_payload
+from app.common.security import validate_token_payload, verify_token
 from app.services.user_service import UserService
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -21,7 +21,7 @@ def get_current_user(
         )
 
     token = credentials.credentials
-    payload = decode_token(token)
+    payload = verify_token(token)
     user_id = validate_token_payload(payload)
     return user_service.get_user_by_id(user_id)
 
