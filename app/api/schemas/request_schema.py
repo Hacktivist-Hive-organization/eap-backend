@@ -65,3 +65,18 @@ class RequestResponseSchema(BaseModel):
 
     class ConfigDict:
         from_attributes = True
+
+
+class RequestResponseListSchema(BaseModel):
+    id: int
+    title: str
+    priority: Priority
+    status: Status
+    type: RequestTypeSchema
+    subtype: RequestSubtypeSchema
+    requester: UserResponseSchema
+    created_at: datetime
+    updated_at: datetime | None
+
+    class ConfigDict:
+        from_attributes = True
