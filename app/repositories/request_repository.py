@@ -1,7 +1,7 @@
 # app/repositories/request_repository.py
 from typing import List
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.common.enums import Status
 from app.models import DBRequest
@@ -33,3 +33,15 @@ class RequestRepository:
         if statuses:
             query = query.filter(DBRequest.status.in_(statuses))
         return query.order_by(DBRequest.created_at.desc()).all()
+
+    def get_request_details(self, request_id: int):
+        return (
+            self.db.query(DBRequest)
+            .options(
+                selectinload(DBRequest.requester),
+                selectinload(DBRequest.type),
+                selectinload(DBRequest.subtype),
+            )
+            .filter(DBRequest.id == request_id)
+            .first()
+        )
