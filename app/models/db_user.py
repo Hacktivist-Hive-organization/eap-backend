@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.common.enums import UserRole
+from app.database.base import Base
 from app.database.session import Base
 from app.models.db_mixins import TimestampMixin
 

@@ -37,6 +37,7 @@ class Settings(BaseSettings):
         "http://localhost:5173",  # Vite server
     ]
     MIDDLEWARE_CORS: bool = True
+    DEVELOPMENT_ENVIRONMENT: bool = True
 
 
 def get_settings() -> Settings:

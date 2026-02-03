@@ -3,7 +3,7 @@ from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
 
 from app.common.enums import Priority, Status
-from app.database.session import Base
+from app.database.base import Base
 
 
 class DBRequest(Base):

@@ -14,15 +14,17 @@ from app.common.exception_handlers import (
 from app.common.exceptions import BusinessException
 from app.core.config import settings
 from app.database.seed_request_data import seed_request_data
-from app.database.session import create_tables, drop_tables, get_db
+from app.database.session import get_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_tables()
+
     # application execution
-    db = next(get_db())
-    seed_request_data(db)
+    ##seed request must be called after database migration
+    if settings.DEVELOPMENT_ENVIRONMENT:
+        db = next(get_db())
+        seed_request_data(db)
     yield
 
     # application shutdown
