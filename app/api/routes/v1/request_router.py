@@ -4,7 +4,11 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 
 from app.api.dependencies.service_dependency import get_request_service
-from app.api.schemas.request_schema import RequestCreateSchema, RequestResponseSchema
+from app.api.schemas.request_schema import (
+    RequestCreateSchema,
+    RequestResponseListSchema,
+    RequestResponseSchema,
+)
 from app.common.enums import Status
 
 router = APIRouter(tags=["Requests"])
@@ -23,7 +27,7 @@ def create_request(
     "/my-requests",
     summary="Get all requests by user",
     description="Get all user requests by status order by creation date",
-    response_model=List[RequestResponseSchema],
+    response_model=List[RequestResponseListSchema],
 )
 def get_requests_by_user(
     statuses: Optional[List[Status]] = Query(None), service=Depends(get_request_service)
