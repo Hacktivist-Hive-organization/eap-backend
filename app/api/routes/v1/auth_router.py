@@ -38,7 +38,7 @@ def register(
 @router.post("/login", response_model=TokenResponse)
 def login(
     data: UserLoginRequest,
-    service: AuthService = Depends(get_user_service),
+    service: AuthService = Depends(get_auth_service),
 ):
     token, user = service.login(email=str(data.email), password=data.password)
     return TokenResponse(
