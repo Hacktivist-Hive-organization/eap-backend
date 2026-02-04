@@ -1,4 +1,4 @@
-# user_router.py
+# auth_router.py
 
 from fastapi import APIRouter, Depends
 from starlette import status
