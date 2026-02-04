@@ -125,6 +125,16 @@ def test_register_invalid_email(client):
     assert response.status_code == 422
 
 
+def test_register_email_with_spaces(client, db_session):
+    response = client.post(
+        f"{API_PREFIX}/register",
+        json=register_payload("  spaced@example.com  "),
+    )
+    assert response.status_code == 201
+    user = db_session.query(DbUser).filter_by(email="spaced@example.com").one()
+    assert user.email == "spaced@example.com"
+
+
 # LOGIN
 
 
@@ -200,6 +210,25 @@ def test_login_invalid_email_format(client):
         },
     )
     assert response.status_code == 422
+
+
+def test_login_email_with_spaces(client):
+    client.post(
+        f"{API_PREFIX}/register",
+        json=register_payload("trimlogin@example.com"),
+    )
+
+    response = client.post(
+        f"{API_PREFIX}/login",
+        json={
+            "email": "  trimlogin@example.com  ",
+            "password": "StrongP@ss1",
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert "access_token" in body
+    assert body["token_type"] == "bearer"
 
 
 # DATABASE
