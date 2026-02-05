@@ -21,3 +21,19 @@ class UserService:
 
     def get_all_users(self) -> list[DbUser]:
         return self.repo.get_all_users()
+
+    def update_current_user_profile(
+        self, current_user: DbUser, first_name: str, last_name: str
+    ) -> DbUser:
+        current_user.first_name = first_name
+        current_user.last_name = last_name
+        return self.repo.update_user(current_user)
+
+    def partially_update_current_user_profile(
+        self, current_user: DbUser, data: dict
+    ) -> DbUser:
+        if "first_name" in data and data["first_name"]:
+            current_user.first_name = data["first_name"]
+        if "last_name" in data and data["last_name"]:
+            current_user.last_name = data["last_name"]
+        return self.repo.update_user(current_user)

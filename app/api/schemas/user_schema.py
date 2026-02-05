@@ -51,3 +51,13 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+
+class UserSelfUpdateRequest(BaseModel):
+    first_name: str = Field(min_length=1)
+    last_name: str = Field(min_length=1)
+
+
+class UserSelfPartialUpdateRequest(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
