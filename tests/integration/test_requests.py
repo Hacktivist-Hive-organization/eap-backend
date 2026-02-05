@@ -96,7 +96,7 @@ def test_create_request_invalid_priority(client, db_session):
 
     response = client.post("/api/v1/requests", json=payload)
 
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert (
         "priority: Input should be 'low', 'medium' or 'high'"
         in response.json()["detail"]
@@ -165,7 +165,7 @@ def test_create_request_validation_error(client):
 
     response = client.post("/api/v1/requests", json=payload)
 
-    assert response.status_code == 400
+    assert response.status_code == 422
     assert (
         "description: String should have at least 20 characters"
         in response.json()["detail"]
@@ -192,7 +192,7 @@ def test_create_request_letters_validation(client, db_session):
     }
 
     response = client.post("/api/v1/requests", json=payload)
-    assert response.status_code == 400
+    assert response.status_code == 422
 
     body = response.json()
 
