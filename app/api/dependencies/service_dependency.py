@@ -1,4 +1,5 @@
 # app/api/dependencies/service_dependency.py
+
 from fastapi import Depends
 
 from app.api.dependencies.repository_dependency import (
@@ -9,6 +10,7 @@ from app.api.dependencies.repository_dependency import (
     get_user_repository,
 )
 from app.services import (
+    AuthService,
     HealthService,
     RequestService,
     RequestSubtypeService,
@@ -19,6 +21,10 @@ from app.services import (
 
 def get_user_service(repo=Depends(get_user_repository)):
     return UserService(repo)
+
+
+def get_auth_service(repo=Depends(get_user_repository)):
+    return AuthService(repo)
 
 
 def get_health_service(repo=Depends(get_health_repository)):
