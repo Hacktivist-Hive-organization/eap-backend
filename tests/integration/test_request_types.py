@@ -1,11 +1,11 @@
-from tests.integration.helpers import seed_types_and_subtypes
+from app.core.config import settings
+
+API_PREFIX = f"{settings.API_V1_PREFIX}/types"
 
 
-def test_get_all_types(client, db_session):
+def test_get_all_types(client, seeded_request_types):
 
-    seed_types_and_subtypes(db_session)
-
-    response = client.get("/api/v1/types")
+    response = client.get(f"{API_PREFIX}")
 
     assert response.status_code == 200
     assert len(response.json()) >= 1
