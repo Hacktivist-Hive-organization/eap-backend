@@ -2,8 +2,11 @@ import os
 
 import pytest
 
-from app.common.enums import Priority, Status
-from tests.integration.helpers import seed_types_and_subtypes, seed_user
+from app.common.enums import Status
+from app.core.config import settings
+from app.main import app
+
+API_PREFIX = f"{settings.API_V1_PREFIX}/requests"
 
 pytestmark = pytest.mark.skipif(
     os.getenv("CI") == "true",
@@ -11,10 +14,10 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_get_request_details_success(client, db_session):
-    data = seed_types_and_subtypes(db_session)
-    users = seed_user(db_session)
-
+def test_get_request_details_success(client, seeded_request_types, users, auth_as):
+    data = seeded_request_types
+    owner = users["user1"]
+    auth_as(owner)
     # Create request
     payload = {
         "type_id": data["hardware"].id,
@@ -23,16 +26,16 @@ def test_get_request_details_success(client, db_session):
         "description": "Need a laptop with 32GB RAM for development work.",
         "business_justification": "Current machine cannot run required tools.",
         "priority": "medium",
-        "requester_id": users["user1"].id,
+        "requester_id": owner.id,
     }
 
-    create_response = client.post("/api/v1/requests", json=payload)
+    create_response = client.post(f"{API_PREFIX}", json=payload)
     assert create_response.status_code == 200
 
     request_id = create_response.json()["id"]
 
     # Fetch request details
-    response = client.get(f"/api/v1/requests/{request_id}")
+    response = client.get(f"{API_PREFIX}/{request_id}")
 
     assert response.status_code == 200
     body = response.json()
@@ -42,27 +45,31 @@ def test_get_request_details_success(client, db_session):
     assert body["status"] == Status.DRAFT
 
     # requester info
-    assert body["requester"]["id"] == users["user1"].id
-    assert body["requester"]["email"] == users["user1"].email
+    assert body["requester"]["id"] == owner.id
+    assert body["requester"]["email"] == owner.email
 
     # timestamps
     assert body["created_at"] is not None
     assert body["updated_at"] is None
 
 
-def test_get_request_details_not_found(client):
-    response = client.get("/api/v1/requests/999999")
+def test_get_request_details_not_found(client, seeded_request_types, users, auth_as):
+    owner = users["user1"]
+    auth_as(owner)
 
+    response = client.get(f"{API_PREFIX}/999999")
     assert response.status_code == 404
     assert response.json() == {"detail": "Request not found"}
 
 
-@pytest.mark.skip(reason="Auth not implemented yet; current user is hardcoded")
-def test_get_request_details_forbidden(client, db_session):
-    data = seed_types_and_subtypes(db_session)
-    users = seed_user(db_session)
+def test_get_request_details_forbidden(client, seeded_request_types, users, auth_as):
+    data = seeded_request_types
+    owner = users["user1"]
+    other_user = users["user2"]
 
-    # Request owned by user1
+    # --- Owner creates request ---
+    auth_as(owner)
+
     payload = {
         "type_id": data["hardware"].id,
         "subtype_id": data["laptop"].id,
@@ -70,16 +77,16 @@ def test_get_request_details_forbidden(client, db_session):
         "description": "Need a laptop with 32GB RAM for development work.",
         "business_justification": "Current machine cannot run required tools.",
         "priority": "low",
-        "requester_id": users["user1"].id,
     }
 
-    response = client.post("/api/v1/requests", json=payload)
-    create_response = response.json()
-    request_id = create_response["id"]
+    create_response = client.post(API_PREFIX, json=payload)
+    assert create_response.status_code == 200
+    request_id = create_response.json()["id"]
 
-    #  Simulate another user (hardcoded user_id=1 logic mismatch)
-    #  we need to mock JWT user
-    response = client.get(f"/api/v1/requests/{request_id}")
+    # --- Switch auth context to another user ---
+    auth_as(other_user)
+    response = client.get(f"{API_PREFIX}/{request_id}")
 
     assert response.status_code == 403
     assert response.json() == {"detail": "Not authorized to view this request"}
+    app.dependency_overrides.clear()

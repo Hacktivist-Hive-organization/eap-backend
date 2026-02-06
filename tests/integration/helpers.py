@@ -33,9 +33,20 @@ def seed_user(db):
         is_active=True,
     )
 
-    db.add_all([user1])
+    user2 = DbUser(
+        email="user2@example.com",
+        first_name="User",
+        last_name="Two",
+        hashed_password="not_a_real_hash",
+        is_active=True,
+    )
+
+    db.add_all([user1, user2])
     db.commit()
+    db.refresh(user1)
+    db.refresh(user2)
 
     return {
         "user1": user1,
+        "user2": user2,
     }

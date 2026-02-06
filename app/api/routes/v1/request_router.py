@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
 
+from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import get_request_service
 from app.api.schemas.request_schema import (
     RequestCreateSchema,
@@ -10,17 +11,18 @@ from app.api.schemas.request_schema import (
     RequestResponseSchema,
 )
 from app.common.enums import Status
+from app.models import DbUser
 
 router = APIRouter(tags=["Requests"])
 
 
 @router.post("/", response_model=RequestResponseSchema)
 def create_request(
-    request_in: RequestCreateSchema, service=Depends(get_request_service)
+    request_in: RequestCreateSchema,
+    service=Depends(get_request_service),
+    current_user: DbUser = Depends(get_current_user),
 ):
-    request_in.requester_id = 1  # TODO:  here we should assign the current
-    # user id
-    return service.create_request(request_in)
+    return service.create_request(request_in, current_user.id)
 
 
 @router.get(
@@ -30,11 +32,12 @@ def create_request(
     response_model=List[RequestResponseListSchema],
 )
 def get_requests_by_user(
-    statuses: Optional[List[Status]] = Query(None), service=Depends(get_request_service)
+    statuses: Optional[List[Status]] = Query(None),
+    service=Depends(get_request_service),
+    current_user: DbUser = Depends(get_current_user),
 ):
-    user_id = 1  # TODO: here we should assign the current user id
     return service.get_requests_by_user(
-        user_id, [s.value for s in statuses] if statuses else None
+        current_user.id, [s.value for s in statuses] if statuses else None
     )
 
 
@@ -47,6 +50,6 @@ def get_requests_by_user(
 def get_request_details(
     request_id: int,
     service=Depends(get_request_service),
+    current_user: DbUser = Depends(get_current_user),
 ):
-    user_id = 1  # TODO: replace with current user from auth
-    return service.get_request_details(request_id, user_id)
+    return service.get_request_details(request_id, current_user.id)

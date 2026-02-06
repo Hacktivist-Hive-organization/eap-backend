@@ -2,8 +2,12 @@ import os
 
 import pytest
 
+from app.api.dependencies.security_dependencies import get_current_user
 from app.common.enums import Priority, Status
-from tests.integration.helpers import seed_types_and_subtypes, seed_user
+from app.core.config import settings
+from app.main import app
+
+API_PREFIX = f"{settings.API_V1_PREFIX}/requests"
 
 # Skip only with CI
 pytestmark = pytest.mark.skipif(
@@ -12,10 +16,12 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_create_draft_request_success(client, db_session):
+def test_create_draft_request_success(client, seeded_request_types, users, auth_as):
+    data = seeded_request_types
+    owner = users["user1"]
+    auth_as(owner)
 
-    data = seed_types_and_subtypes(db_session)
-    users = seed_user(db_session)
+    app.dependency_overrides[get_current_user] = lambda: owner
 
     payload = {
         "type_id": data["hardware"].id,
@@ -24,10 +30,9 @@ def test_create_draft_request_success(client, db_session):
         "description": "Laptop does not start properly and needs repair.",
         "business_justification": "Employee cannot work without laptop.",
         "priority": "high",
-        "requester_id": users["user1"].id,
     }
 
-    response = client.post("/api/v1/requests", json=payload)
+    response = client.post(f"{API_PREFIX}", json=payload)
 
     assert response.status_code == 200
 
@@ -39,7 +44,11 @@ def test_create_draft_request_success(client, db_session):
     assert body["updated_at"] is None
 
 
-def test_create_request_type_not_found(client, db_session):
+def test_create_request_type_not_found(client, seeded_request_types, users, auth_as):
+    owner = users["user1"]
+    auth_as(owner)
+
+    app.dependency_overrides[get_current_user] = lambda: owner
     payload = {
         "type_id": 999,
         "subtype_id": 1,
@@ -50,7 +59,7 @@ def test_create_request_type_not_found(client, db_session):
         "requester_id": 1,
     }
 
-    response = client.post("/api/v1/requests", json=payload)
+    response = client.post(f"{API_PREFIX}", json=payload)
 
     assert response.status_code == 400
     assert response.json() == {
@@ -58,10 +67,11 @@ def test_create_request_type_not_found(client, db_session):
     }
 
 
-def test_create_request_subtype_mismatch(client, db_session):
-
-    data = seed_types_and_subtypes(db_session)
-    users = seed_user(db_session)
+def test_create_request_subtype_mismatch(client, seeded_request_types, users, auth_as):
+    data = seeded_request_types
+    owner = users["user1"]
+    auth_as(owner)
+    app.dependency_overrides[get_current_user] = lambda: owner
 
     payload = {
         "type_id": data["hardware"].id,
@@ -73,17 +83,19 @@ def test_create_request_subtype_mismatch(client, db_session):
         "requester_id": users["user1"].id,
     }
 
-    response = client.post("/api/v1/requests", json=payload)
+    response = client.post(f"{API_PREFIX}", json=payload)
 
     assert response.status_code == 400
     assert "subtype mismatch" in response.json()["detail"]
 
 
-def test_create_request_invalid_priority(client, db_session):
-    """Test that invalid priority values are rejected by Pydantic validation"""
-    data = seed_types_and_subtypes(db_session)
-    users = seed_user(db_session)
+def test_create_request_invalid_priority(client, seeded_request_types, users, auth_as):
+    data = seeded_request_types
+    owner = users["user1"]
+    auth_as(owner)
+    app.dependency_overrides[get_current_user] = lambda: owner
 
+    """Test that invalid priority values are rejected by Pydantic validation"""
     payload = {
         "type_id": data["hardware"].id,
         "subtype_id": data["laptop"].id,
@@ -91,10 +103,9 @@ def test_create_request_invalid_priority(client, db_session):
         "description": "Laptop does not start properly and needs repair.",
         "business_justification": "Employee cannot work without laptop.",
         "priority": "URGENT",  # Invalid
-        "requester_id": users["user1"].id,
     }
 
-    response = client.post("/api/v1/requests", json=payload)
+    response = client.post(f"{API_PREFIX}", json=payload)
 
     assert response.status_code == 400
     assert (
@@ -103,22 +114,26 @@ def test_create_request_invalid_priority(client, db_session):
     )
 
 
-def test_create_request_status_defaults_to_draft(client, db_session):
-    """Test that status is defaulted to Draft if not provided"""
-    data = seed_types_and_subtypes(db_session)
-    users = seed_user(db_session)
+def test_create_request_status_defaults_to_draft(
+    client, seeded_request_types, users, auth_as
+):
+    data = seeded_request_types
+    owner = users["user1"]
+    auth_as(owner)
+    app.dependency_overrides[get_current_user] = lambda: owner
 
+    """Test that status is defaulted to Draft if not provided"""
     payload = {
         "type_id": data["hardware"].id,
         "subtype_id": data["laptop"].id,
         "title": "Install Zoom",
         "description": "Need Zoom installed on new laptop for remote meetings.",
         "business_justification": "Required for remote collaboration.",
-        "priority": "medium",  # Lowercase should still work because enum is string
+        "priority": "medium",
         "requester_id": users["user1"].id,
     }
 
-    response = client.post("/api/v1/requests", json=payload)
+    response = client.post(f"{API_PREFIX}", json=payload)
     body = response.json()
 
     assert response.status_code == 200
@@ -126,11 +141,14 @@ def test_create_request_status_defaults_to_draft(client, db_session):
     assert body["priority"] == Priority.MEDIUM
 
 
-def test_create_request_status_always_draft(client, db_session):
-    """Test that status is always Draft on create, even if FE sends another value"""
-    data = seed_types_and_subtypes(db_session)
-    users = seed_user(db_session)
+def test_create_request_status_always_draft(
+    client, seeded_request_types, users, auth_as
+):
+    data = seeded_request_types
+    owner = users["user1"]
+    auth_as(owner)
 
+    """Test that status is always Draft on create, even if FE sends another value"""
     payload = {
         "type_id": data["hardware"].id,
         "subtype_id": data["laptop"].id,
@@ -152,7 +170,10 @@ def test_create_request_status_always_draft(client, db_session):
     assert body["priority"] == Priority.HIGH
 
 
-def test_create_request_validation_error(client):
+def test_create_request_validation_error(client, seeded_request_types, users, auth_as):
+    owner = users["user1"]
+    auth_as(owner)
+
     payload = {
         "type_id": 1,
         "subtype_id": 1,
@@ -163,7 +184,7 @@ def test_create_request_validation_error(client):
         "requester_id": 1,
     }
 
-    response = client.post("/api/v1/requests", json=payload)
+    response = client.post(f"{API_PREFIX}", json=payload)
 
     assert response.status_code == 400
     assert (
@@ -172,14 +193,15 @@ def test_create_request_validation_error(client):
     )
 
 
-def test_create_request_letters_validation(client, db_session):
+def test_create_request_letters_validation(
+    client, seeded_request_types, users, auth_as
+):
+    data = seeded_request_types
+    owner = users["user1"]
+    auth_as(owner)
+    app.dependency_overrides[get_current_user] = lambda: owner
+
     """Ensure title, description, and business_justification include at least one letter"""
-    # Seed types/subtypes
-    from tests.integration.helpers import seed_types_and_subtypes
-
-    data = seed_types_and_subtypes(db_session)
-    users = seed_user(db_session)
-
     # Payload with numbers only (invalid)
     payload = {
         "type_id": data["hardware"].id,
@@ -191,7 +213,7 @@ def test_create_request_letters_validation(client, db_session):
         "requester_id": users["user1"].id,
     }
 
-    response = client.post("/api/v1/requests", json=payload)
+    response = client.post(f"{API_PREFIX}", json=payload)
     assert response.status_code == 400
 
     body = response.json()

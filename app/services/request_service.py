@@ -42,10 +42,10 @@ class RequestService:
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-    def create_request(self, request_in):
+    def create_request(self, request_in, current_user_id: int):
 
         self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)
-        return self.request_repo.create(request_in)
+        return self.request_repo.create(request_in, current_user_id)
 
     def get_requests_by_user(self, user_id: int, statuses: List[str]):
         return self.request_repo.get_requests_by_user(user_id, statuses)

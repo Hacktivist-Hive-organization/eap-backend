@@ -12,7 +12,7 @@ class RequestRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, request: DBRequest):
+    def create(self, request: DBRequest, current_user_id: int):
         db_request = DBRequest(
             type_id=request.type_id,
             subtype_id=request.subtype_id,
@@ -21,7 +21,7 @@ class RequestRepository:
             business_justification=request.business_justification,
             priority=request.priority,
             status=Status.DRAFT,
-            requester_id=request.requester_id,
+            requester_id=current_user_id,
         )
         self.db.add(db_request)
         self.db.commit()
