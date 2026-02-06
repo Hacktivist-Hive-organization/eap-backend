@@ -8,19 +8,17 @@
  - Connect pgAdmin to the postgres server as done in the tutorial.
    - Configure environment variables (Create a .env file (example)):
        - DATABASE_TYPE=postgresql  
-       - DATABASE_HOST=127.0.0.1  
        - DATABASE_HOST=eap-postgres-container (Docker containers can communicate by using each other's names if they both run on the same Docker network)  
-       - DATABASE_PORT=5432  
+       - DATABASE_PORT=5432 (We're already using the container as the host in the line above, so this is the container's port, which is still the default of 5432)  
        - DATABASE_USER=user1  
-       - DATABASE_PASSWORD=user123  
        - DATABASE_USER=postgres  
        - DATABASE_PASSWORD=12345  
-       - DATABASE_NAME=eap_db  
+       - DATABASE_NAME=postgres  
        - JWT_SECRET_KEY="my secret key"  
 
  - Run the following commands:
    - docker build -t eap_backend_image .   
-   - docker run --name another-eap-backend --network eap-docker-net -it -p 8000:8000 eap_backend_image
+   - docker run --name eap-backend --network eap-docker-net -it -p 8000:8000 eap_backend_image
    - Go to pgAdmin to confirm the database was created with the tables that are defined in the app.
 
 Note - The DB name itself does not matter. We can use the default DB name that's automatically generated when running
