@@ -1,4 +1,5 @@
 # app/api/v1/request_subtype_router.py
+
 from fastapi import APIRouter, Depends, Response
 
 from app.api.dependencies.service_dependency import get_request_subtype_service

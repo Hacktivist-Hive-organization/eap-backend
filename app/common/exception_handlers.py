@@ -19,6 +19,6 @@ def validation_exception_handler(request, exc: RequestValidationError):
     message = first_error["msg"]
 
     return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         content={"detail": f"{field_name}: {message}"},
     )

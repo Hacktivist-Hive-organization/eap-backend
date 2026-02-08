@@ -19,7 +19,7 @@ class AuthService:
 
     def register(
         self, email: str, password: str, first_name: str, last_name: str
-    ) -> tuple[str, "DbUser"]:
+    ) -> tuple[str, DbUser]:
 
         normalized_email = email.strip().lower()
 

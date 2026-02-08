@@ -1,4 +1,5 @@
 # app/services/request_type_service.py
+
 from fastapi import status
 
 from app.common.exceptions import BusinessException

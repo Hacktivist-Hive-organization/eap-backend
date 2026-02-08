@@ -1,4 +1,5 @@
 # app/common/exceptions.py
+
 from fastapi import status
 
 
