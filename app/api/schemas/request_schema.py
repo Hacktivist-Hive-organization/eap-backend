@@ -1,12 +1,16 @@
 # app/api/schemas/request_schema.py
+
 import re
 from datetime import datetime
+from typing import List
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.api.schemas.user_schema import UserResponse  # <-- единая схема
 from app.common.enums import Priority, Status
 
 
+# --- request input ---
 class RequestCreateSchema(BaseModel):
     type_id: int
     subtype_id: int
@@ -22,7 +26,7 @@ class RequestCreateSchema(BaseModel):
         return v
 
 
-# ------responses schema ---
+# --- response schemas ---
 class RequestTypeSchema(BaseModel):
     id: int
     name: str
@@ -39,16 +43,6 @@ class RequestSubtypeSchema(BaseModel):
         from_attributes = True
 
 
-class UserResponseSchema(BaseModel):
-    id: int
-    email: str
-    first_name: str
-    last_name: str
-
-    class ConfigDict:
-        from_attributes = True
-
-
 class RequestResponseSchema(BaseModel):
     id: int
     title: str
@@ -58,7 +52,7 @@ class RequestResponseSchema(BaseModel):
     business_justification: str
     type: RequestTypeSchema
     subtype: RequestSubtypeSchema
-    requester: UserResponseSchema
+    requester: UserResponse  # <-- единая схема
     created_at: datetime
     updated_at: datetime | None
 
@@ -73,7 +67,7 @@ class RequestResponseListSchema(BaseModel):
     status: Status
     type: RequestTypeSchema
     subtype: RequestSubtypeSchema
-    requester: UserResponseSchema
+    requester: UserResponse  # <-- единая схема
     created_at: datetime
     updated_at: datetime | None
 

@@ -1,4 +1,5 @@
 # app/api/routes/v1/request_type_router.py
+
 from typing import List
 
 from fastapi import APIRouter, Depends, Query
