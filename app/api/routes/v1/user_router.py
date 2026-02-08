@@ -1,3 +1,5 @@
+# app/api/routes/v1/user_router.py
+
 from fastapi import APIRouter, Depends
 from starlette import status
 
@@ -11,6 +13,7 @@ from app.api.schemas.user_schema import (
 )
 from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
+from app.models.db_user import DbUser
 from app.services.user_service import UserService
 
 router = APIRouter(
@@ -22,16 +25,16 @@ router = APIRouter(
 @router.get("/", response_model=list[UserResponse])
 def get_all_users(
     service: UserService = Depends(get_user_service),
-    current_user: UserBaseResponse = Depends(get_current_user),
+    current_user: DbUser = Depends(get_current_user),
 ):
     if current_user.role == UserRole.ADMIN:
         return service.get_all_users()
-    return [UserResponse.model_validate(current_user)]
+    return [current_user]
 
 
 @router.get("/me", response_model=UserBaseResponse)
 def get_me(
-    current_user: UserBaseResponse = Depends(get_current_user),
+    current_user: DbUser = Depends(get_current_user),
 ):
     return current_user
 
@@ -40,7 +43,7 @@ def get_me(
 def get_user_info(
     id: int,
     service: UserService = Depends(get_user_service),
-    current_user: UserBaseResponse = Depends(get_current_user),
+    current_user: DbUser = Depends(get_current_user),
 ):
     if current_user.role != UserRole.ADMIN and current_user.id != id:
         raise BusinessException(
@@ -54,7 +57,7 @@ def get_user_info(
 def update_current_user_profile(
     payload: UserSelfUpdateRequest,
     service: UserService = Depends(get_user_service),
-    current_user: UserBaseResponse = Depends(get_current_user),
+    current_user: DbUser = Depends(get_current_user),
 ):
     user_model = service.get_user_model_by_id(current_user.id)
     return service.update_current_user_profile(
@@ -68,7 +71,7 @@ def update_current_user_profile(
 def partially_update_current_user_profile(
     payload: UserSelfPartialUpdateRequest,
     service: UserService = Depends(get_user_service),
-    current_user: UserBaseResponse = Depends(get_current_user),
+    current_user: DbUser = Depends(get_current_user),
 ):
     user_model = service.get_user_model_by_id(current_user.id)
     return service.partially_update_current_user_profile(
