@@ -2,6 +2,7 @@ from fastapi import Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.api.dependencies.service_dependency import get_user_service
+from app.api.schemas.user_schema import UserBaseResponse
 from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
 from app.common.security import validate_token_payload, verify_token
@@ -13,7 +14,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     user_service: UserService = Depends(get_user_service),
-):
+) -> UserBaseResponse:
     if not credentials or credentials.scheme.lower() != "bearer":
         raise BusinessException(
             message="Authentication required",
@@ -23,11 +24,12 @@ def get_current_user(
     token = credentials.credentials
     payload = verify_token(token)
     user_id = validate_token_payload(payload)
+
     return user_service.get_user_by_id(user_id)
 
 
 def require_role(role: UserRole):
-    def checker(user=Depends(get_current_user)):
+    def checker(user: UserBaseResponse = Depends(get_current_user)):
         if user.role != role:
             raise BusinessException(
                 message="You do not have permission to perform this action",
@@ -39,7 +41,7 @@ def require_role(role: UserRole):
 
 
 def require_roles(*roles: UserRole):
-    def checker(user=Depends(get_current_user)):
+    def checker(user: UserBaseResponse = Depends(get_current_user)):
         if user.role not in roles:
             raise BusinessException(
                 message="You do not have permission to perform this action",
