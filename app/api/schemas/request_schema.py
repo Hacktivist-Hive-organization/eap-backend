@@ -6,7 +6,7 @@ from typing import List
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.api.schemas.user_schema import UserResponse  # <-- единая схема
+from app.api.schemas.user_schema import UserResponse
 from app.common.enums import Priority, Status
 
 
@@ -52,7 +52,7 @@ class RequestResponseSchema(BaseModel):
     business_justification: str
     type: RequestTypeSchema
     subtype: RequestSubtypeSchema
-    requester: UserResponse  # <-- единая схема
+    requester: UserResponse
     created_at: datetime
     updated_at: datetime | None
 
@@ -67,7 +67,7 @@ class RequestResponseListSchema(BaseModel):
     status: Status
     type: RequestTypeSchema
     subtype: RequestSubtypeSchema
-    requester: UserResponse  # <-- единая схема
+    requester: UserResponse
     created_at: datetime
     updated_at: datetime | None
 
