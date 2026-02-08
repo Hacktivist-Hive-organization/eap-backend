@@ -1,8 +1,7 @@
-# auth_service.py
+# app/services/auth_service.py
 
 from fastapi import status
 
-from app.api.schemas.user_schema import UserResponse
 from app.common.exceptions import BusinessException
 from app.common.security import create_access_token, hash_password, verify_password
 from app.common.utils import (
@@ -18,12 +17,9 @@ class AuthService:
     def __init__(self, repo: UserRepository):
         self.repo = repo
 
-    def _to_user_response(self, user: DbUser) -> UserResponse:
-        return UserResponse.model_validate(user)
-
     def register(
         self, email: str, password: str, first_name: str, last_name: str
-    ) -> tuple[str, UserResponse]:
+    ) -> tuple[str, DbUser]:
 
         normalized_email = email.strip().lower()
 
@@ -72,9 +68,9 @@ class AuthService:
         )
 
         token = create_access_token({"sub": str(user.id)})
-        return token, self._to_user_response(user)
+        return token, user
 
-    def login(self, email: str, password: str) -> tuple[str, UserResponse]:
+    def login(self, email: str, password: str) -> tuple[str, DbUser]:
 
         normalized_email = email.strip().lower()
 
@@ -93,4 +89,4 @@ class AuthService:
             )
 
         token = create_access_token({"sub": str(user.id)})
-        return token, self._to_user_response(user)
+        return token, user
