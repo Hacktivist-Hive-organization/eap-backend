@@ -11,7 +11,7 @@ from app.api.schemas.request_schema import (
     RequestResponseListSchema,
     RequestResponseSchema,
 )
-from app.api.schemas.user_schema import UserResponse
+from app.api.schemas.user_schema import AdminUserResponseSchema
 from app.common.enums import Status
 
 router = APIRouter(tags=["Requests"])
@@ -21,7 +21,7 @@ router = APIRouter(tags=["Requests"])
 def create_request(
     request_in: RequestCreateSchema,
     service=Depends(get_request_service),
-    current_user: UserResponse = Depends(get_current_user),
+    current_user: AdminUserResponseSchema = Depends(get_current_user),
 ):
     return service.create_request(request_in, current_user.id)
 
@@ -35,7 +35,7 @@ def create_request(
 def get_requests_by_user(
     statuses: Optional[List[Status]] = Query(None),
     service=Depends(get_request_service),
-    current_user: UserResponse = Depends(get_current_user),
+    current_user: AdminUserResponseSchema = Depends(get_current_user),
 ):
     return service.get_requests_by_user(
         current_user.id, [s.value for s in statuses] if statuses else None
@@ -51,6 +51,6 @@ def get_requests_by_user(
 def get_request_details(
     request_id: int,
     service=Depends(get_request_service),
-    current_user: UserResponse = Depends(get_current_user),
+    current_user: AdminUserResponseSchema = Depends(get_current_user),
 ):
     return service.get_request_details(request_id, current_user.id)

@@ -7,45 +7,45 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.common.enums import UserRole
 
 
-class UserRegisterRequest(BaseModel):
+class UserRegisterRequestSchema(BaseModel):
     email: str | None = None
     password: str | None = None
     first_name: str | None = None
     last_name: str | None = None
 
 
-class UserLoginRequest(BaseModel):
+class UserLoginRequestSchema(BaseModel):
     email: str
     password: str
 
 
-class UserSelfUpdateRequest(BaseModel):
+class UserSelfUpdateRequestSchema(BaseModel):
     first_name: str = Field(min_length=1)
     last_name: str = Field(min_length=1)
 
 
-class UserSelfPartialUpdateRequest(BaseModel):
+class UserSelfPartialUpdateRequestSchema(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
 
 
-class UserBaseResponse(BaseModel):
+class UserBaseResponseSchema(BaseModel):
     id: int
     email: str
     first_name: str
     last_name: str
-    is_active: bool
     role: UserRole
 
     model_config = ConfigDict(from_attributes=True)
 
 
-class UserResponse(UserBaseResponse):
+class AdminUserResponseSchema(UserBaseResponseSchema):
     created: datetime
     updated: datetime
+    is_active: bool
 
 
-class TokenResponse(BaseModel):
+class TokenResponseSchema(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    user: UserBaseResponse
+    user: UserBaseResponseSchema
