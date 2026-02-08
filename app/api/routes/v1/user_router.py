@@ -6,10 +6,10 @@ from starlette import status
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import get_user_service
 from app.api.schemas.user_schema import (
-    UserBaseResponse,
-    UserResponse,
-    UserSelfPartialUpdateRequest,
-    UserSelfUpdateRequest,
+    AdminUserResponseSchema,
+    UserBaseResponseSchema,
+    UserSelfPartialUpdateRequestSchema,
+    UserSelfUpdateRequestSchema,
 )
 from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
@@ -22,7 +22,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[UserResponse])
+@router.get("/", response_model=list[AdminUserResponseSchema])
 def get_all_users(
     service: UserService = Depends(get_user_service),
     current_user: DbUser = Depends(get_current_user),
@@ -32,14 +32,14 @@ def get_all_users(
     return [current_user]
 
 
-@router.get("/me", response_model=UserBaseResponse)
+@router.get("/me", response_model=UserBaseResponseSchema)
 def get_me(
     current_user: DbUser = Depends(get_current_user),
 ):
     return current_user
 
 
-@router.get("/{id}", response_model=UserBaseResponse)
+@router.get("/{id}", response_model=UserBaseResponseSchema)
 def get_user_info(
     id: int,
     service: UserService = Depends(get_user_service),
@@ -53,9 +53,9 @@ def get_user_info(
     return service.get_user_by_id(user_id=id)
 
 
-@router.put("/me", response_model=UserBaseResponse)
+@router.put("/me", response_model=UserBaseResponseSchema)
 def update_current_user_profile(
-    payload: UserSelfUpdateRequest,
+    payload: UserSelfUpdateRequestSchema,
     service: UserService = Depends(get_user_service),
     current_user: DbUser = Depends(get_current_user),
 ):
@@ -67,9 +67,9 @@ def update_current_user_profile(
     )
 
 
-@router.patch("/me", response_model=UserBaseResponse)
+@router.patch("/me", response_model=UserBaseResponseSchema)
 def partially_update_current_user_profile(
-    payload: UserSelfPartialUpdateRequest,
+    payload: UserSelfPartialUpdateRequestSchema,
     service: UserService = Depends(get_user_service),
     current_user: DbUser = Depends(get_current_user),
 ):
