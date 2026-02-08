@@ -2,13 +2,11 @@
 
 from fastapi import APIRouter, Depends, status
 
-from app.api.dependencies.service_dependency import get_auth_service, get_user_service
+from app.api.dependencies.service_dependency import get_auth_service
 from app.api.schemas.user_schema import (
     TokenResponse,
-    UserBaseResponse,
     UserLoginRequest,
     UserRegisterRequest,
-    UserResponse,
 )
 from app.services.auth_service import AuthService
 
@@ -21,7 +19,8 @@ router = APIRouter(prefix="", tags=["Authentication"])
     status_code=status.HTTP_201_CREATED,
 )
 def register(
-    data: UserRegisterRequest, service: AuthService = Depends(get_auth_service)
+    data: UserRegisterRequest,
+    service: AuthService = Depends(get_auth_service),
 ):
     token, user = service.register(
         email=str(data.email),
@@ -29,10 +28,7 @@ def register(
         first_name=data.first_name,
         last_name=data.last_name,
     )
-    return TokenResponse(
-        access_token=token,
-        user=UserResponse.model_validate(user),
-    )
+    return TokenResponse(access_token=token, user=user)
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -40,8 +36,8 @@ def login(
     data: UserLoginRequest,
     service: AuthService = Depends(get_auth_service),
 ):
-    token, user = service.login(email=str(data.email), password=data.password)
-    return TokenResponse(
-        access_token=token,
-        user=UserResponse.model_validate(user),
+    token, user = service.login(
+        email=str(data.email),
+        password=data.password,
     )
+    return TokenResponse(access_token=token, user=user)
