@@ -6,7 +6,7 @@ from app.api.dependencies.service_dependency import get_auth_service
 from app.api.schemas.user_schema import (
     TokenResponseSchema,
     UserLoginRequestSchema,
-    UserRegisterRequest,
+    UserRegisterRequestSchema,
 )
 from app.services.auth_service import AuthService
 
@@ -19,7 +19,7 @@ router = APIRouter(prefix="", tags=["Authentication"])
     status_code=status.HTTP_201_CREATED,
 )
 def register(
-    data: UserRegisterRequest,
+    data: UserRegisterRequestSchema,
     service: AuthService = Depends(get_auth_service),
 ):
     token, user = service.register(

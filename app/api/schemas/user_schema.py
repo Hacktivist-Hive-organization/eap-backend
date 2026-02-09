@@ -34,7 +34,6 @@ class UserBaseResponseSchema(BaseModel):
     email: str
     first_name: str
     last_name: str
-    is_active: bool
     role: UserRole
 
     model_config = ConfigDict(from_attributes=True)

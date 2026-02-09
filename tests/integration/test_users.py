@@ -68,7 +68,7 @@ def test_get_all_users_as_admin(client, db_session):
 def test_get_all_users_as_non_admin(client):
     headers = register_and_login(client, "single@example.com")
     response = client.get(f"{API_PREFIX}/", headers=headers)
-    assert response.status_code == 200
+    assert response.status_code == 403
     assert len(response.json()) == 1
 
 

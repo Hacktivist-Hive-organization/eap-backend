@@ -25,21 +25,38 @@ class UserService:
 
     def update_current_user_profile(
         self,
-        current_user: DbUser,
+        user_id: int,
         first_name: str,
         last_name: str,
     ) -> DbUser:
-        current_user.first_name = first_name
-        current_user.last_name = last_name
-        return self.repo.update_user(current_user)
+        user = self.repo.get_user(user_id=user_id)
+        if not user:
+            raise BusinessException(
+                message="User not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        user.first_name = first_name
+        user.last_name = last_name
+
+        return self.repo.update_user(user)
 
     def partially_update_current_user_profile(
         self,
-        current_user: DbUser,
+        user_id: int,
         data: dict,
     ) -> DbUser:
-        if "first_name" in data and data["first_name"]:
-            current_user.first_name = data["first_name"]
-        if "last_name" in data and data["last_name"]:
-            current_user.last_name = data["last_name"]
-        return self.repo.update_user(current_user)
+        user = self.repo.get_user(user_id=user_id)
+        if not user:
+            raise BusinessException(
+                message="User not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        if "first_name" in data:
+            user.first_name = data["first_name"]
+
+        if "last_name" in data:
+            user.last_name = data["last_name"]
+
+        return self.repo.update_user(user)
