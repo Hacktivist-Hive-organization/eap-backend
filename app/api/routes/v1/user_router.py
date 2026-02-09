@@ -63,9 +63,8 @@ def update_current_user_profile(
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    user_model = service.get_user_by_id(current_user.id)
     return service.update_current_user_profile(
-        current_user=user_model,
+        user_id=current_user.id,
         first_name=payload.first_name,
         last_name=payload.last_name,
     )
@@ -77,8 +76,7 @@ def partially_update_current_user_profile(
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    user_model = service.get_user_by_id(current_user.id)
     return service.partially_update_current_user_profile(
-        current_user=user_model,
+        user_id=current_user.id,
         data=payload.model_dump(exclude_unset=True),
     )
