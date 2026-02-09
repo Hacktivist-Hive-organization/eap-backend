@@ -13,6 +13,7 @@ from app.api.schemas.user_schema import (
 )
 from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
+from app.models.security_models import CurrentUser
 from app.services.user_service import UserService
 
 router = APIRouter(
@@ -24,25 +25,27 @@ router = APIRouter(
 @router.get("/", response_model=list[AdminUserResponseSchema])
 def get_all_users(
     service: UserService = Depends(get_user_service),
-    current_user: AdminUserResponseSchema = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     if current_user.role == UserRole.ADMIN:
         return service.get_all_users()
-    return [current_user]
+    user = service.get_user_by_id(current_user.id)
+    return [user]
 
 
 @router.get("/me", response_model=UserBaseResponseSchema)
 def get_me(
-    current_user: UserBaseResponseSchema = Depends(get_current_user),
+    service: UserService = Depends(get_user_service),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
-    return current_user
+    return service.get_user_by_id(current_user.id)
 
 
 @router.get("/{id}", response_model=AdminUserResponseSchema)
 def get_user_info(
     id: int,
     service: UserService = Depends(get_user_service),
-    current_user: AdminUserResponseSchema = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     if current_user.role != UserRole.ADMIN and current_user.id != id:
         raise BusinessException(
@@ -56,7 +59,7 @@ def get_user_info(
 def update_current_user_profile(
     payload: UserSelfUpdateRequestSchema,
     service: UserService = Depends(get_user_service),
-    current_user: UserBaseResponseSchema = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     user_model = service.get_user_by_id(current_user.id)
     return service.update_current_user_profile(
@@ -70,7 +73,7 @@ def update_current_user_profile(
 def partially_update_current_user_profile(
     payload: UserSelfPartialUpdateRequestSchema,
     service: UserService = Depends(get_user_service),
-    current_user: UserBaseResponseSchema = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     user_model = service.get_user_by_id(current_user.id)
     return service.partially_update_current_user_profile(
