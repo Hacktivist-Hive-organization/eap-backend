@@ -29,8 +29,10 @@ def get_all_users(
 ):
     if current_user.role == UserRole.ADMIN:
         return service.get_all_users()
-    user = service.get_user_by_id(current_user.id)
-    return [user]
+    raise BusinessException(
+        message="You do not have permission to access this user",
+        status_code=status.HTTP_403_FORBIDDEN,
+    )
 
 
 @router.get("/me", response_model=UserBaseResponseSchema)
