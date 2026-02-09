@@ -7,7 +7,7 @@ from app.api.dependencies.service_dependency import get_user_service
 from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
 from app.common.security import validate_token_payload, verify_token
-from app.models.db_user import DbUser
+from app.models.security_models import CurrentUser
 from app.services.user_service import UserService
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -16,7 +16,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
     user_service: UserService = Depends(get_user_service),
-) -> DbUser:
+) -> CurrentUser:
     if not credentials or credentials.scheme.lower() != "bearer":
         raise BusinessException(
             message="Authentication required",
@@ -33,11 +33,14 @@ def get_current_user(
             message="User not found",
             status_code=status.HTTP_404_NOT_FOUND,
         )
-    return user
+    return CurrentUser(
+        id=user.id,
+        role=user.role,
+    )
 
 
 def require_role(role: UserRole):
-    def checker(user: DbUser = Depends(get_current_user)):
+    def checker(user: CurrentUser = Depends(get_current_user)):
         if user.role != role:
             raise BusinessException(
                 message="You do not have permission to perform this action",
@@ -49,7 +52,7 @@ def require_role(role: UserRole):
 
 
 def require_roles(*roles: UserRole):
-    def checker(user: DbUser = Depends(get_current_user)):
+    def checker(user: CurrentUser = Depends(get_current_user)):
         if user.role not in roles:
             raise BusinessException(
                 message="You do not have permission to perform this action",
