@@ -12,7 +12,7 @@ from app.api.schemas.request_schema import (
     RequestResponseSchema,
 )
 from app.common.enums import Status
-from app.models.security_models import CurrentUser
+from app.common.security_models import CurrentUser
 
 router = APIRouter(tags=["Requests"])
 

@@ -13,7 +13,7 @@ from app.api.schemas.user_schema import (
 )
 from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
-from app.models.security_models import CurrentUser
+from app.common.security_models import CurrentUser
 from app.services.user_service import UserService
 
 router = APIRouter(

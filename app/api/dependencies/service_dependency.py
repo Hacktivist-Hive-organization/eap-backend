@@ -9,6 +9,7 @@ from app.api.dependencies.repository_dependency import (
     get_request_type_repository,
     get_user_repository,
 )
+from app.infrastructure.email.manager import EmailManager
 from app.services import (
     AuthService,
     HealthService,
@@ -17,6 +18,10 @@ from app.services import (
     RequestTypeService,
     UserService,
 )
+
+
+def get_email_manager() -> EmailManager:
+    return EmailManager()
 
 
 def get_user_service(repo=Depends(get_user_repository)):
@@ -49,3 +54,7 @@ def get_request_type_service(repo=Depends(get_request_type_repository)):
 
 def get_request_subtype_service(repo=Depends(get_request_subtype_repository)):
     return RequestSubtypeService(repo)
+
+
+def get_email_manager() -> EmailManager:
+    return EmailManager()
