@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     APP_VERSION: str = APP_VERSION
     API_V1_PREFIX: str = API_V1_PREFIX
 
+    # Environment & Logging
+    APP_ENV: str = "development"  # development | production
+    LOG_LEVEL: str = "INFO"  # DEBUG | INFO | WARNING | ERROR
+
     # DATABASE
     DATABASE_TYPE: str
     DATABASE_HOST: str | None = None
