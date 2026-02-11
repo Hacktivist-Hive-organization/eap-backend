@@ -54,7 +54,3 @@ def get_request_type_service(repo=Depends(get_request_type_repository)):
 
 def get_request_subtype_service(repo=Depends(get_request_subtype_repository)):
     return RequestSubtypeService(repo)
-
-
-def get_email_manager() -> EmailManager:
-    return EmailManager()

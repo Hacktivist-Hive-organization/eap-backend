@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from app.api.dependencies.security_dependencies import get_current_user
+from app.api.dependencies.security_dependencies import get_current_user, require_role
 from app.api.dependencies.service_dependency import get_user_service
 from app.api.schemas.user_schema import (
     AdminUserResponseSchema,
@@ -25,14 +25,9 @@ router = APIRouter(
 @router.get("/", response_model=list[AdminUserResponseSchema])
 def get_all_users(
     service: UserService = Depends(get_user_service),
-    current_user: CurrentUser = Depends(get_current_user),
+    current_user: CurrentUser = Depends(require_role(UserRole.ADMIN)),
 ):
-    if current_user.role == UserRole.ADMIN:
-        return service.get_all_users()
-    raise BusinessException(
-        message="You do not have permission to access this user",
-        status_code=status.HTTP_403_FORBIDDEN,
-    )
+    return service.get_all_users()
 
 
 @router.get("/me", response_model=UserBaseResponseSchema)
