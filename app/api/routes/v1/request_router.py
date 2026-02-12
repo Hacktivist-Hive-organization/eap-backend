@@ -3,6 +3,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
+from starlette import status
 
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import get_request_service
