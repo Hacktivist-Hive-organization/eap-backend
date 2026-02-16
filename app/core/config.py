@@ -42,15 +42,17 @@ class Settings(BaseSettings):
     MIDDLEWARE_CORS: bool = True
     DEVELOPMENT_ENVIRONMENT: bool = False
 
-    # EMAIL
+    # Email
     EMAIL_SERVICE: str = "mailtrap"
 
+    # Sender
     MAIL_FROM_EMAIL: str | None = None
     MAIL_FROM_NAME: str | None = None
 
     # Mailtrap
     MAILTRAP_USER: str | None = None
     MAILTRAP_SMTP_PASSWORD: str | None = None
+
     MAILTRAP_SMTP_HOST: str | None = None
     MAILTRAP_SMTP_PORT: int = 587
     MAILTRAP_USE_TLS: bool = True
