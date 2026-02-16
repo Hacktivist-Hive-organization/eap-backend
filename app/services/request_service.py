@@ -4,6 +4,7 @@ from typing import List
 
 from fastapi import status
 
+from app.common.enums import Status
 from app.common.exceptions import BusinessException
 from app.repositories import (
     RequestRepository,
@@ -48,7 +49,7 @@ class RequestService:
         self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)
         return self.request_repo.create(request_in, current_user_id)
 
-    def get_requests_by_user(self, user_id: int, statuses: List[str]):
+    def get_requests_by_user(self, user_id: int, statuses: List[Status]):
         return self.request_repo.get_requests_by_user(user_id, statuses)
 
     def get_request_details(self, request_id: int, user_id: int):

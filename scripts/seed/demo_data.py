@@ -11,22 +11,32 @@ from app.models.db_request_type import DBRequestType
 
 def seed_demo_data():
     db = SessionLocal()
+
     # -----------------------
     # Demo user
     # -----------------------
-    if db.query(DbUser).filter(DbUser.email == "user1@example.com").count() > 0:
-        return
-
-    user1 = DbUser(
-        email="user1@example.com",
-        first_name="User",
-        last_name="One",
-        hashed_password=hash_password("user123!"),
-        is_active=True,
-    )
-
-    db.add_all([user1])
-    db.commit()
+    if db.query(DbUser).filter(DbUser.email == "user1@example.com").count() == 0:
+        user1 = DbUser(
+            email="user1@example.com",
+            first_name="User",
+            last_name="One",
+            hashed_password=hash_password("user123!"),
+            role=UserRole.REQUESTER,
+            is_active=True,
+        )
+        user2 = DbUser(
+            email="user2@example.com",
+            first_name="User",
+            last_name="Two",
+            hashed_password=hash_password("user456!"),
+            role=UserRole.APPROVER,
+            is_active=True,
+        )
+        db.add_all([user1, user2])
+        db.commit()
+    else:
+        user1 = db.query(DbUser).filter(DbUser.email == "user1@example.com").first()
+        user2 = db.query(DbUser).filter(DbUser.email == "user2@example.com").first()
 
     # -----------------------
     # Demo requests
@@ -103,3 +113,8 @@ def seed_demo_data():
 
     db.add_all(demo_requests)
     db.commit()
+
+    print("Seeded demo users and requests successfully.")
+    print("User credentials for login:")
+    print(" - Email: user1@example.com / Password: user123!")
+    print(" - Email: user2@example.com / Password: user456!")

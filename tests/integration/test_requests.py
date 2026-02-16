@@ -18,7 +18,6 @@ def test_create_draft_request_success(client, seeded_request_types, users, auth_
     data = seeded_request_types
     owner = users["user1"]
     auth_as(owner)
-
     payload = {
         "type_id": data["hardware"].id,
         "subtype_id": data["laptop"].id,
@@ -30,14 +29,14 @@ def test_create_draft_request_success(client, seeded_request_types, users, auth_
 
     response = client.post(f"{API_PREFIX}", json=payload)
 
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     body = response.json()
 
     assert body["current_status"] == Status.DRAFT
     assert body["type"]["name"] == "Hardware"
     assert body["subtype"]["name"] == "Laptop"
-    assert body["updated_at"] is None
+    assert body["updated_at"] is not None
 
 
 def test_create_request_type_not_found(client, seeded_request_types, users, auth_as):
@@ -128,7 +127,7 @@ def test_create_request_status_defaults_to_draft(
     response = client.post(f"{API_PREFIX}", json=payload)
     body = response.json()
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert body["current_status"] == Status.DRAFT
     assert body["priority"] == Priority.MEDIUM
 
@@ -155,7 +154,7 @@ def test_create_request_status_always_draft(
     response = client.post("/api/v1/requests", json=payload)
     body = response.json()
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     # Status is always Draft
     assert body["current_status"] == Status.DRAFT
     # Priority is accepted correctly

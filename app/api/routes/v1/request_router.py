@@ -19,7 +19,9 @@ from app.models.security_models import CurrentUser
 router = APIRouter(tags=["Requests"])
 
 
-@router.post("/", response_model=RequestResponseSchema)
+@router.post(
+    "/", response_model=RequestResponseSchema, status_code=status.HTTP_201_CREATED
+)
 def create_request(
     request_in: RequestCreateSchema,
     service=Depends(get_request_service),

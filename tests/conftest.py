@@ -8,9 +8,11 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import get_user_service
+from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
 from app.main import app
+from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
 from tests.integration.helpers import seed_types_and_subtypes, seed_user
@@ -90,3 +92,75 @@ def auth_as():
 
     yield _auth
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def valid_request_payload(seeded_request_types):
+    """
+    Returns a factory function to generate valid request payloads.
+    Usage:
+        payload = valid_request_payload(title="My Request", status=Status.DRAFT)
+    """
+
+    def _factory(title="Default Title", status=Status.DRAFT):
+        data = seeded_request_types
+        return {
+            "type_id": data["hardware"].id,
+            "subtype_id": data["laptop"].id,
+            "title": title,
+            "description": "This is a valid description with at least 20 chars",
+            "business_justification": "Business justification is long enough for validation",
+            "priority": "medium",
+            "status": status.value,
+        }
+
+    return _factory
+
+
+@pytest.fixture
+def seeded_requests_for_user(db_session, users, seeded_request_types):
+    """
+    Seeds multiple requests with different statuses
+    for user1. Returns created requests.
+    """
+
+    owner = users["user1"]
+    data = seeded_request_types
+
+    requests = [
+        DBRequest(
+            type_id=data["hardware"].id,
+            subtype_id=data["laptop"].id,
+            title="Draft Req",
+            description="Valid description long enough",
+            business_justification="Valid justification long enough",
+            priority=Priority.MEDIUM,
+            status=Status.DRAFT,
+            requester_id=owner.id,
+        ),
+        DBRequest(
+            type_id=data["hardware"].id,
+            subtype_id=data["laptop"].id,
+            title="Submitted Req",
+            description="Valid description long enough",
+            business_justification="Valid justification long enough",
+            priority=Priority.MEDIUM,
+            status=Status.SUBMITTED,
+            requester_id=owner.id,
+        ),
+        DBRequest(
+            type_id=data["hardware"].id,
+            subtype_id=data["laptop"].id,
+            title="Approved Req",
+            description="Valid description long enough",
+            business_justification="Valid justification long enough",
+            priority=Priority.MEDIUM,
+            status=Status.APPROVED,
+            requester_id=owner.id,
+        ),
+    ]
+
+    db_session.add_all(requests)
+    db_session.commit()
+
+    return requests
