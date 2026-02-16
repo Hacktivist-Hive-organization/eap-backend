@@ -14,23 +14,17 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_get_request_details_success(client, seeded_request_types, users, auth_as):
+def test_get_request_details_success(
+    client, seeded_request_types, users, auth_as, valid_request_payload
+):
     data = seeded_request_types
     owner = users["user1"]
     auth_as(owner)
     # Create request
-    payload = {
-        "type_id": data["hardware"].id,
-        "subtype_id": data["laptop"].id,
-        "title": "New laptop",
-        "description": "Need a laptop with 32GB RAM for development work.",
-        "business_justification": "Current machine cannot run required tools.",
-        "priority": "medium",
-        "requester_id": owner.id,
-    }
+    payload = valid_request_payload(title="New laptop")
 
     create_response = client.post(f"{API_PREFIX}", json=payload)
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
 
     request_id = create_response.json()["id"]
 
@@ -50,7 +44,7 @@ def test_get_request_details_success(client, seeded_request_types, users, auth_a
 
     # timestamps
     assert body["created_at"] is not None
-    assert body["updated_at"] is None
+    assert body["updated_at"] is not None
 
 
 def test_get_request_details_not_found(client, seeded_request_types, users, auth_as):
@@ -62,25 +56,19 @@ def test_get_request_details_not_found(client, seeded_request_types, users, auth
     assert response.json() == {"detail": "Request not found"}
 
 
-def test_get_request_details_forbidden(client, seeded_request_types, users, auth_as):
+def test_get_request_details_forbidden(
+    client, seeded_request_types, users, auth_as, valid_request_payload
+):
     data = seeded_request_types
     owner = users["user1"]
     other_user = users["user2"]
 
     # --- Owner creates request ---
     auth_as(owner)
-
-    payload = {
-        "type_id": data["hardware"].id,
-        "subtype_id": data["laptop"].id,
-        "title": "Private request",
-        "description": "Need a laptop with 32GB RAM for development work.",
-        "business_justification": "Current machine cannot run required tools.",
-        "priority": "low",
-    }
+    payload = valid_request_payload(title="Private request")
 
     create_response = client.post(API_PREFIX, json=payload)
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
     request_id = create_response.json()["id"]
 
     # --- Switch auth context to another user ---
