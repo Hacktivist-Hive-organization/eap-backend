@@ -47,7 +47,7 @@ class RequestResponseSchema(BaseModel):
     id: int
     title: str
     priority: Priority
-    status: Status
+    current_status: Status
     description: str
     business_justification: str
     type: RequestTypeSchema
@@ -64,7 +64,7 @@ class RequestResponseListSchema(BaseModel):
     id: int
     title: str
     priority: Priority
-    status: Status
+    current_status: Status
     type: RequestTypeSchema
     subtype: RequestSubtypeSchema
     requester: AdminUserResponseSchema

@@ -21,7 +21,7 @@ class RequestRepository:
             description=request.description,
             business_justification=request.business_justification,
             priority=request.priority,
-            status=Status.DRAFT,
+            current_status=Status.DRAFT,
             requester_id=current_user_id,
         )
         self.db.add(db_request)
@@ -32,7 +32,7 @@ class RequestRepository:
     def get_requests_by_user(self, user_id: int, statuses: List[str]):
         query = self.db.query(DBRequest).filter(DBRequest.requester_id == user_id)
         if statuses:
-            query = query.filter(DBRequest.status.in_(statuses))
+            query = query.filter(DBRequest.current_status.in_(statuses))
         return query.order_by(DBRequest.created_at.desc()).all()
 
     def get_request_details(self, request_id: int):
@@ -45,4 +45,15 @@ class RequestRepository:
             )
             .filter(DBRequest.id == request_id)
             .first()
+        )
+
+    def is_request_owned_by_user(self, request_id: int, user_id: int) -> bool:
+        return (
+            self.db.query(DBRequest.id)
+            .filter(
+                DBRequest.id == request_id,
+                DBRequest.requester_id == user_id
+            )
+            .first()
+            is not None
         )

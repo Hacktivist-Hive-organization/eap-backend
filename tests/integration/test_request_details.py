@@ -42,7 +42,7 @@ def test_get_request_details_success(client, seeded_request_types, users, auth_a
 
     assert body["id"] == request_id
     assert body["title"] == payload["title"]
-    assert body["status"] == Status.DRAFT
+    assert body["current_status"] == Status.DRAFT
 
     # requester info
     assert body["requester"]["id"] == owner.id

@@ -6,7 +6,6 @@ from sqlalchemy.engine import URL
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
-from app.database.base import Base
 
 
 # -------------------------------------------------

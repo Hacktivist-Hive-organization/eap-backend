@@ -2,10 +2,8 @@ import os
 
 import pytest
 
-from app.api.dependencies.security_dependencies import get_current_user
 from app.common.enums import Priority, Status
 from app.core.config import settings
-from app.main import app
 
 API_PREFIX = f"{settings.API_V1_PREFIX}/requests"
 
@@ -36,7 +34,7 @@ def test_create_draft_request_success(client, seeded_request_types, users, auth_
 
     body = response.json()
 
-    assert body["status"] == Status.DRAFT
+    assert body["current_status"] == Status.DRAFT
     assert body["type"]["name"] == "Hardware"
     assert body["subtype"]["name"] == "Laptop"
     assert body["updated_at"] is None
@@ -131,7 +129,7 @@ def test_create_request_status_defaults_to_draft(
     body = response.json()
 
     assert response.status_code == 200
-    assert body["status"] == Status.DRAFT
+    assert body["current_status"] == Status.DRAFT
     assert body["priority"] == Priority.MEDIUM
 
 
@@ -150,7 +148,7 @@ def test_create_request_status_always_draft(
         "description": "Need Zoom installed on new laptop for remote meetings.",
         "business_justification": "Required for remote collaboration.",
         "priority": "high",
-        "status": "submitted",  # FE tries to override
+        "current_status": "submitted",  # FE tries to override
         "requester_id": users["user1"].id,
     }
 
@@ -159,7 +157,7 @@ def test_create_request_status_always_draft(
 
     assert response.status_code == 200
     # Status is always Draft
-    assert body["status"] == Status.DRAFT
+    assert body["current_status"] == Status.DRAFT
     # Priority is accepted correctly
     assert body["priority"] == Priority.HIGH
 
