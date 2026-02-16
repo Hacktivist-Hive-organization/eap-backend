@@ -3,9 +3,8 @@ from fastapi import APIRouter
 from app.api.routes.v1.auth_router import router as auth_router
 from app.api.routes.v1.health_router import router as health_router
 from app.api.routes.v1.request_router import router as request_router
-from app.api.routes.v1.request_tracking_router import  router as tracking_router
-
 from app.api.routes.v1.request_subtype_router import router as subtype_router
+from app.api.routes.v1.request_tracking_router import router as tracking_router
 from app.api.routes.v1.request_type_router import router as type_router
 from app.api.routes.v1.user_router import router as user_router
 

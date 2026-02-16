@@ -50,10 +50,7 @@ class RequestRepository:
     def is_request_owned_by_user(self, request_id: int, user_id: int) -> bool:
         return (
             self.db.query(DBRequest.id)
-            .filter(
-                DBRequest.id == request_id,
-                DBRequest.requester_id == user_id
-            )
+            .filter(DBRequest.id == request_id, DBRequest.requester_id == user_id)
             .first()
             is not None
         )

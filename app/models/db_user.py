@@ -27,5 +27,7 @@ class DbUser(TimestampMixin, Base):
     )
 
     req_tracking = relationship(
-        "DBRequestTracking", foreign_keys="[DBRequestTracking.user_id]", back_populates="user"
+        "DBRequestTracking",
+        foreign_keys="[DBRequestTracking.user_id]",
+        back_populates="user",
     )

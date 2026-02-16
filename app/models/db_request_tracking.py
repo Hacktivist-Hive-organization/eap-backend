@@ -21,6 +21,4 @@ class DBRequestTracking(Base):
         "DBRequest", foreign_keys=[request_id], back_populates="req_tracking"
     )
 
-    user = relationship(
-        "DbUser", foreign_keys=[user_id], back_populates="req_tracking"
-    )
+    user = relationship("DbUser", foreign_keys=[user_id], back_populates="req_tracking")

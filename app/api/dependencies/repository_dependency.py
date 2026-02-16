@@ -5,9 +5,9 @@ from app.repositories import (
     HealthRepository,
     RequestRepository,
     RequestSubtypeRepository,
+    RequestTrackingRepository,
     RequestTypeRepository,
     UserRepository,
-    RequestTrackingRepository
 )
 
 
@@ -29,6 +29,7 @@ def get_request_type_repository(db: DBSession):
 
 def get_request_subtype_repository(db: DBSession):
     return RequestSubtypeRepository(db)
+
 
 def get_request_tracking_repository(db: DBSession):
     return RequestTrackingRepository(db)

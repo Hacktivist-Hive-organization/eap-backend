@@ -10,6 +10,7 @@ from app.models.security_models import CurrentUser
 
 router = APIRouter(tags=["Request tracking"])
 
+
 @router.get(
     "/{id}",
     summary="Get request tracking for specific request",
@@ -18,5 +19,6 @@ router = APIRouter(tags=["Request tracking"])
 def get_request_tracking_by_request_id(
     id: int,
     service=Depends(get_request_tracking_service),
-    current_user: CurrentUser = Depends(get_current_user)):
+    current_user: CurrentUser = Depends(get_current_user),
+):
     return service.get_request_tracking_by_request_id(id, current_user.id)

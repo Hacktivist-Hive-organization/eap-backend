@@ -5,6 +5,7 @@ from sqlalchemy.orm import relationship, validates
 from app.common.enums import Priority, Status
 from app.database.base import Base
 
+
 class DBRequest(Base):
     __tablename__ = "requests"
 
@@ -42,5 +43,7 @@ class DBRequest(Base):
     )
 
     req_tracking = relationship(
-        "DBRequestTracking", foreign_keys="[DBRequestTracking.request_id]", back_populates="request"
+        "DBRequestTracking",
+        foreign_keys="[DBRequestTracking.request_id]",
+        back_populates="request",
     )
