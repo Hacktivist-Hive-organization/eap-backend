@@ -65,28 +65,15 @@ def test_get_my_requests_single_status(client, users, auth_as, valid_request_pay
     assert body[0]["status"] == Status.DRAFT
 
 
-@pytest.mark.skip(reason="for now we are able to create only draft requests")
 def test_get_my_requests_multiple_statuses(
-    client, users, auth_as, valid_request_payload
+    client, users, auth_as, seeded_requests_for_user
 ):
-    """User fetches requests filtered by multiple statuses"""
-    owner = users["user1"]
-    auth_as(owner)
+    auth_as(users["user1"])
 
-    # Create draft, submitted, approved requests
-    requests = [
-        ("Draft Req", Status.DRAFT),
-        ("Submitted Req", Status.SUBMITTED),
-        ("Approved Req", Status.APPROVED),
-    ]
-    for title, status in requests:
-        payload = valid_request_payload(title=title, status=status)
-        resp = client.post(f"{API_PREFIX}", json=payload)
-        assert resp.status_code == 201
-
-    # Filter draft + submitted
     response = client.get(f"{API_PREFIX}/my-requests?statuses=draft&statuses=submitted")
+
     assert response.status_code == 200
+
     titles = [r["title"] for r in response.json()]
 
     assert "Draft Req" in titles
