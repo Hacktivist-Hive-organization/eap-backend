@@ -50,12 +50,6 @@ class RequestService:
         return self.request_repo.create(request_in, current_user_id)
 
     def get_requests_by_user(self, user_id: int, statuses: List[Status]):
-        requests = self.request_repo.get_requests_by_user(user_id, statuses)
-        if len(requests) == 0:
-            raise BusinessException(
-                message="No requests founded",
-                status_code=status.HTTP_404_NOT_FOUND,
-            )
         return self.request_repo.get_requests_by_user(user_id, statuses)
 
     def get_request_details(self, request_id: int, user_id: int):

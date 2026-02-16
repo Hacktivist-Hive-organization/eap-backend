@@ -85,9 +85,9 @@ def test_get_my_requests_empty_result(client, users, auth_as, seeded_requests_fo
 
     # requests approved, submitted , draft has been created, fetch in_progress
     response = client.get(f"{API_PREFIX}/my-requests?statuses=in_progress")
-    assert response.status_code == 404
+    assert response.status_code == 200
     body = response.json()
-    assert body["detail"] == "No requests founded"
+    assert body == []
 
 
 def test_get_my_requests_user_isolation(client, users, auth_as, valid_request_payload):
@@ -109,6 +109,6 @@ def test_get_my_requests_user_isolation(client, users, auth_as, valid_request_pa
     # Switch to other user, who hasn't created any requests yet
     auth_as(other_user)
     response_other = client.get(f"{API_PREFIX}/my-requests")
-    assert response_other.status_code == 404
+    assert response_other.status_code == 200
     body = response_other.json()
-    assert body["detail"] == "No requests founded"
+    assert body == []
