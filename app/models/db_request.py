@@ -29,8 +29,8 @@ class DBRequest(Base):
         Index(
             "ix_requests_dashboard",
             "requester_id",
-            "status",
-            "updated_at",
+            "current_status",
+            "created_at",
         ),
     )
 
