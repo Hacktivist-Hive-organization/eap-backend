@@ -56,63 +56,62 @@ def seed_demo_data():
         db.query(DBRequestSubtype).filter_by(name="Training/course enrollment").first()
     )
 
-    demo_requests = [
-        # Drafts (3)
-        DBRequest(
-            type_id=hardware.id,
-            subtype_id=laptop.id,
-            title="Request for new development laptop",
-            description="Draft request for a new laptop to support development work.",
-            business_justification="Will improve development performance and reliability.",
-            priority=Priority.HIGH,
-            current_status=Status.DRAFT,
-            requester_id=user1.id,
-        ),
-        DBRequest(
-            type_id=hardware.id,
-            subtype_id=monitor.id,
-            title="Additional monitor for workstation",
-            description="Considering a second monitor for better multitasking.",
-            business_justification="Improves productivity during development and reviews.",
-            priority=Priority.MEDIUM,
-            current_status=Status.DRAFT,
-            requester_id=user1.id,
-        ),
-        DBRequest(
-            type_id=software.id,
-            subtype_id=software_license.id,
-            title="IDE software license",
-            description="Draft request for a professional IDE license.",
-            business_justification="Advanced tooling speeds up development and debugging.",
-            priority=Priority.LOW,
-            current_status=Status.DRAFT,
-            requester_id=user1.id,
-        ),
-        # Submitted / non-draft (2)
-        DBRequest(
-            type_id=software.id,
-            subtype_id=vpn.id,
-            title="VPN access for remote work",
-            description="Need VPN access to securely connect to internal systems.",
-            business_justification="Required for secure remote access.",
-            priority=Priority.MEDIUM,
-            current_status=Status.SUBMITTED,
-            requester_id=user1.id,
-        ),
-        DBRequest(
-            type_id=services.id,
-            subtype_id=training.id,
-            title="Backend training course enrollment",
-            description="Request to attend an advanced backend architecture course.",
-            business_justification="Improves system scalability and team knowledge.",
-            priority=Priority.LOW,
-            current_status=Status.SUBMITTED,
-            requester_id=user1.id,
-        ),
-    ]
-
-    db.add_all(demo_requests)
-    db.commit()
+    # Only seed if there are no requests yet
+    if db.query(DBRequest).count() == 0:
+        demo_requests = [
+            # Draft
+            DBRequest(
+                type_id=hardware.id,
+                subtype_id=laptop.id,
+                title="Request for new development laptop",
+                description="Draft request for a new laptop to support development work.",
+                business_justification="Will improve development performance and reliability.",
+                priority=Priority.HIGH,
+                requester_id=user1.id,
+            ),
+            # Submitted
+            DBRequest(
+                type_id=software.id,
+                subtype_id=vpn.id,
+                title="VPN access for remote work",
+                description="Need VPN access to securely connect to internal systems.",
+                business_justification="Required for secure remote access.",
+                priority=Priority.MEDIUM,
+                requester_id=user1.id,
+            ),
+            # In Progress
+            DBRequest(
+                type_id=services.id,
+                subtype_id=training.id,
+                title="Backend training course enrollment",
+                description="Request to attend an advanced backend architecture course.",
+                business_justification="Improves system scalability and team knowledge.",
+                priority=Priority.LOW,
+                requester_id=user1.id,
+            ),
+            # Approved
+            DBRequest(
+                type_id=hardware.id,
+                subtype_id=monitor.id,
+                title="Additional monitor for workstation",
+                description="Considering a second monitor for better multitasking.",
+                business_justification="Improves productivity during development and reviews.",
+                priority=Priority.MEDIUM,
+                requester_id=user1.id,
+            ),
+            # Rejected
+            DBRequest(
+                type_id=software.id,
+                subtype_id=software_license.id,
+                title="IDE software license",
+                description="Draft request for a professional IDE license.",
+                business_justification="Advanced tooling speeds up development and debugging.",
+                priority=Priority.LOW,
+                requester_id=user1.id,
+            ),
+        ]
+        db.add_all(demo_requests)
+        db.commit()
 
     print("Seeded demo users and requests successfully.")
     print("User credentials for login:")

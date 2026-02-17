@@ -31,7 +31,7 @@ class DBRequest(Base):
             "ix_requests_dashboard",
             "requester_id",
             "current_status",
-            "created_at",
+            "updated_at",
         ),
     )
 

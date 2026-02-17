@@ -33,7 +33,7 @@ class RequestRepository:
         query = self.db.query(DBRequest).filter(DBRequest.requester_id == user_id)
         if statuses:
             query = query.filter(DBRequest.current_status.in_(statuses))
-        return query.order_by(DBRequest.created_at.desc()).all()
+        return query.order_by(DBRequest.updated_at.desc()).all()
 
     def get_request_details(self, request_id: int):
         return (
