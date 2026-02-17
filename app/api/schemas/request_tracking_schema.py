@@ -10,7 +10,6 @@ from app.common.enums import Status
 class RequestTrackingResponseSchema(BaseModel):
     id: int
     user: UserBaseResponseSchema
-    request: RequestResponseSchema
     comment: Optional[str] = None
     status: Status
 
