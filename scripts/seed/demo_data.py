@@ -13,7 +13,7 @@ def seed_demo_data():
     db = SessionLocal()
 
     # -----------------------
-    # Demo users
+    # Demo user
     # -----------------------
     if db.query(DbUser).filter(DbUser.email == "user1@example.com").count() == 0:
         user1 = DbUser(
@@ -41,6 +41,7 @@ def seed_demo_data():
     # -----------------------
     # Demo requests
     # -----------------------
+
     hardware = db.query(DBRequestType).filter_by(name="Hardware").first()
     software = db.query(DBRequestType).filter_by(name="Software & Access").first()
     services = db.query(DBRequestType).filter_by(name="Services & Facilities").first()
@@ -66,7 +67,6 @@ def seed_demo_data():
                 description="Draft request for a new laptop to support development work.",
                 business_justification="Will improve development performance and reliability.",
                 priority=Priority.HIGH,
-                status=Status.DRAFT,
                 requester_id=user1.id,
             ),
             # Submitted
@@ -77,7 +77,6 @@ def seed_demo_data():
                 description="Need VPN access to securely connect to internal systems.",
                 business_justification="Required for secure remote access.",
                 priority=Priority.MEDIUM,
-                status=Status.SUBMITTED,
                 requester_id=user1.id,
             ),
             # In Progress
@@ -88,7 +87,6 @@ def seed_demo_data():
                 description="Request to attend an advanced backend architecture course.",
                 business_justification="Improves system scalability and team knowledge.",
                 priority=Priority.LOW,
-                status=Status.IN_PROGRESS,
                 requester_id=user1.id,
             ),
             # Approved
@@ -99,7 +97,6 @@ def seed_demo_data():
                 description="Considering a second monitor for better multitasking.",
                 business_justification="Improves productivity during development and reviews.",
                 priority=Priority.MEDIUM,
-                status=Status.APPROVED,
                 requester_id=user1.id,
             ),
             # Rejected
@@ -110,7 +107,6 @@ def seed_demo_data():
                 description="Draft request for a professional IDE license.",
                 business_justification="Advanced tooling speeds up development and debugging.",
                 priority=Priority.LOW,
-                status=Status.REJECTED,
                 requester_id=user1.id,
             ),
         ]

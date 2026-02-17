@@ -6,6 +6,7 @@ from app.api.dependencies.repository_dependency import (
     get_health_repository,
     get_request_repository,
     get_request_subtype_repository,
+    get_request_tracking_repository,
     get_request_type_repository,
     get_user_repository,
 )
@@ -14,6 +15,7 @@ from app.services import (
     HealthService,
     RequestService,
     RequestSubtypeService,
+    RequestTrackingService,
     RequestTypeService,
     UserService,
 )
@@ -49,3 +51,10 @@ def get_request_type_service(repo=Depends(get_request_type_repository)):
 
 def get_request_subtype_service(repo=Depends(get_request_subtype_repository)):
     return RequestSubtypeService(repo)
+
+
+def get_request_tracking_service(
+    repo=Depends(get_request_tracking_repository),
+    request_repo=Depends(get_request_repository),
+):
+    return RequestTrackingService(repo, request_repo)

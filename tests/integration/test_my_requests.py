@@ -41,7 +41,7 @@ def test_get_my_requests_single_status(
     response = client.get(f"{API_PREFIX}/my-requests?statuses=draft")
     assert response.status_code == 200
 
-    statuses = [r["status"] for r in response.json()]
+    statuses = [r["current_status"] for r in response.json()]
     for s in statuses:
         assert s == "draft"
 
@@ -97,7 +97,9 @@ def test_get_my_requests_user_isolation(client, users, auth_as, valid_request_pa
     auth_as(owner)
 
     # Owner creates request
-    payload = valid_request_payload(title="Private Request", status=Status.DRAFT)
+    payload = valid_request_payload(
+        title="Private Request", current_status=Status.DRAFT
+    )
     resp = client.post(f"{API_PREFIX}", json=payload)
     assert resp.status_code == 201
 

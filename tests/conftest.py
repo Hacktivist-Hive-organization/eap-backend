@@ -102,7 +102,7 @@ def valid_request_payload(seeded_request_types):
         payload = valid_request_payload(title="My Request", status=Status.DRAFT)
     """
 
-    def _factory(title="Default Title", status=Status.DRAFT):
+    def _factory(title="Default Title", current_status=Status.DRAFT):
         data = seeded_request_types
         return {
             "type_id": data["hardware"].id,
@@ -111,7 +111,7 @@ def valid_request_payload(seeded_request_types):
             "description": "This is a valid description with at least 20 chars",
             "business_justification": "Business justification is long enough for validation",
             "priority": "medium",
-            "status": status.value,
+            "current_status": current_status.value,
         }
 
     return _factory
@@ -135,7 +135,7 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             description="Valid description long enough",
             business_justification="Valid justification long enough",
             priority=Priority.MEDIUM,
-            status=Status.DRAFT,
+            current_status=Status.DRAFT,
             requester_id=owner.id,
         ),
         DBRequest(
@@ -145,7 +145,7 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             description="Valid description long enough",
             business_justification="Valid justification long enough",
             priority=Priority.MEDIUM,
-            status=Status.SUBMITTED,
+            current_status=Status.SUBMITTED,
             requester_id=owner.id,
         ),
         DBRequest(
@@ -155,7 +155,7 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             description="Valid description long enough",
             business_justification="Valid justification long enough",
             priority=Priority.MEDIUM,
-            status=Status.APPROVED,
+            current_status=Status.APPROVED,
             requester_id=owner.id,
         ),
     ]

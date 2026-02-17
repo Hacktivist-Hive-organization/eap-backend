@@ -5,7 +5,6 @@ from sqlalchemy.orm import relationship
 
 from app.common.enums import UserRole
 from app.database.base import Base
-from app.database.session import Base
 from app.models.db_mixins import TimestampMixin
 
 
@@ -25,4 +24,10 @@ class DbUser(TimestampMixin, Base):
 
     user_reqs = relationship(
         "DBRequest", foreign_keys="[DBRequest.requester_id]", back_populates="requester"
+    )
+
+    req_tracking = relationship(
+        "DBRequestTracking",
+        foreign_keys="[DBRequestTracking.user_id]",
+        back_populates="user",
     )
