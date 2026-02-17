@@ -16,7 +16,7 @@ class DBRequest(Base):
     description = Column(String(2000), nullable=False)
     business_justification = Column(String(1000), nullable=False)
     priority = Column(Enum(Priority), nullable=False)
-    status = Column(Enum(Status), nullable=False, default=Status.DRAFT)
+    current_status = Column(Enum(Status), nullable=False, default=Status.DRAFT)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True),
@@ -30,7 +30,7 @@ class DBRequest(Base):
         Index(
             "ix_requests_dashboard",
             "requester_id",
-            "status",
+            "current_status",
             "updated_at",
         ),
     )
@@ -40,4 +40,10 @@ class DBRequest(Base):
     subtype = relationship("DBRequestSubtype")
     requester = relationship(
         "DbUser", foreign_keys=[requester_id], back_populates="user_reqs"
+    )
+
+    req_tracking = relationship(
+        "DBRequestTracking",
+        foreign_keys="[DBRequestTracking.request_id]",
+        back_populates="request",
     )
