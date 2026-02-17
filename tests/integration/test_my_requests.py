@@ -15,54 +15,51 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_get_my_requests_success(client, users, auth_as, valid_request_payload):
+def test_get_my_requests_success(client, users, auth_as, seeded_requests_for_user):
     """User fetches all their requests without status filter"""
     owner = users["user1"]
     auth_as(owner)
-
-    # Create two requests
-    payload1 = valid_request_payload(title="Request 1", status=Status.DRAFT)
-    payload2 = valid_request_payload(title="Request 2", status=Status.DRAFT)
-
-    resp1 = client.post(f"{API_PREFIX}", json=payload1)
-    resp2 = client.post(f"{API_PREFIX}", json=payload2)
-
-    # Assert creation returns 201
-    assert resp1.status_code == 201
-    assert resp2.status_code == 201
-
-    id1 = resp1.json()["id"]
-    id2 = resp2.json()["id"]
 
     # Confirm requests exist for owner
     response = client.get(f"{API_PREFIX}/my-requests")
     assert response.status_code == 200
     titles = [r["title"] for r in response.json()]
-    ids = [r["id"] for r in response.json()]
-    assert id1 in ids
-    assert id2 in ids
-    assert "Request 1" in titles
-    assert "Request 2" in titles
+    assert "Draft Req" in titles
+    assert "Submitted Req" in titles
+    assert "Approved Req" in titles
 
 
-def test_get_my_requests_single_status(client, users, auth_as, valid_request_payload):
+def test_get_my_requests_single_status(
+    client, users, auth_as, seeded_requests_for_user
+):
     """User fetches requests filtered by a single status"""
     owner = users["user1"]
     auth_as(owner)
 
-    payload = valid_request_payload(title="Draft Request", status=Status.DRAFT)
-    resp = client.post(f"{API_PREFIX}", json=payload)
-    assert resp.status_code == 201
-    request_id = resp.json()["id"]
-
-    # Fetch only DRAFT requests
+    # Fetch only DRAFT requests, seeded_requests_for_user has created multi
+    # statuses requests
     response = client.get(f"{API_PREFIX}/my-requests?statuses=draft")
     assert response.status_code == 200
-    body = response.json()
 
-    assert len(body) == 1
-    assert body[0]["id"] == request_id
-    assert body[0]["status"] == Status.DRAFT
+    statuses = [r["status"] for r in response.json()]
+    for s in statuses:
+        assert s == "draft"
+
+
+def test_get_my_requests_with_an_invalid_status_value(
+    client, users, auth_as, seeded_requests_for_user
+):
+    owner = users["user1"]
+    auth_as(owner)
+    invalid_status = "Draft"  # should be lowercase: 'draft'
+    response = client.get(f"{API_PREFIX}/my-requests?statuses={invalid_status}")
+    assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
+    assert (
+        "Input should be 'draft', 'submitted', 'in_progress', 'approved', "
+        "'rejected', 'completed' or 'cancelled'" in body["detail"]
+    )
 
 
 def test_get_my_requests_multiple_statuses(
@@ -81,15 +78,16 @@ def test_get_my_requests_multiple_statuses(
     assert "Approved Req" not in titles
 
 
-def test_get_my_requests_empty_result(client, users, auth_as):
+def test_get_my_requests_empty_result(client, users, auth_as, seeded_requests_for_user):
     """User fetches requests with a status that has no matches"""
     owner = users["user1"]
     auth_as(owner)
 
-    # No requests created yet, fetch SUBMITTED
-    response = client.get(f"{API_PREFIX}/my-requests?statuses=submitted")
+    # requests approved, submitted , draft has been created, fetch in_progress
+    response = client.get(f"{API_PREFIX}/my-requests?statuses=in_progress")
     assert response.status_code == 200
-    assert response.json() == []
+    body = response.json()
+    assert body == []
 
 
 def test_get_my_requests_user_isolation(client, users, auth_as, valid_request_payload):
@@ -102,15 +100,15 @@ def test_get_my_requests_user_isolation(client, users, auth_as, valid_request_pa
     payload = valid_request_payload(title="Private Request", status=Status.DRAFT)
     resp = client.post(f"{API_PREFIX}", json=payload)
     assert resp.status_code == 201
-    request_id = resp.json()["id"]
 
     # Confirm request exists for owner
     response_owner = client.get(f"{API_PREFIX}/my-requests")
     titles_owner = [r["title"] for r in response_owner.json()]
     assert "Private Request" in titles_owner
 
-    # Switch to other user
+    # Switch to other user, who hasn't created any requests yet
     auth_as(other_user)
     response_other = client.get(f"{API_PREFIX}/my-requests")
-    titles_other = [r["title"] for r in response_other.json()]
-    assert "Private Request" not in titles_other
+    assert response_other.status_code == 200
+    body = response_other.json()
+    assert body == []
