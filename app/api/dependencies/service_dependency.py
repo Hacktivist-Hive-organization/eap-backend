@@ -18,10 +18,15 @@ from app.services import (
     RequestTypeService,
     UserService,
 )
+from app.services.email_service import EmailService
 
 
-def get_email_manager() -> EmailManager:
+def get_email_manager():
     return EmailManager()
+
+
+def get_email_service(manager=Depends(get_email_manager)):
+    return EmailService(manager)
 
 
 def get_user_service(repo=Depends(get_user_repository)):
