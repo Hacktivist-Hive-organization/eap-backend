@@ -27,6 +27,7 @@ class UserSelfUpdateRequestSchema(BaseModel):
 class UserSelfPartialUpdateRequestSchema(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
+    is_out_of_office: bool | None = None
 
 
 class UserBaseResponseSchema(BaseModel):
