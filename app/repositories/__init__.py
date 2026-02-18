@@ -2,5 +2,8 @@ from app.repositories.health_repository import HealthRepository
 from app.repositories.request_repository import RequestRepository
 from app.repositories.request_subtype_repository import RequestSubtypeRepository
 from app.repositories.request_tracking_repository import RequestTrackingRepository
+from app.repositories.request_type_approver_repository import (
+    RequestTypeApproverRepository,
+)
 from app.repositories.request_type_repository import RequestTypeRepository
 from app.repositories.user_repository import UserRepository

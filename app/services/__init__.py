@@ -3,5 +3,6 @@ from app.services.health_service import HealthService
 from app.services.request_service import RequestService
 from app.services.request_subtype_service import RequestSubtypeService
 from app.services.request_tracking_service import RequestTrackingService
+from app.services.request_type_approver_service import RequestTypeApproverService
 from app.services.request_type_service import RequestTypeService
 from app.services.user_service import UserService
