@@ -67,6 +67,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-
-print("ENV FILE:", os.getenv("ENV_FILE_PATH", ".env"))
-print("USER RAW:", repr(os.getenv("MAILTRAP_USER")))
