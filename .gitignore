@@ -219,5 +219,3 @@ __marimo__/
 .idea/
 *.iml
 
-#alembic
-alembic/versions
