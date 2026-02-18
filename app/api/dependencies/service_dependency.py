@@ -9,6 +9,7 @@ from app.api.dependencies.repository_dependency import (
     get_request_repository,
     get_request_subtype_repository,
     get_request_tracking_repository,
+    get_request_type_approver_repository,
     get_request_type_repository,
     get_user_repository,
 )
@@ -19,6 +20,7 @@ from app.services import (
     RequestService,
     RequestSubtypeService,
     RequestTrackingService,
+    RequestTypeApproverService,
     RequestTypeService,
     UserService,
 )
@@ -68,3 +70,11 @@ def get_request_tracking_service(
     request_repo=Depends(get_request_repository),
 ):
     return RequestTrackingService(repo, request_repo)
+
+
+def get_request_type_approver_service(
+    repo=Depends(get_request_type_approver_repository),
+    type_repo=Depends(get_request_type_repository),
+    user_repo=Depends(get_user_repository),
+):
+    return RequestTypeApproverService(repo, type_repo, user_repo)
