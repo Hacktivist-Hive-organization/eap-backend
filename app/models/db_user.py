@@ -32,19 +32,3 @@ class DbUser(TimestampMixin, Base):
         foreign_keys="[DBRequestTracking.user_id]",
         back_populates="user",
     )
-
-    def __init__(
-        self,
-        email: str,
-        first_name: str,
-        last_name: str,
-        hashed_password: str,
-        role: UserRole,
-        is_active: bool = True,
-    ):
-        self.email = email
-        self.first_name = first_name
-        self.last_name = last_name
-        self.hashed_password = hashed_password
-        self.role = role
-        self.is_active = is_active
