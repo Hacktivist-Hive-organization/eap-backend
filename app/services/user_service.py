@@ -59,4 +59,7 @@ class UserService:
         if "last_name" in data:
             user.last_name = data["last_name"]
 
+        if "is_out_of_office" in data:
+            user.is_out_of_office = data["is_out_of_office"]
+
         return self.repo.update_user(user)
