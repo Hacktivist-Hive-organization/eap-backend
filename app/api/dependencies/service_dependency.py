@@ -64,8 +64,7 @@ def get_request_tracking_service(
 
 def get_request_type_approver_service(
     repo=Depends(get_request_type_approver_repository),
-    request_repo=Depends(get_request_repository),
     type_repo=Depends(get_request_type_repository),
     user_repo=Depends(get_user_repository),
 ):
-    return RequestTypeApproverService(repo, request_repo, type_repo, user_repo)
+    return RequestTypeApproverService(repo, type_repo, user_repo)
