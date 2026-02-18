@@ -51,25 +51,6 @@ class RequestService:
 
         self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)
         request = self.request_repo.create(request_in, current_user_id)
-
-        email_body = REQUEST_SUBMITTED.substitute(
-            request_code=f"REQ-{request.id}",
-            user_name=request.user.full_name,
-            request_id=request.id,
-            request_title=request.title,
-            request_type=f"{request.type.name} > {request.subtype.name}",
-            priority=request.priority,
-            submitted_at=request.created_at.strftime("%B %d, %Y at %I:%M %p"),
-            status=request.status.value,
-            link=f"https://your-system.com/requests/{request.id}",
-        )
-
-        self.email_manager.send_email(
-            to=request.user.email,
-            subject=f"Request Submitted - REQ-{request.id} - {request.title}",
-            body=email_body,
-        )
-
         return request
 
     def get_requests_by_user(self, user_id: int, statuses: List[Status]):
