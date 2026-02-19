@@ -4,6 +4,7 @@ from asyncio import to_thread
 
 from mailjet_rest import Client
 
+from app.common.exceptions import ConfigurationException, ExternalServiceException
 from app.core.config import settings
 from app.infrastructure.email.base import EmailService
 
@@ -11,7 +12,7 @@ from app.infrastructure.email.base import EmailService
 class MailjetEmailService(EmailService):
     def __init__(self):
         if not settings.MAILJET_API_KEY or not settings.MAILJET_SECRET_KEY:
-            raise ValueError("Mailjet credentials are not configured")
+            raise ConfigurationException("Mailjet credentials are not configured")
 
         self.client = Client(
             auth=(settings.MAILJET_API_KEY, settings.MAILJET_SECRET_KEY),
@@ -39,4 +40,4 @@ class MailjetEmailService(EmailService):
         response = await to_thread(self.client.send.create, data=message)
 
         if response.status_code >= 400:
-            raise RuntimeError(f"Mailjet email failed: {response.text}")
+            raise ExternalServiceException(f"Mailjet email failed: {response.text}")

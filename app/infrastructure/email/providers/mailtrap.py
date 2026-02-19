@@ -3,6 +3,7 @@ from asyncio import to_thread
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from app.common.exceptions import ConfigurationException
 from app.core.config import settings
 from app.infrastructure.email.base import EmailService
 
@@ -15,7 +16,7 @@ class MailtrapEmailService(EmailService):
         self.smtp_port = settings.MAILTRAP_SMTP_PORT
 
         if not self.smtp_user or not self.smtp_password:
-            raise ValueError("Mailtrap credentials are not configured")
+            raise ConfigurationException("Mailtrap credentials are not configured")
 
     async def send(
         self,
