@@ -1,5 +1,5 @@
 # app/infrastructure/email/manager.py
-
+from app.common.exceptions import ConfigurationException
 from app.core.config import settings
 from app.infrastructure.email.registry import EMAIL_PROVIDERS
 
@@ -9,7 +9,7 @@ class EmailManager:
         name = settings.EMAIL_SERVICE.lower()
 
         if name not in EMAIL_PROVIDERS:
-            raise ValueError(f"Email provider '{name}' not registered")
+            raise ConfigurationException(f"Email provider '{name}' not registered")
 
         self._service = EMAIL_PROVIDERS[name]()
 
