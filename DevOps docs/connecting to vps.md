@@ -66,6 +66,7 @@ VS Code just treats it as plain text.
 At the bottom-right corner of VS Code:
 
 Click where it says Plain Text
+
 ![img_3.png](img_3.png)
 
 Type:
