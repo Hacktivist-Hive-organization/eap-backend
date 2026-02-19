@@ -1,3 +1,5 @@
+# app/infrastructure/email/providers/mailtrap.py
+
 import smtplib
 from asyncio import to_thread
 from email.mime.multipart import MIMEMultipart

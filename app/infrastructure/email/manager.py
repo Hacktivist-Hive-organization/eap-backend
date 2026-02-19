@@ -1,4 +1,5 @@
 # app/infrastructure/email/manager.py
+
 from app.common.exceptions import ConfigurationException
 from app.core.config import settings
 from app.infrastructure.email.registry import EMAIL_PROVIDERS
