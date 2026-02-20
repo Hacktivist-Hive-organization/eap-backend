@@ -1,5 +1,7 @@
 # app/api/dependencies/service_dependency.py
 
+from functools import lru_cache
+
 from fastapi import Depends
 
 from app.api.dependencies.repository_dependency import (
@@ -11,6 +13,7 @@ from app.api.dependencies.repository_dependency import (
     get_request_type_repository,
     get_user_repository,
 )
+from app.infrastructure.email.manager import EmailManager
 from app.services import (
     AuthService,
     HealthService,
@@ -21,6 +24,11 @@ from app.services import (
     RequestTypeService,
     UserService,
 )
+
+
+@lru_cache
+def get_email_manager():
+    return EmailManager()
 
 
 def get_user_service(repo=Depends(get_user_repository)):
@@ -39,11 +47,13 @@ def get_request_service(
     request_repo=Depends(get_request_repository),
     type_repo=Depends(get_request_type_repository),
     subtype_repo=Depends(get_request_subtype_repository),
+    email_manager=Depends(get_email_manager),
 ):
     return RequestService(
         request_repo,
         type_repo,
         subtype_repo,
+        email_manager,
     )
 
 

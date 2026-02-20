@@ -12,9 +12,8 @@ from app.api.schemas.request_schema import (
     RequestResponseListSchema,
     RequestResponseSchema,
 )
-from app.common.enums import Status, UserRole
-from app.common.exceptions import BusinessException
-from app.models.security_models import CurrentUser
+from app.common.enums import Status
+from app.common.security_models import CurrentUser
 
 router = APIRouter(tags=["Requests"])
 
@@ -27,12 +26,7 @@ def create_request(
     service=Depends(get_request_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    if current_user.role == UserRole.REQUESTER:
-        return service.create_request(request_in, current_user.id)
-    raise BusinessException(
-        message="You do not have permission to create request",
-        status_code=status.HTTP_403_FORBIDDEN,
-    )
+    return service.create_request(request_in, current_user.id)
 
 
 @router.get(

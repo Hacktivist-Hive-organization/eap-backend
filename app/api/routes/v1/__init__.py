@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.routes.v1.auth_router import router as auth_router
+from app.api.routes.v1.email_router import router as email_router
 from app.api.routes.v1.health_router import router as health_router
 from app.api.routes.v1.request_router import router as request_router
 from app.api.routes.v1.request_subtype_router import router as subtype_router
@@ -17,3 +18,4 @@ router.include_router(tracking_router, prefix="/tracking")
 router.include_router(type_router, prefix="/types")
 router.include_router(subtype_router, prefix="/subtypes")
 router.include_router(health_router, prefix="/health")
+router.include_router(email_router, prefix="/email")

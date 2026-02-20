@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import get_request_tracking_service
 from app.api.schemas.request_tracking_schema import RequestTrackingResponseSchema
-from app.models.security_models import CurrentUser
+from app.common.security_models import CurrentUser
 
 router = APIRouter(tags=["Request tracking"])
 
