@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
-from app.api.dependencies.service_dependency import get_auth_service, get_user_service
+from app.api.dependencies.service_dependency import get_user_service
 from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
@@ -42,7 +42,6 @@ def db_session():
         yield session
     finally:
         session.close()
-
         Base.metadata.drop_all(bind=engine)
 
 
@@ -57,18 +56,15 @@ def client(db_session):
     user_repository = UserRepository(db_session)
     user_service = UserService(user_repository)
 
+    # Dummy EmailManager for testing (does nothing)
     class DummyEmailManager:
         async def send_email(self, to, subject, body, html=None):
             return None
 
-    auth_service = AuthService(
-        user_repository=user_repository,
-        email_manager=DummyEmailManager(),
-    )
+    auth_service = AuthService(repo=user_repository, email_manager=DummyEmailManager())
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_user_service] = lambda: user_service
-    app.dependency_overrides[get_auth_service] = lambda: auth_service
 
     with TestClient(app) as test_client:
         yield test_client
