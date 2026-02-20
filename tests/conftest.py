@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
-from app.api.dependencies.service_dependency import get_user_service
+from app.api.dependencies.service_dependency import get_email_manager, get_user_service
 from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
