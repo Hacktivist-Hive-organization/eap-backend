@@ -50,3 +50,12 @@ class TokenResponseSchema(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserBaseResponseSchema
+
+
+class ForgotPasswordRequestSchema(BaseModel):
+    email: str
+
+
+class ResetPasswordRequestSchema(BaseModel):
+    token: str
+    new_password: str

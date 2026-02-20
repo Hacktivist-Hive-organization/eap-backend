@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     MAILJET_API_KEY: str | None = None
     MAILJET_SECRET_KEY: str | None = None
 
+    # Frontend
+    FRONTEND_URL: str | None = None
+
 
 def get_settings() -> Settings:
     return Settings()
