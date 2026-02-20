@@ -11,6 +11,7 @@ from app.api.dependencies.service_dependency import get_user_service
 from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
+from app.infrastructure.email.manager import EmailManager
 from app.main import app
 from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
@@ -115,6 +116,18 @@ def valid_request_payload(seeded_request_types):
         }
 
     return _factory
+
+
+@pytest.fixture(autouse=True)
+def mock_email_manager(monkeypatch):
+    class DummyEmailManager:
+        async def send_email(self, to, subject, body, html=None):
+            return None
+
+    monkeypatch.setattr(
+        "app.api.dependencies.service_dependency.get_email_manager",
+        lambda: DummyEmailManager(),
+    )
 
 
 @pytest.fixture
