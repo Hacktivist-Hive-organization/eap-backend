@@ -119,7 +119,7 @@ class AuthService:
             expires_minutes=RESET_TOKEN_EXPIRE_MINUTES,
         )
 
-        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+        reset_link = f"{settings.FRONTEND_URL}/reset-password#{token}"
 
         subject = "Password reset"
         body = f"Use the following link to reset your password: {reset_link}"
