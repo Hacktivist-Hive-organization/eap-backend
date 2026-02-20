@@ -61,6 +61,8 @@ class Settings(BaseSettings):
     MAILJET_API_KEY: str | None = None
     MAILJET_SECRET_KEY: str | None = None
 
+    FRONTEND_URL: str = "http://localhost:3000"
+
 
 def get_settings() -> Settings:
     return Settings()
