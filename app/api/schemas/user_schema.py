@@ -36,6 +36,7 @@ class UserBaseResponseSchema(BaseModel):
     first_name: str
     last_name: str
     role: UserRole
+    is_out_of_office: bool | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
