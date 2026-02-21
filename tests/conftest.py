@@ -7,14 +7,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
-from app.api.dependencies.service_dependency import get_user_service
+from app.api.dependencies.service_dependency import get_auth_service, get_user_service
 from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
-from app.infrastructure.email.manager import EmailManager
 from app.main import app
 from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
+from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from tests.integration.helpers import seed_types_and_subtypes, seed_user
 
@@ -119,15 +119,18 @@ def valid_request_payload(seeded_request_types):
 
 
 @pytest.fixture(autouse=True)
-def mock_email_manager(monkeypatch):
+def override_auth_service(db_session):
     class DummyEmailManager:
         async def send_email(self, to, subject, body, html=None):
             return None
 
-    monkeypatch.setattr(
-        "app.api.dependencies.service_dependency.get_email_manager",
-        lambda: DummyEmailManager(),
-    )
+    def _override():
+        repo = UserRepository(db_session)
+        return AuthService(repo, DummyEmailManager())
+
+    app.dependency_overrides[get_auth_service] = _override
+    yield
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
