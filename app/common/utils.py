@@ -1,4 +1,4 @@
-# utils.py
+# app/common/utils.py
 
 import re
 
@@ -19,3 +19,7 @@ def is_password_strong(password: str) -> bool:
     if password.islower() or password.isupper() or password.isalnum():
         return False
     return True
+
+
+def normalize_email(email: str) -> str:
+    return email.strip().lower()

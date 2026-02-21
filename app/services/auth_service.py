@@ -13,6 +13,7 @@ from app.common.utils import (
     is_email_valid,
     is_password_strong,
     is_required_fields_filled,
+    normalize_email,
 )
 from app.core.config import settings
 from app.infrastructure.email.manager import EmailManager
@@ -31,7 +32,7 @@ class AuthService:
         self, email: str, password: str, first_name: str, last_name: str
     ) -> tuple[str, DbUser]:
 
-        normalized_email = email.strip().lower()
+        normalized_email = normalize_email(email)
 
         checks = [
             {
@@ -82,7 +83,7 @@ class AuthService:
 
     def login(self, email: str, password: str) -> tuple[str, DbUser]:
 
-        normalized_email = email.strip().lower()
+        normalized_email = normalize_email(email)
 
         if not is_email_valid(normalized_email):
             raise BusinessException(
@@ -102,7 +103,7 @@ class AuthService:
         return token, user
 
     async def forgot_password(self, email: str) -> None:
-        normalized_email = email.strip().lower()
+        normalized_email = normalize_email(email)
 
         if not is_email_valid(normalized_email):
             return
