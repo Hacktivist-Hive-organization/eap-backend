@@ -93,7 +93,7 @@ Enforce consistent code style using **Black** and **isort**. Checks run locally 
 pip install -r requirements-dev.txt
 ```
 
-- Install the pre-commit Git hook pre-commit Git hook to automatically format files before committing
+- Install the pre-commit Git hook to automatically format files before committing
 ```bash
 pre-commit install
 ```
