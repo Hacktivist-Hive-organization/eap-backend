@@ -1,19 +1,14 @@
-# demo_data.py
-
 from app.common.enums import Priority, Status, UserRole
 from app.common.security import hash_password
 from app.database.session import SessionLocal
-from app.models import DbUser
-from app.models.db_request import DBRequest
-from app.models.db_request_subtype import DBRequestSubtype
-from app.models.db_request_type import DBRequestType
+from app.models import DBRequest, DBRequestSubtype, DBRequestType, DbUser
 
 
 def seed_demo_data():
     db = SessionLocal()
 
     # -----------------------
-    # Demo user
+    # Demo users
     # -----------------------
     if db.query(DbUser).filter(DbUser.email == "user1@example.com").count() == 0:
         user1 = DbUser(
@@ -41,7 +36,6 @@ def seed_demo_data():
     # -----------------------
     # Demo requests
     # -----------------------
-
     hardware = db.query(DBRequestType).filter_by(name="Hardware").first()
     software = db.query(DBRequestType).filter_by(name="Software & Access").first()
     services = db.query(DBRequestType).filter_by(name="Services & Facilities").first()
@@ -56,10 +50,8 @@ def seed_demo_data():
         db.query(DBRequestSubtype).filter_by(name="Training/course enrollment").first()
     )
 
-    # Only seed if there are no requests yet
     if db.query(DBRequest).count() == 0:
         demo_requests = [
-            # Draft
             DBRequest(
                 type_id=hardware.id,
                 subtype_id=laptop.id,
@@ -69,7 +61,6 @@ def seed_demo_data():
                 priority=Priority.HIGH,
                 requester_id=user1.id,
             ),
-            # Submitted
             DBRequest(
                 type_id=software.id,
                 subtype_id=vpn.id,
@@ -79,7 +70,6 @@ def seed_demo_data():
                 priority=Priority.MEDIUM,
                 requester_id=user1.id,
             ),
-            # In Progress
             DBRequest(
                 type_id=services.id,
                 subtype_id=training.id,
@@ -89,31 +79,11 @@ def seed_demo_data():
                 priority=Priority.LOW,
                 requester_id=user1.id,
             ),
-            # Approved
-            DBRequest(
-                type_id=hardware.id,
-                subtype_id=monitor.id,
-                title="Additional monitor for workstation",
-                description="Considering a second monitor for better multitasking.",
-                business_justification="Improves productivity during development and reviews.",
-                priority=Priority.MEDIUM,
-                requester_id=user1.id,
-            ),
-            # Rejected
-            DBRequest(
-                type_id=software.id,
-                subtype_id=software_license.id,
-                title="IDE software license",
-                description="Draft request for a professional IDE license.",
-                business_justification="Advanced tooling speeds up development and debugging.",
-                priority=Priority.LOW,
-                requester_id=user1.id,
-            ),
         ]
         db.add_all(demo_requests)
         db.commit()
 
-    print("Seeded demo users and requests successfully.")
+    print("Seeded demo users, request types, subtypes, and requests successfully.")
     print("User credentials for login:")
     print(" - Email: user1@example.com / Password: user123!")
     print(" - Email: user2@example.com / Password: user456!")

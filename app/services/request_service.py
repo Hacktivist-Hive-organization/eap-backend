@@ -10,6 +10,8 @@ from app.infrastructure.email.templates import REQUEST_SUBMITTED
 from app.repositories import (
     RequestRepository,
     RequestSubtypeRepository,
+    RequestTrackingRepository,
+    RequestTypeApproverRepository,
     RequestTypeRepository,
 )
 
@@ -21,11 +23,15 @@ class RequestService:
         request_repo: RequestRepository,
         type_repo: RequestTypeRepository,
         subtype_repo: RequestSubtypeRepository,
+        approver_repo: RequestTypeApproverRepository,
+        tracking_repo: RequestTrackingRepository,
         email_manager,
     ):
         self.request_repo = request_repo
         self.type_repo = type_repo
         self.subtype_repo = subtype_repo
+        self.approver_repo = approver_repo
+        self.tracking_repo = tracking_repo
         self.email_manager = email_manager
 
     def _validate_type_and_subtype(self, type_id: int, subtype_id: int):
@@ -70,5 +76,56 @@ class RequestService:
                 message="Not authorized to view this request",
                 status_code=status.HTTP_403_FORBIDDEN,
             )
+
+        return request
+
+    def submit_existing_request(
+        self,
+        request_id: int,
+        current_user_id: int,
+    ):
+        request = self.request_repo.get_request_details(request_id)
+
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.requester_id != current_user_id:
+            raise BusinessException(
+                message="Not authorized to submit this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        if request.current_status != Status.DRAFT:
+            raise BusinessException(
+                message="Only draft requests can be submitted",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        #  Get default approver
+        approver = self.approver_repo.get_default_or_available(request.type_id)
+
+        if not approver:
+            raise BusinessException(
+                message="No approver configured for this request type",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        #  Change ONLY status
+        request.current_status = Status.SUBMITTED
+
+        self.request_repo.save(request)
+        self.approver_repo.increment_workload(approver)
+
+        #  Create tracking entry (store approver here)
+        self.tracking_repo.create_tracking_entry(
+            request_id=request.id,
+            user_id=current_user_id,
+            approver_id=approver.user_id,
+            status=Status.SUBMITTED,
+            comment="Request submitted and assigned to approver",
+        )
 
         return request

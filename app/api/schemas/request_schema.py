@@ -73,3 +73,31 @@ class RequestResponseListSchema(BaseModel):
 
     class ConfigDict:
         from_attributes = True
+
+
+class RequestTrackingSchema(BaseModel):
+    id: int
+    user_id: int
+    status: Status
+    comment: str
+    created_at: datetime
+    approver: AdminUserResponseSchema
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class RequestSubmitResponseSchema(BaseModel):
+    id: int
+    title: str
+    priority: Priority
+    current_status: Status
+    type: RequestTypeSchema
+    subtype: RequestSubtypeSchema
+    requester: AdminUserResponseSchema
+    created_at: datetime
+    updated_at: datetime | None
+    req_tracking: list[RequestTrackingSchema]
+
+    class ConfigDict:
+        from_attributes = True

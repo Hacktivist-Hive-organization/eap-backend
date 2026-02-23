@@ -46,14 +46,3 @@ class DBRequestTypeApprover(Base):
         """Decrease workload when user finishes a request"""
         if self.workload > 0:
             self.workload -= 1
-
-    @property
-    def is_available(self):
-        # TODO: Add out_of_office check when feature is merged
-        """Check if user can take more requests"""
-        return self.workload < 5
-
-    @property
-    def is_available_without_ooo(self):
-        """Separate property to check workload without OOO (for backward compatibility)"""
-        return self.workload < 5

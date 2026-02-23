@@ -11,6 +11,7 @@ from app.api.schemas.request_schema import (
     RequestCreateSchema,
     RequestResponseListSchema,
     RequestResponseSchema,
+    RequestSubmitResponseSchema,
 )
 from app.common.enums import Status
 from app.common.security_models import CurrentUser
@@ -57,3 +58,19 @@ def get_request_details(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     return service.get_request_details(request_id, current_user.id)
+
+
+@router.patch(
+    "/{request_id}/submit",
+    response_model=RequestSubmitResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+def submit_request(
+    request_id: int,
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.submit_existing_request(
+        request_id=request_id,
+        current_user_id=current_user.id,
+    )

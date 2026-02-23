@@ -54,3 +54,9 @@ class RequestRepository:
             .first()
             is not None
         )
+
+    def save(self, request: DBRequest) -> DBRequest:
+        self.db.add(request)
+        self.db.commit()
+        self.db.refresh(request)
+        return request
