@@ -102,15 +102,18 @@ class AuthService:
         token = create_access_token({"sub": str(user.id)})
         return token, user
 
-    async def forgot_password(self, email: str) -> None:
+    async def forgot_password(self, email: str) -> bool:
         normalized_email = normalize_email(email)
 
         if not is_email_valid(normalized_email):
-            return
+            raise BusinessException(
+                message="Invalid email format",
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            )
 
         user = self.repo.get_by_email(normalized_email)
         if not user:
-            return
+            return False
 
         token = create_access_token(
             {
@@ -130,6 +133,7 @@ class AuthService:
             subject=subject,
             body=body,
         )
+        return True
 
     def reset_password(self, token: str, new_password: str) -> None:
         if not is_password_strong(new_password):
