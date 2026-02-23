@@ -25,6 +25,7 @@ configure_logging()
 async def lifespan(app: FastAPI):
 
     if settings.DEVELOPMENT_ENVIRONMENT:
+        pass
         run_seeds()
         seed_demo_data()
     yield

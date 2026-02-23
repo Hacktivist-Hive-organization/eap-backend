@@ -1,9 +1,8 @@
 # demo_data.py
-
 from app.common.enums import Priority, Status, UserRole
 from app.common.security import hash_password
 from app.database.session import SessionLocal
-from app.models import DbUser
+from app.models import DbUser, DBRequestTracking
 from app.models.db_request import DBRequest
 from app.models.db_request_subtype import DBRequestSubtype
 from app.models.db_request_type import DBRequestType
@@ -41,6 +40,9 @@ def seed_demo_data():
     # -----------------------
     # Demo requests
     # -----------------------
+    software_approver = db.query(DbUser).filter_by(email="approver-software@eap.local").first()
+    if not software_approver:
+        raise ValueError("Software approver user not found")
 
     hardware = db.query(DBRequestType).filter_by(name="Hardware").first()
     software = db.query(DBRequestType).filter_by(name="Software & Access").first()
@@ -112,6 +114,21 @@ def seed_demo_data():
         ]
         db.add_all(demo_requests)
         db.commit()
+
+        if db.query(DBRequestTracking).count() == 0:
+            demo_tracking_requests = [
+            # Draft
+            DBRequestTracking(
+                status= Status.SUBMITTED,
+                user_id=software_approver.id,
+                request_id=demo_requests[4].id,
+                comment='initial submit'
+            ),]
+
+            demo_requests[4].current_status = Status.SUBMITTED
+
+            db.add_all(demo_tracking_requests)
+            db.commit()
 
     print("Seeded demo users and requests successfully.")
     print("User credentials for login:")
