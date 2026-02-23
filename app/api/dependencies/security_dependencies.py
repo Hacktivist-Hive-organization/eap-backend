@@ -7,7 +7,7 @@ from app.api.dependencies.service_dependency import get_user_service
 from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
 from app.common.security import validate_token_payload, verify_token
-from app.models.security_models import CurrentUser
+from app.common.security_models import CurrentUser
 from app.services.user_service import UserService
 
 bearer_scheme = HTTPBearer(auto_error=False)

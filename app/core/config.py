@@ -6,7 +6,6 @@ from app.core.static_conf import *
 
 
 class Settings(BaseSettings):
-
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE_PATH", ".env"),  # Default to .env,
         env_file_encoding="utf-8",
@@ -42,6 +41,25 @@ class Settings(BaseSettings):
     ]
     MIDDLEWARE_CORS: bool = True
     DEVELOPMENT_ENVIRONMENT: bool = False
+
+    # Email
+    EMAIL_SERVICE: str = "mailtrap"
+
+    # Sender
+    MAIL_FROM_EMAIL: str | None = None
+    MAIL_FROM_NAME: str | None = None
+
+    # Mailtrap
+    MAILTRAP_USER: str | None = None
+    MAILTRAP_SMTP_PASSWORD: str | None = None
+
+    MAILTRAP_SMTP_HOST: str | None = None
+    MAILTRAP_SMTP_PORT: int = 587
+    MAILTRAP_USE_TLS: bool = True
+
+    # Mailjet
+    MAILJET_API_KEY: str | None = None
+    MAILJET_SECRET_KEY: str | None = None
 
 
 def get_settings() -> Settings:

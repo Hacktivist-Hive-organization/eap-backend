@@ -6,6 +6,7 @@ from fastapi import status
 
 from app.common.enums import Status
 from app.common.exceptions import BusinessException
+from app.infrastructure.email.templates import REQUEST_SUBMITTED
 from app.repositories import (
     RequestRepository,
     RequestSubtypeRepository,
@@ -20,10 +21,12 @@ class RequestService:
         request_repo: RequestRepository,
         type_repo: RequestTypeRepository,
         subtype_repo: RequestSubtypeRepository,
+        email_manager,
     ):
         self.request_repo = request_repo
         self.type_repo = type_repo
         self.subtype_repo = subtype_repo
+        self.email_manager = email_manager
 
     def _validate_type_and_subtype(self, type_id: int, subtype_id: int):
         """
@@ -47,7 +50,8 @@ class RequestService:
     def create_request(self, request_in, current_user_id: int):
 
         self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)
-        return self.request_repo.create(request_in, current_user_id)
+        request = self.request_repo.create(request_in, current_user_id)
+        return request
 
     def get_requests_by_user(self, user_id: int, statuses: List[Status]):
         return self.request_repo.get_requests_by_user(user_id, statuses)
