@@ -3,25 +3,36 @@
 from fastapi import status
 
 from app.common.exceptions import BusinessException
-from app.common.security import create_access_token, hash_password, verify_password
+from app.common.security import (
+    create_access_token,
+    hash_password,
+    verify_password,
+    verify_token,
+)
 from app.common.utils import (
     is_email_valid,
     is_password_strong,
     is_required_fields_filled,
+    normalize_email,
 )
+from app.core.config import settings
+from app.infrastructure.email.manager import EmailManager
 from app.models.db_user import DbUser
 from app.repositories.user_repository import UserRepository
 
+RESET_TOKEN_EXPIRE_MINUTES = 15
+
 
 class AuthService:
-    def __init__(self, repo: UserRepository):
+    def __init__(self, repo: UserRepository, email_manager: EmailManager):
         self.repo = repo
+        self.email_manager = email_manager
 
     def register(
         self, email: str, password: str, first_name: str, last_name: str
     ) -> tuple[str, DbUser]:
 
-        normalized_email = email.strip().lower()
+        normalized_email = normalize_email(email)
 
         checks = [
             {
@@ -72,7 +83,7 @@ class AuthService:
 
     def login(self, email: str, password: str) -> tuple[str, DbUser]:
 
-        normalized_email = email.strip().lower()
+        normalized_email = normalize_email(email)
 
         if not is_email_valid(normalized_email):
             raise BusinessException(
@@ -90,3 +101,68 @@ class AuthService:
 
         token = create_access_token({"sub": str(user.id)})
         return token, user
+
+    async def forgot_password(self, email: str) -> bool:
+        normalized_email = normalize_email(email)
+
+        if not is_email_valid(normalized_email):
+            raise BusinessException(
+                message="Invalid email format",
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            )
+
+        user = self.repo.get_by_email(normalized_email)
+        if not user:
+            return False
+
+        token = create_access_token(
+            {
+                "sub": str(user.id),
+                "type": "password_reset",
+            },
+            expires_minutes=RESET_TOKEN_EXPIRE_MINUTES,
+        )
+
+        reset_link = f"{settings.FRONTEND_URL}/reset-password#{token}"
+
+        subject = "Password reset"
+        body = f"Use the following link to reset your password: {reset_link}"
+
+        await self.email_manager.send_email(
+            to=user.email,
+            subject=subject,
+            body=body,
+        )
+        return True
+
+    def reset_password(self, token: str, new_password: str) -> None:
+        if not is_password_strong(new_password):
+            raise BusinessException(
+                message="Password is too weak",
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            )
+
+        payload = verify_token(token)
+
+        if payload.get("type") != "password_reset":
+            raise BusinessException(
+                message="Invalid token type",
+                status_code=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        user_id = payload.get("sub")
+        if not user_id:
+            raise BusinessException(
+                message="Invalid token payload",
+                status_code=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        user = self.repo.get_user(int(user_id))
+        if not user:
+            raise BusinessException(
+                message="User not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        user.hashed_password = hash_password(new_password)
+        self.repo.update_user(user)

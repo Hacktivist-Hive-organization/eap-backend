@@ -6,6 +6,7 @@ from fastapi import status
 
 from app.common.enums import Status
 from app.common.exceptions import BusinessException
+from app.infrastructure.email.manager import EmailManager
 from app.infrastructure.email.templates import REQUEST_SUBMITTED
 from app.repositories import (
     RequestRepository,
@@ -21,7 +22,7 @@ class RequestService:
         request_repo: RequestRepository,
         type_repo: RequestTypeRepository,
         subtype_repo: RequestSubtypeRepository,
-        email_manager,
+        email_manager: EmailManager,
     ):
         self.request_repo = request_repo
         self.type_repo = type_repo

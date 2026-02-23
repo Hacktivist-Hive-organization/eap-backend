@@ -1,4 +1,7 @@
+# app/core/config.py
+
 import os
+from typing import List
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -60,6 +63,16 @@ class Settings(BaseSettings):
     # Mailjet
     MAILJET_API_KEY: str | None = None
     MAILJET_SECRET_KEY: str | None = None
+
+    # Frontend
+    FRONTEND_URL: str | None = None
+
+    @property
+    def cors_origins(self) -> List[str]:
+        origins = self.CORS_ALLOWED_ORIGINS.copy()
+        if self.FRONTEND_URL:
+            origins.append(self.FRONTEND_URL)
+        return origins
 
 
 def get_settings() -> Settings:

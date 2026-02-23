@@ -36,6 +36,7 @@ class UserBaseResponseSchema(BaseModel):
     first_name: str
     last_name: str
     role: UserRole
+    is_out_of_office: bool | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -50,3 +51,12 @@ class TokenResponseSchema(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserBaseResponseSchema
+
+
+class ForgotPasswordRequestSchema(BaseModel):
+    email: str
+
+
+class ResetPasswordRequestSchema(BaseModel):
+    token: str
+    new_password: str
