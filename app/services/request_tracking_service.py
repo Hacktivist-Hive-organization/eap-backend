@@ -21,17 +21,25 @@ class RequestTrackingService:
             )
         return self.repo.get_request_tracking_by_request_id(request_id)
 
-    def process_request(self, request_id: int, status_in: Status, user_id: int, comment:str,):
+    def process_request(
+        self,
+        request_id: int,
+        status_in: Status,
+        user_id: int,
+        comment: str,
+    ):
         request = self.request_repo.get_request_details(request_id)
 
-        #check if the request exists
+        # check if the request exists
         if not request:
             raise BusinessException(
                 message="Request not found", status_code=status.HTTP_404_NOT_FOUND
             )
 
-        #check if the request is already assigned to the user
-        request_tracking = self.repo.get_tracking_by_request_user_id(request_id, user_id)
+        # check if the request is already assigned to the user
+        request_tracking = self.repo.get_tracking_by_request_user_id(
+            request_id, user_id
+        )
         if not request_tracking:
             raise BusinessException(
                 message="You are not authorized to process this request",
@@ -39,7 +47,10 @@ class RequestTrackingService:
             )
 
         # check if request status = submitted
-        if request.current_status != Status.SUBMITTED or request_tracking.status != Status.SUBMITTED:
+        if (
+            request.current_status != Status.SUBMITTED
+            or request_tracking.status != Status.SUBMITTED
+        ):
             raise BusinessException(
                 message=f"Request cannot be {status_in.value} because it is in {request.current_status.value} status",
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -48,8 +59,8 @@ class RequestTrackingService:
         # for reject request, comment must be mandatory
         if status_in == Status.REJECTED and not comment:
             raise BusinessException(
-                 message="Comment is mandatory for rejection",
-                 status_code=status.HTTP_400_BAD_REQUEST,
+                message="Comment is mandatory for rejection",
+                status_code=status.HTTP_400_BAD_REQUEST,
             )
 
         if status_in not in [Status.APPROVED, Status.REJECTED, Status.CANCELLED]:
@@ -61,4 +72,3 @@ class RequestTrackingService:
         self.repo.create(comment, request_id, status_in, user_id)
 
         return request
-

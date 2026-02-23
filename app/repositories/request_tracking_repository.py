@@ -10,10 +10,10 @@ class RequestTrackingRepository:
 
     def create(self, comment: str, request_id: int, status: Status, user_id: int):
         db_request_tracking = DBRequestTracking(
-            comment= comment,
-            request_id= request_id,
-            status= status,
-            user_id= user_id,
+            comment=comment,
+            request_id=request_id,
+            status=status,
+            user_id=user_id,
         )
         self.db.add(db_request_tracking)
         self.db.commit()
@@ -37,4 +37,3 @@ class RequestTrackingRepository:
             .order_by(DBRequestTracking.created_at.desc())
             .first()
         )
-

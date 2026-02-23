@@ -66,5 +66,3 @@ class RequestRepository:
         self.db.commit()
         self.db.refresh(request)
         return request
-
-

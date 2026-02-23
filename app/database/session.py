@@ -91,4 +91,3 @@ def get_db():
 
 
 DBSession = Annotated[Session, Depends(get_db)]
-
