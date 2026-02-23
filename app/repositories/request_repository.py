@@ -61,8 +61,9 @@ class RequestRepository:
         self.db.refresh(request)
         return request
 
-    def update_request_status(self, request, status: Status):
+    def update_request_status(self, request, status: Status, commit: bool = True):
         request.current_status = status
-        self.db.commit()
-        self.db.refresh(request)
+        if commit:
+            self.db.commit()
+            self.db.refresh(request)
         return request

@@ -68,7 +68,15 @@ class RequestTrackingService:
                 message="Invalid status transition",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
-        self.request_repo.update_request_status(request, status_in)
-        self.repo.create(comment, request_id, status_in, user_id)
+        try:
+            self.request_repo.update_request_status(request, status_in, commit=False)
+            self.repo.create(comment, request_id, status_in, user_id, commit=False)
 
+            self.repo.db.commit()
+        except Exception:
+            self.repo.db.rollback()
+            raise BusinessException(
+                message="Database error, Please contact your administrator",
+                status_code=status.HTTP_417_EXPECTATION_FAILED,
+            )
         return request

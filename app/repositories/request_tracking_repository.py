@@ -8,7 +8,14 @@ class RequestTrackingRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, comment: str, request_id: int, status: Status, user_id: int):
+    def create(
+        self,
+        comment: str,
+        request_id: int,
+        status: Status,
+        user_id: int,
+        commit: bool = True,
+    ):
         db_request_tracking = DBRequestTracking(
             comment=comment,
             request_id=request_id,
@@ -16,8 +23,9 @@ class RequestTrackingRepository:
             user_id=user_id,
         )
         self.db.add(db_request_tracking)
-        self.db.commit()
-        self.db.refresh(db_request_tracking)
+        if commit:
+            self.db.commit()
+            self.db.refresh(db_request_tracking)
         return db_request_tracking
 
     def get_request_tracking_by_request_id(self, request_id: int):
