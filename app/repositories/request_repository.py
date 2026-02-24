@@ -54,3 +54,10 @@ class RequestRepository:
             .first()
             is not None
         )
+
+    def update_request_status(self, request, status: Status, commit: bool = True):
+        request.current_status = status
+        if commit:
+            self.db.commit()
+            self.db.refresh(request)
+        return request
