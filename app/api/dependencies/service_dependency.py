@@ -55,12 +55,12 @@ def get_request_service(
     email_manager=Depends(get_email_manager),
 ):
     return RequestService(
-        request_repo,
-        type_repo,
-        subtype_repo,
-        approver_repo,
-        tracking_repo,
-        email_manager,
+        request_repo=request_repo,
+        type_repo=type_repo,
+        subtype_repo=subtype_repo,
+        email_manager=email_manager,
+        approver_repo=approver_repo,
+        tracking_repo=tracking_repo,
     )
 
 

@@ -3,6 +3,7 @@
 from typing import List
 
 from fastapi import status
+from sqlalchemy.orm import Session
 
 from app.common.enums import Status
 from app.common.exceptions import BusinessException
@@ -106,7 +107,7 @@ class RequestService:
             )
 
         #  Get default approver
-        approver = self.approver_repo.get_default_or_available(request.type_id)
+        approver = self.approver_repo.get_least_busy(request.type_id)
 
         if not approver:
             raise BusinessException(
@@ -129,4 +130,29 @@ class RequestService:
             comment="Request submitted and assigned to approver",
         )
 
+        return request
+
+    def create_and_submit_request(self, request_in, current_user_id: int):
+        self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)
+        #  Get lowest-workload approver
+        approver = self.approver_repo.get_least_busy(request_in.type_id)
+        if not approver:
+            raise BusinessException(
+                message="No approver configured for this request type",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        request = self.request_repo.create(
+            request_in, current_user_id, Status.SUBMITTED
+        )
+        # Increment approver workload
+        self.approver_repo.increment_workload(approver)
+        #  Create tracking entry (store approver here)
+        self.tracking_repo.create_tracking_entry(
+            request_id=request.id,
+            user_id=current_user_id,
+            approver_id=approver.user_id,
+            status=Status.SUBMITTED,
+            comment="Request submitted and assigned to approver",
+        )
         return request

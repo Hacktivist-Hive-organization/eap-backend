@@ -46,18 +46,17 @@ def get_requests_by_user(
     )
 
 
-@router.get(
-    "/{request_id}",
-    summary="Get request details",
-    description="Get full request details by id (requester only)",
-    response_model=RequestResponseSchema,
+@router.post(
+    "/submit",
+    response_model=RequestSubmitResponseSchema,
+    status_code=status.HTTP_201_CREATED,
 )
-def get_request_details(
-    request_id: int,
+def create_and_submit_request(
+    request_in: RequestCreateSchema,
     service=Depends(get_request_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    return service.get_request_details(request_id, current_user.id)
+    return service.create_and_submit_request(request_in, current_user.id)
 
 
 @router.patch(
@@ -74,3 +73,17 @@ def submit_request(
         request_id=request_id,
         current_user_id=current_user.id,
     )
+
+
+@router.get(
+    "/{request_id}",
+    summary="Get request details",
+    description="Get full request details by id (requester only)",
+    response_model=RequestResponseSchema,
+)
+def get_request_details(
+    request_id: int,
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.get_request_details(request_id, current_user.id)

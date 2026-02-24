@@ -11,20 +11,11 @@ class RequestTypeApproverRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_default_or_available(
-        self, request_type_id: int
-    ) -> DBRequestTypeApprover | None:
+    def get_least_busy(self, request_type_id: int) -> DBRequestTypeApprover | None:
         """
         Return least busy approver for request_type_id
         Exclude users who are currently out of office
         """
-        approvers_all = (
-            self.db.query(DBRequestTypeApprover).filter(
-                DBRequestTypeApprover.request_type_id == request_type_id
-            )
-        ).all()
-        print("approvers_all", approvers_all)
-        now = datetime.now(timezone.utc)
         approvers = (
             self.db.query(DBRequestTypeApprover)
             .join(DbUser, DBRequestTypeApprover.user_id == DbUser.id)
