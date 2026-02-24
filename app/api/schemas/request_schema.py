@@ -77,11 +77,10 @@ class RequestResponseListSchema(BaseModel):
 
 class RequestTrackingSchema(BaseModel):
     id: int
-    user_id: int
     status: Status
     comment: str
     created_at: datetime
-    approver: AdminUserResponseSchema
+    user: AdminUserResponseSchema
 
     class ConfigDict:
         from_attributes = True

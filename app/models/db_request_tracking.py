@@ -15,7 +15,6 @@ class DBRequestTracking(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     request_id = Column(Integer, ForeignKey("requests.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    approver_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     #  relationships
     request = relationship(
@@ -23,4 +22,3 @@ class DBRequestTracking(Base):
     )
 
     user = relationship("DbUser", foreign_keys=[user_id], back_populates="req_tracking")
-    approver = relationship("DbUser", foreign_keys=[approver_id])

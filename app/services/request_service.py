@@ -123,8 +123,7 @@ class RequestService:
         #  Create tracking entry (store approver here)
         self.tracking_repo.create_tracking_entry(
             request_id=request.id,
-            user_id=current_user_id,
-            approver_id=approver.user_id,
+            user_id=approver.user_id,
             status=Status.SUBMITTED,
             comment="Request submitted and assigned to approver",
         )

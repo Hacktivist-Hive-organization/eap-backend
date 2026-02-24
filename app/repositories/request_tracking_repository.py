@@ -19,7 +19,6 @@ class RequestTrackingRepository:
         self,
         request_id: int,
         user_id: int,
-        approver_id: int | None,
         status: Status,
         comment: str,
     ) -> DBRequestTracking:
@@ -27,7 +26,6 @@ class RequestTrackingRepository:
         tracking = DBRequestTracking(
             request_id=request_id,
             user_id=user_id,
-            approver_id=approver_id,
             status=status,
             comment=comment,
         )

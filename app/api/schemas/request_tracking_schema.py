@@ -10,7 +10,6 @@ class RequestTrackingResponseSchema(BaseModel):
     id: int
     user: UserBaseResponseSchema
     comment: Optional[str] = None
-    approver: UserBaseResponseSchema
     status: Status
 
     class ConfigDict:

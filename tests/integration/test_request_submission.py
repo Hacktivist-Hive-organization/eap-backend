@@ -50,18 +50,18 @@ def test_submit_request_success(
     response = client.patch(f"{API_PREFIX}/{request_id}/submit")
     assert response.status_code == 200
 
-    data = response.json()
+    request_response = response.json()
 
-    assert data["id"] == request_id
-    assert data["current_status"] == Status.SUBMITTED.value
+    assert request_response["id"] == request_id
+    assert request_response["current_status"] == Status.SUBMITTED.value
 
     # Validate tracking entry
-    assert len(data["req_tracking"]) == 1
-    tracking = data["req_tracking"][0]
+    assert len(request_response["req_tracking"]) == 1
+    tracking = request_response["req_tracking"][0]
 
     assert tracking["status"] == Status.SUBMITTED.value
     assert tracking["id"] is not None
-    assert tracking["approver"]["id"] is not None
+    assert tracking["user"]["id"] is not None
 
     # Validate DB state
     db_request = db_session.get(DBRequest, request_id)
@@ -331,8 +331,7 @@ def test_submit_selects_lowest_workload_approver(
     # Validate Lowest Workload Approver Was Assigned
     # -------------------------------------------------
     tracking = data["req_tracking"][0]
-    assigned_approver_id = tracking["approver"]["id"]
-
+    assigned_approver_id = tracking["user"]["id"]
     assert assigned_approver_id == low_workload_approver.id
 
     # -------------------------------------------------
