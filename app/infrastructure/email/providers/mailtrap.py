@@ -5,7 +5,7 @@ from asyncio import to_thread
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from app.common.exceptions import ConfigurationException
+from app.common.exceptions import ConfigurationException, ExternalServiceException
 from app.core.config import settings
 from app.infrastructure.email.base import EmailService
 
@@ -38,9 +38,13 @@ class MailtrapEmailService(EmailService):
             msg.attach(MIMEText(body, "plain"))
 
         def send_email():
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.send_message(msg)
+            try:
+                with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                    server.starttls()
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.send_message(msg)
+
+            except Exception as exc:
+                raise ExternalServiceException("Mailtrap email failed") from exc
 
         await to_thread(send_email)

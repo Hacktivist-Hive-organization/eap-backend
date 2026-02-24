@@ -35,8 +35,11 @@ def get_user_service(repo=Depends(get_user_repository)):
     return UserService(repo)
 
 
-def get_auth_service(repo=Depends(get_user_repository)):
-    return AuthService(repo)
+def get_auth_service(
+    repo=Depends(get_user_repository),
+    email_manager=Depends(get_email_manager),
+):
+    return AuthService(repo, email_manager)
 
 
 def get_health_service(repo=Depends(get_health_repository)):
