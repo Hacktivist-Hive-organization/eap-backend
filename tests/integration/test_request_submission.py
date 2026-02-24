@@ -5,7 +5,7 @@ import pytest
 from app.common.enums import Status
 from app.core.config import settings
 from app.main import app
-from app.models import DBRequest, DBRequestTypeApprover
+from app.models import DBRequest, DBRequestTypeApprover, DbUser
 from app.repositories import RequestTrackingRepository
 
 API_PREFIX = f"{settings.API_V1_PREFIX}/requests"
@@ -67,22 +67,13 @@ def test_submit_request_success(
     db_request = db_session.get(DBRequest, request_id)
     assert db_request.current_status == Status.SUBMITTED
 
-    # Validate workload increment
-    approver_link = (
-        db_session.query(DBRequestTypeApprover)
-        .filter_by(request_type_id=db_request.type_id)
-        .first()
-    )
-
-    assert approver_link.workload == 1
-
 
 # =========================================================
 # OOO FILTER TEST
 # =========================================================
 
 
-def test_submit_request_skips_ooo_approver(
+def test_submit_request_skips_all_ooo_approvers(
     client,
     db_session,
     users,
@@ -91,26 +82,48 @@ def test_submit_request_skips_ooo_approver(
     valid_request_payload,
 ):
     """
-    If approver is OOO, request should not be assigned.
+    If all approvers for a request type are OOO,
+    submission should fail with 400.
     """
 
     requester = users["user1"]
     auth_as(requester)
 
-    # Set hardware approver OOO
-    approver = seeded_request_types["approver1"]
-    approver.is_out_of_office = True
+    hardware = seeded_request_types["hardware"]
+
+    # -------------------------------------------------
+    # Fetch all hardware approvers
+    # -------------------------------------------------
+    approver_links = (
+        db_session.query(DBRequestTypeApprover)
+        .filter_by(request_type_id=hardware.id)
+        .all()
+    )
+
+    # Map to user objects and set all OOO
+    for link in approver_links:
+        approver = db_session.get(DbUser, link.user_id)
+        approver.is_out_of_office = True
+
     db_session.commit()
 
+    # -------------------------------------------------
+    # Create Draft Request
+    # -------------------------------------------------
     payload = valid_request_payload(current_status=Status.DRAFT)
 
     response = client.post(f"{API_PREFIX}", json=payload)
     assert response.status_code == 201
     request_id = response.json()["id"]
 
+    # -------------------------------------------------
+    # Submit Request
+    # -------------------------------------------------
     response = client.patch(f"{API_PREFIX}/{request_id}/submit")
 
-    # Since hardware only has one approver → expect 400
+    # -------------------------------------------------
+    # Expect Failure (No Available Approvers)
+    # -------------------------------------------------
     assert response.status_code == 400
     assert response.json()["detail"] == "No approver configured for this request type"
 
@@ -191,11 +204,27 @@ def test_submit_multiple_requests_increments_workload(
     valid_request_payload,
 ):
     """
-    Workload should increment per successful submission.
+    Workload should increment on the selected (lowest workload) approver
+    for each successful submission.
     """
 
     requester = users["user1"]
     auth_as(requester)
+
+    hardware = seeded_request_types["hardware"]
+
+    # -------------------------------------------------
+    # Get lowest workload approver BEFORE submissions
+    # -------------------------------------------------
+    approver_links = (
+        db_session.query(DBRequestTypeApprover)
+        .filter_by(request_type_id=hardware.id)
+        .order_by(DBRequestTypeApprover.workload.asc())
+        .all()
+    )
+
+    lowest_link = approver_links[0]
+    initial_workload = lowest_link.workload
 
     # -----------------------
     # First request
@@ -226,13 +255,91 @@ def test_submit_multiple_requests_increments_workload(
     assert submit_response_2.status_code == 200
     assert submit_response_2.json()["current_status"] == Status.SUBMITTED.value
 
-    # -----------------------
-    # Validate workload increment
-    # -----------------------
-    approver_link = (
+    # -------------------------------------------------
+    # Validate workload incremented by 2
+    # -------------------------------------------------
+    db_session.refresh(lowest_link)
+
+    assert lowest_link.workload == initial_workload + 2
+
+
+def test_submit_selects_lowest_workload_approver(
+    client,
+    db_session,
+    users,
+    seeded_request_types,
+    auth_as,
+    valid_request_payload,
+):
+    """
+    When multiple approvers exist for Hardware,
+    the approver with the lowest workload should be selected.
+    """
+
+    requester = users["user1"]
+    auth_as(requester)
+
+    hardware = seeded_request_types["hardware"]
+
+    # Based on seed:
+    high_workload_approver = seeded_request_types["approver1"]  # workload = 5
+    low_workload_approver = seeded_request_types["approver2"]  # workload = 1
+
+    # -------------------------------------------------
+    # Assert initial workload ordering (safety check)
+    # -------------------------------------------------
+    high_link = (
         db_session.query(DBRequestTypeApprover)
-        .filter_by(request_type_id=seeded_request_types["hardware"].id)
+        .filter_by(
+            user_id=high_workload_approver.id,
+            request_type_id=hardware.id,
+        )
         .first()
     )
 
-    assert approver_link.workload == 2
+    low_link = (
+        db_session.query(DBRequestTypeApprover)
+        .filter_by(
+            user_id=low_workload_approver.id,
+            request_type_id=hardware.id,
+        )
+        .first()
+    )
+
+    assert low_link.workload < high_link.workload
+    initial_low_workload = low_link.workload
+    initial_high_workload = high_link.workload
+
+    # -------------------------------------------------
+    # Create Draft Request (Hardware default)
+    # -------------------------------------------------
+    payload = valid_request_payload(current_status=Status.DRAFT)
+
+    response = client.post(f"{API_PREFIX}", json=payload)
+    assert response.status_code == 201
+    request_id = response.json()["id"]
+
+    # -------------------------------------------------
+    # Submit Request
+    # -------------------------------------------------
+    response = client.patch(f"{API_PREFIX}/{request_id}/submit")
+    assert response.status_code == 200
+
+    data = response.json()
+
+    # -------------------------------------------------
+    # Validate Lowest Workload Approver Was Assigned
+    # -------------------------------------------------
+    tracking = data["req_tracking"][0]
+    assigned_approver_id = tracking["approver"]["id"]
+
+    assert assigned_approver_id == low_workload_approver.id
+
+    # -------------------------------------------------
+    # Validate Workload Updated Correctly
+    # -------------------------------------------------
+    db_session.refresh(low_link)
+    db_session.refresh(high_link)
+
+    assert low_link.workload == initial_low_workload + 1  # was 1 → now 2
+    assert high_link.workload == initial_high_workload  # unchanged
