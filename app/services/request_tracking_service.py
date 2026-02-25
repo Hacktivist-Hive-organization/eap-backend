@@ -91,11 +91,16 @@ class RequestTrackingService:
                 message="Database error, Please contact your administrator",
                 status_code=status.HTTP_417_EXPECTATION_FAILED,
             )
-        if status_in == Status.REJECTED:
+
+        if status_in in [Status.REJECTED, Status.APPROVED]:  # ADDED
             requester = request.requester
             link = f"{settings.FRONTEND_URL}/requests/{request.id}"
 
-            email_body = REQUEST_REJECTED.substitute(
+            template = (  # ADDED
+                REQUEST_REJECTED if status_in == Status.REJECTED else REQUEST_APPROVED
+            )
+
+            email_body = template.substitute(
                 request_code=f"REQ-{request.id}",
                 request_title=request.title,
                 user_name=f"{requester.first_name} {requester.last_name}",
@@ -107,10 +112,16 @@ class RequestTrackingService:
                 link=link,
             )
 
+            subject_prefix = (
+                "Request Rejected"
+                if status_in == Status.REJECTED
+                else "Request Approved"
+            )
+
             asyncio.run(
                 self.email_manager.send_email(
                     to=requester.email,
-                    subject=f"Request Rejected - REQ-{request.id} - {request.title}",
+                    subject=f"{subject_prefix} - REQ-{request.id} - {request.title}",
                     body=email_body,
                 )
             )
