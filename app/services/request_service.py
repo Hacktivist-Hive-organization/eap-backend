@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.common.enums import Status
 from app.common.exceptions import BusinessException
 from app.infrastructure.email.manager import EmailManager
-from app.infrastructure.email.templates import REQUEST_SUBMITTED
+from app.infrastructure.email.templates import REQUEST_REJECTED
 from app.repositories import (
     RequestRepository,
     RequestSubtypeRepository,
