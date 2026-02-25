@@ -1,7 +1,9 @@
 # app/services/request_tracking_service.py
 
 import asyncio
+import time
 
+from fastapi import BackgroundTasks
 from starlette import status
 
 from app.common.enums import Status
@@ -38,6 +40,7 @@ class RequestTrackingService:
         status_in: Status,
         user_id: int,
         comment: str,
+        background_tasks: BackgroundTasks | None = None,
     ):
         request = self.request_repo.get_request_details(request_id)
 
@@ -92,38 +95,40 @@ class RequestTrackingService:
                 status_code=status.HTTP_417_EXPECTATION_FAILED,
             )
 
-        if status_in in [Status.REJECTED, Status.APPROVED]:  # ADDED
-            requester = request.requester
-            link = f"{settings.FRONTEND_URL}/requests/{request.id}"
-
-            template = (
-                REQUEST_REJECTED if status_in == Status.REJECTED else REQUEST_APPROVED
-            )
-
-            email_body = template.substitute(
-                request_code=f"REQ-{request.id}",
-                request_title=request.title,
-                user_name=f"{requester.first_name} {requester.last_name}",
-                request_id=request.id,
-                request_type=f"{request.type.name} > {request.subtype.name}",
-                priority=request.priority.value,
-                submitted_at=request.created_at.strftime("%B %d, %Y at %I:%M %p"),
-                status=status_in.value,
-                link=link,
-            )
-
-            subject_prefix = (
-                "Request Rejected"
-                if status_in == Status.REJECTED
-                else "Request Approved"
-            )
-
-            asyncio.run(
-                self.email_manager.send_email(
-                    to=requester.email,
-                    subject=f"{subject_prefix} - REQ-{request.id} - {request.title}",
-                    body=email_body,
-                )
-            )
+        if status_in in [Status.REJECTED, Status.APPROVED] and background_tasks:
+            background_tasks.add_task(self._send_email_task, request, status_in)
 
         return request
+
+    def _send_email_task(self, request, status_in: Status):
+        requester = request.requester
+        link = f"{settings.FRONTEND_URL}/requests/{request.id}"
+        template = (
+            REQUEST_REJECTED if status_in == Status.REJECTED else REQUEST_APPROVED
+        )
+
+        email_body = template.substitute(
+            request_code=f"REQ-{request.id}",
+            request_title=request.title,
+            user_name=f"{requester.first_name} {requester.last_name}",
+            request_id=request.id,
+            request_type=f"{request.type.name} > {request.subtype.name}",
+            priority=request.priority.value,
+            submitted_at=request.created_at.strftime("%B %d, %Y at %I:%M %p"),
+            status=status_in.value,
+            link=link,
+        )
+
+        subject_prefix = (
+            "Request Rejected" if status_in == Status.REJECTED else "Request Approved"
+        )
+
+        time.sleep(10)
+
+        asyncio.run(
+            self.email_manager.send_email(
+                to=requester.email,
+                subject=f"{subject_prefix} - REQ-{request.id} - {request.title}",
+                body=email_body,
+            )
+        )
