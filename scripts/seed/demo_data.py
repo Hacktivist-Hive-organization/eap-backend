@@ -2,10 +2,13 @@
 from app.common.enums import Priority, Status, UserRole
 from app.common.security import hash_password
 from app.database.session import SessionLocal
-from app.models import DBRequestTracking, DbUser
-from app.models.db_request import DBRequest
-from app.models.db_request_subtype import DBRequestSubtype
-from app.models.db_request_type import DBRequestType
+from app.models import (
+    DBRequest,
+    DBRequestSubtype,
+    DBRequestTracking,
+    DBRequestType,
+    DbUser,
+)
 
 
 def seed_demo_data():
@@ -60,10 +63,8 @@ def seed_demo_data():
         db.query(DBRequestSubtype).filter_by(name="Training/course enrollment").first()
     )
 
-    # Only seed if there are no requests yet
     if db.query(DBRequest).count() == 0:
         demo_requests = [
-            # Draft
             DBRequest(
                 type_id=hardware.id,
                 subtype_id=laptop.id,
@@ -73,7 +74,6 @@ def seed_demo_data():
                 priority=Priority.HIGH,
                 requester_id=user1.id,
             ),
-            # Submitted
             DBRequest(
                 type_id=software.id,
                 subtype_id=vpn.id,
@@ -83,7 +83,6 @@ def seed_demo_data():
                 priority=Priority.MEDIUM,
                 requester_id=user1.id,
             ),
-            # In Progress
             DBRequest(
                 type_id=services.id,
                 subtype_id=training.id,
@@ -133,7 +132,7 @@ def seed_demo_data():
             db.add_all(demo_tracking_requests)
             db.commit()
 
-    print("Seeded demo users and requests successfully.")
+    print("Seeded demo users, request types, subtypes, and requests successfully.")
     print("User credentials for login:")
     print(" - Email: user1@example.com / Password: user123!")
     print(" - Email: user2@example.com / Password: user456!")

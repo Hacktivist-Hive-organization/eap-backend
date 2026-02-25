@@ -1,8 +1,8 @@
+from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from app.api.schemas.request_schema import RequestResponseSchema
 from app.api.schemas.user_schema import UserBaseResponseSchema
 from app.common.enums import Status
 
@@ -13,4 +13,5 @@ class RequestTrackingResponseSchema(BaseModel):
     comment: Optional[str] = None
     status: Status
 
-    model_config = ConfigDict(from_attributes=True)
+    class ConfigDict:
+        from_attributes = True

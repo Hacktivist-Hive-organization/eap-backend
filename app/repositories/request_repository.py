@@ -1,6 +1,6 @@
 # app/repositories/request_repository.py
 
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.orm import Session, selectinload
 
@@ -13,7 +13,12 @@ class RequestRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, request: DBRequest, current_user_id: int):
+    def create(
+        self,
+        request: DBRequest,
+        current_user_id: int,
+        current_status: Optional[Status] = Status.DRAFT,
+    ):
         db_request = DBRequest(
             type_id=request.type_id,
             subtype_id=request.subtype_id,
@@ -21,7 +26,7 @@ class RequestRepository:
             description=request.description,
             business_justification=request.business_justification,
             priority=request.priority,
-            current_status=Status.DRAFT,
+            current_status=current_status,
             requester_id=current_user_id,
         )
         self.db.add(db_request)
@@ -60,4 +65,10 @@ class RequestRepository:
         if commit:
             self.db.commit()
             self.db.refresh(request)
+        return request
+
+    def save(self, request: DBRequest) -> DBRequest:
+        self.db.add(request)
+        self.db.commit()
+        self.db.refresh(request)
         return request

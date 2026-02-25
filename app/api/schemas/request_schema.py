@@ -6,6 +6,7 @@ from typing import List
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.api.schemas.request_tracking_schema import RequestTrackingResponseSchema
 from app.api.schemas.user_schema import AdminUserResponseSchema
 from app.common.enums import Priority, Status
 
@@ -70,6 +71,22 @@ class RequestResponseListSchema(BaseModel):
     requester: AdminUserResponseSchema
     created_at: datetime
     updated_at: datetime | None
+
+    class ConfigDict:
+        from_attributes = True
+
+
+class RequestSubmitResponseSchema(BaseModel):
+    id: int
+    title: str
+    priority: Priority
+    current_status: Status
+    type: RequestTypeSchema
+    subtype: RequestSubtypeSchema
+    requester: AdminUserResponseSchema
+    created_at: datetime
+    updated_at: datetime | None
+    req_tracking: list[RequestTrackingResponseSchema]
 
     class ConfigDict:
         from_attributes = True

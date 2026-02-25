@@ -50,13 +50,17 @@ def get_request_service(
     request_repo=Depends(get_request_repository),
     type_repo=Depends(get_request_type_repository),
     subtype_repo=Depends(get_request_subtype_repository),
+    approver_repo=Depends(get_request_type_approver_repository),
+    tracking_repo=Depends(get_request_tracking_repository),
     email_manager=Depends(get_email_manager),
 ):
     return RequestService(
-        request_repo,
-        type_repo,
-        subtype_repo,
-        email_manager,
+        request_repo=request_repo,
+        type_repo=type_repo,
+        subtype_repo=subtype_repo,
+        email_manager=email_manager,
+        approver_repo=approver_repo,
+        tracking_repo=tracking_repo,
     )
 
 
