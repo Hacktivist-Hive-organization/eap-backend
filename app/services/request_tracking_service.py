@@ -96,7 +96,7 @@ class RequestTrackingService:
             requester = request.requester
             link = f"{settings.FRONTEND_URL}/requests/{request.id}"
 
-            template = (  # ADDED
+            template = (
                 REQUEST_REJECTED if status_in == Status.REJECTED else REQUEST_APPROVED
             )
 
