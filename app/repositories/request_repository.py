@@ -55,6 +55,13 @@ class RequestRepository:
             is not None
         )
 
+    def update_request_status(self, request, status: Status, commit: bool = True):
+        request.current_status = status
+        if commit:
+            self.db.commit()
+            self.db.refresh(request)
+        return request
+
     def save(self, request: DBRequest) -> DBRequest:
         self.db.add(request)
         self.db.commit()

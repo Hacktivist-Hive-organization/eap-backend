@@ -8,6 +8,26 @@ class RequestTrackingRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    def create(
+        self,
+        comment: str,
+        request_id: int,
+        status: Status,
+        user_id: int,
+        commit: bool = True,
+    ):
+        db_request_tracking = DBRequestTracking(
+            comment=comment,
+            request_id=request_id,
+            status=status,
+            user_id=user_id,
+        )
+        self.db.add(db_request_tracking)
+        if commit:
+            self.db.commit()
+            self.db.refresh(db_request_tracking)
+        return db_request_tracking
+
     def get_request_tracking_by_request_id(self, request_id: int):
         query = self.db.query(DBRequestTracking).filter(
             DBRequestTracking.request_id == request_id
@@ -15,23 +35,13 @@ class RequestTrackingRepository:
         request_tracking = query.order_by(DBRequestTracking.created_at.desc()).all()
         return request_tracking
 
-    def create_tracking_entry(
-        self,
-        request_id: int,
-        user_id: int,
-        status: Status,
-        comment: str,
-    ) -> DBRequestTracking:
-
-        tracking = DBRequestTracking(
-            request_id=request_id,
-            user_id=user_id,
-            status=status,
-            comment=comment,
+    def get_tracking_by_request_user_id(self, request_id: int, user_id: int):
+        return (
+            self.db.query(DBRequestTracking)
+            .filter(
+                DBRequestTracking.request_id == request_id,
+                DBRequestTracking.user_id == user_id,
+            )
+            .order_by(DBRequestTracking.created_at.desc())
+            .first()
         )
-
-        self.db.add(tracking)
-        self.db.commit()
-        self.db.refresh(tracking)
-
-        return tracking

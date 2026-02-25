@@ -91,6 +91,3 @@ def get_db():
 
 
 DBSession = Annotated[Session, Depends(get_db)]
-
-# SQLAlchemy DB URL
-SQLALCHEMY_DATABASE_URL = create_database_url()

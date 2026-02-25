@@ -121,7 +121,7 @@ class RequestService:
         self.approver_repo.increment_workload(approver)
 
         #  Create tracking entry (store approver here)
-        self.tracking_repo.create_tracking_entry(
+        self.tracking_repo.create(
             request_id=request.id,
             user_id=approver.user_id,
             status=Status.SUBMITTED,

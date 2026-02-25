@@ -1,14 +1,21 @@
+# demo_data.py
 from app.common.enums import Priority, Status, UserRole
 from app.common.security import hash_password
 from app.database.session import SessionLocal
-from app.models import DBRequest, DBRequestSubtype, DBRequestType, DbUser
+from app.models import (
+    DBRequest,
+    DBRequestSubtype,
+    DBRequestTracking,
+    DBRequestType,
+    DbUser,
+)
 
 
 def seed_demo_data():
     db = SessionLocal()
 
     # -----------------------
-    # Demo users
+    # Demo user
     # -----------------------
     if db.query(DbUser).filter(DbUser.email == "user1@example.com").count() == 0:
         user1 = DbUser(
@@ -36,6 +43,12 @@ def seed_demo_data():
     # -----------------------
     # Demo requests
     # -----------------------
+    software_approver = (
+        db.query(DbUser).filter_by(email="approver-software@eap.local").first()
+    )
+    if not software_approver:
+        raise ValueError("Software approver user not found")
+
     hardware = db.query(DBRequestType).filter_by(name="Hardware").first()
     software = db.query(DBRequestType).filter_by(name="Software & Access").first()
     services = db.query(DBRequestType).filter_by(name="Services & Facilities").first()
@@ -79,9 +92,45 @@ def seed_demo_data():
                 priority=Priority.LOW,
                 requester_id=user1.id,
             ),
+            # Approved
+            DBRequest(
+                type_id=hardware.id,
+                subtype_id=monitor.id,
+                title="Additional monitor for workstation",
+                description="Considering a second monitor for better multitasking.",
+                business_justification="Improves productivity during development and reviews.",
+                priority=Priority.MEDIUM,
+                requester_id=user1.id,
+            ),
+            # Rejected
+            DBRequest(
+                type_id=software.id,
+                subtype_id=software_license.id,
+                title="IDE software license",
+                description="Draft request for a professional IDE license.",
+                business_justification="Advanced tooling speeds up development and debugging.",
+                priority=Priority.LOW,
+                requester_id=user1.id,
+            ),
         ]
         db.add_all(demo_requests)
         db.commit()
+
+        if db.query(DBRequestTracking).count() == 0:
+            demo_tracking_requests = [
+                # Draft
+                DBRequestTracking(
+                    status=Status.SUBMITTED,
+                    user_id=software_approver.id,
+                    request_id=demo_requests[4].id,
+                    comment="initial submit",
+                ),
+            ]
+
+            demo_requests[4].current_status = Status.SUBMITTED
+
+            db.add_all(demo_tracking_requests)
+            db.commit()
 
     print("Seeded demo users, request types, subtypes, and requests successfully.")
     print("User credentials for login:")
