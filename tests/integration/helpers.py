@@ -63,7 +63,7 @@ def seed_types_and_subtypes(db):
     # -----------------------------
     db.add_all(
         [
-            # 🔥 Hardware → TWO approvers (different workload)
+            # Hardware → TWO approvers (different workload)
             DBRequestTypeApprover(
                 user_id=approver1.id,
                 request_type_id=hardware.id,
