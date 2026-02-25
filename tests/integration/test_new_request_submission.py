@@ -347,7 +347,7 @@ def test_submit_selects_lowest_workload_approver(
     # Validate Lowest Workload Approver Was Assigned
     # -------------------------------------------------
     tracking = data["req_tracking"][0]
-    assigned_approver_id = tracking["approver"]["id"]
+    assigned_approver_id = tracking["user"]["id"]
 
     assert assigned_approver_id == low_workload_approver.id
 
