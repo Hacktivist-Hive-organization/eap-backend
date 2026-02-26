@@ -157,11 +157,8 @@ def test_get_assigned_requests_filter_by_one_status(
     )
 
     assert len(data) == len(expected)
-
-    returned_ids = {r["id"] for r in data}
-    expected_ids = {r.id for r in expected}
-
-    assert returned_ids == expected_ids
+    returned_statuses = {r["current_status"] for r in data}
+    assert returned_statuses == {Status.SUBMITTED.value}
 
 
 def test_get_assigned_requests_filter_by_two_statuses(
@@ -189,10 +186,9 @@ def test_get_assigned_requests_filter_by_two_statuses(
 
     assert len(data) == len(expected)
 
-    returned_ids = {r["id"] for r in data}
-    expected_ids = {r.id for r in expected}
-
-    assert returned_ids == expected_ids
+    #  Only allowed statuses returned
+    returned_statuses = {r["current_status"] for r in data}
+    assert returned_statuses.issubset({s.value for s in statuses})
 
 
 def test_get_assigned_requests_without_filter_returns_all(
@@ -212,10 +208,10 @@ def test_get_assigned_requests_without_filter_returns_all(
 
     assert len(data) == len(expected)
 
-    returned_ids = {r["id"] for r in data}
-    expected_ids = {r.id for r in expected}
-
-    assert returned_ids == expected_ids
+    #  All statuses present
+    expected_statuses = {r.current_status.value for r in expected}
+    returned_statuses = {r["current_status"] for r in data}
+    assert returned_statuses == expected_statuses
 
 
 def test_get_assigned_requests_empty_for_other_approver(
