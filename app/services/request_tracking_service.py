@@ -1,6 +1,8 @@
+from typing import List, Optional
+
 from starlette import status
 
-from app.common.enums import Status
+from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
 from app.repositories import RequestRepository, RequestTrackingRepository
 
@@ -80,3 +82,19 @@ class RequestTrackingService:
                 status_code=status.HTTP_417_EXPECTATION_FAILED,
             )
         return request
+
+    def get_requests_for_approver(
+        self, current_user, statuses: Optional[List[Status]] = None
+    ) -> list:
+        """
+        Returns requests assigned to the current approver, optionally filtered by statuses.
+        """
+        if current_user.role != UserRole.APPROVER:
+            raise BusinessException(
+                message="User is not an approver",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        return self.repo.get_requests_for_approver(
+            approver_id=current_user.id, statuses=statuses
+        )

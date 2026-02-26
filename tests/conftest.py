@@ -16,7 +16,11 @@ from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
 from app.services.auth_service import AuthService
 from app.services.user_service import UserService
-from tests.integration.helpers import seed_types_and_subtypes, seed_user
+from tests.integration.helpers import (
+    seed_dashboard_approvers,
+    seed_types_and_subtypes,
+    seed_user,
+)
 
 
 @pytest.fixture(scope="function")
@@ -69,6 +73,11 @@ def client(db_session):
 def users(db_session):
     users = seed_user(db_session)
     return users
+
+
+@pytest.fixture
+def dashboard_approvers(db_session):
+    return seed_dashboard_approvers(db_session)
 
 
 @pytest.fixture(scope="function")
@@ -164,6 +173,7 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             current_status=Status.SUBMITTED,
             requester_id=owner.id,
         ),
+        # APPROVED
         DBRequest(
             type_id=data["hardware"].id,
             subtype_id=data["laptop"].id,
@@ -172,6 +182,27 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             business_justification="Valid justification long enough",
             priority=Priority.MEDIUM,
             current_status=Status.APPROVED,
+            requester_id=owner.id,
+        ),
+        DBRequest(
+            type_id=data["hardware"].id,
+            subtype_id=data["laptop"].id,
+            title="Approved Req 2",
+            description="Valid description long enough",
+            business_justification="Valid justification long enough",
+            priority=Priority.MEDIUM,
+            current_status=Status.APPROVED,
+            requester_id=owner.id,
+        ),
+        # REJECTED
+        DBRequest(
+            type_id=data["hardware"].id,
+            subtype_id=data["laptop"].id,
+            title="Rejected Req",
+            description="Valid description long enough",
+            business_justification="Valid justification long enough",
+            priority=Priority.MEDIUM,
+            current_status=Status.REJECTED,
             requester_id=owner.id,
         ),
     ]

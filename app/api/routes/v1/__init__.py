@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from app.api.routes.v1.approver_router import router as approver_router
 from app.api.routes.v1.auth_router import router as auth_router
 from app.api.routes.v1.email_router import router as email_router
 from app.api.routes.v1.health_router import router as health_router
@@ -19,3 +20,4 @@ router.include_router(type_router, prefix="/types")
 router.include_router(subtype_router, prefix="/subtypes")
 router.include_router(health_router, prefix="/health")
 router.include_router(email_router, prefix="/email")
+router.include_router(approver_router, prefix="/approver")

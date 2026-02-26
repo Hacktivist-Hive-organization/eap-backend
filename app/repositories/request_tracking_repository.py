@@ -1,7 +1,10 @@
-from sqlalchemy.orm import Session
+from typing import List, Optional
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session, selectinload
 
 from app.common.enums import Status
-from app.models import DBRequestTracking
+from app.models import DBRequest, DBRequestTracking
 
 
 class RequestTrackingRepository:
@@ -45,3 +48,28 @@ class RequestTrackingRepository:
             .order_by(DBRequestTracking.created_at.desc())
             .first()
         )
+
+    def get_requests_for_approver(
+        self, approver_id: int, statuses: Optional[List[Status]] = None
+    ) -> list[DBRequest]:
+        """
+        Returns all requests assigned to the approver via tracking entries,
+        optionally filtered by request statuses.
+        """
+        stmt = (
+            select(DBRequest)
+            .join(DBRequestTracking, DBRequestTracking.request_id == DBRequest.id)
+            .where(DBRequestTracking.user_id == approver_id)
+            .options(
+                selectinload(DBRequest.requester),
+                selectinload(DBRequest.type),
+                selectinload(DBRequest.subtype),
+                selectinload(DBRequest.req_tracking),
+            )
+            .order_by(DBRequest.updated_at.asc())
+        )
+
+        if statuses:
+            stmt = stmt.where(DBRequest.current_status.in_(statuses))
+
+        return self.db.execute(stmt).scalars().all()
