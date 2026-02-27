@@ -1,5 +1,6 @@
 # tests/integration/helpers.py
 
+from app.common.enums import UserRole
 from app.models import (
     DBRequestSubtype,
     DBRequestType,
@@ -122,4 +123,45 @@ def seed_user(db):
     return {
         "user1": user1,
         "user2": user2,
+    }
+
+
+# ---------------------------------------
+# Dedicated approvers for dashboard tests
+# ---------------------------------------
+
+
+def seed_dashboard_approvers(db):
+    """
+    Create dedicated approver users for dashboard tests.
+    Does NOT interfere with existing seeded users.
+    """
+
+    dashboard_approver1 = DbUser(
+        email="dashboard_approver1@example.com",
+        first_name="Dashboard",
+        last_name="ApproverOne",
+        hashed_password="not_a_real_hash",
+        is_active=True,
+        role=UserRole.APPROVER,
+    )
+
+    dashboard_approver2 = DbUser(
+        email="dashboard_approver2@example.com",
+        first_name="Dashboard",
+        last_name="ApproverTwo",
+        hashed_password="not_a_real_hash",
+        is_active=True,
+        role=UserRole.APPROVER,
+    )
+
+    db.add_all([dashboard_approver1, dashboard_approver2])
+    db.commit()
+
+    db.refresh(dashboard_approver1)
+    db.refresh(dashboard_approver2)
+
+    return {
+        "dashboard_approver1": dashboard_approver1,
+        "dashboard_approver2": dashboard_approver2,
     }

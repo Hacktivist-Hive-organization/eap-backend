@@ -1,12 +1,12 @@
 # app/services/request_tracking_service.py
-
 import asyncio
 import time
+from typing import List, Optional
 
 from fastapi import BackgroundTasks
 from starlette import status
 
-from app.common.enums import Status
+from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
 from app.core.config import settings
 from app.infrastructure.email.manager import EmailManager
@@ -99,6 +99,22 @@ class RequestTrackingService:
             background_tasks.add_task(self._send_email_task, request, status_in)
 
         return request
+
+    def get_requests_for_approver(
+        self, current_user, statuses: Optional[List[Status]] = None
+    ) -> list:
+        """
+        Returns requests assigned to the current approver, optionally filtered by statuses.
+        """
+        if current_user.role != UserRole.APPROVER:
+            raise BusinessException(
+                message="User is not an approver",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        return self.repo.get_requests_for_approver(
+            approver_id=current_user.id, statuses=statuses
+        )
 
     def _send_email_task(self, request, status_in: Status):
         requester = request.requester
