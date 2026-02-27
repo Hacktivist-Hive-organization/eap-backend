@@ -47,3 +47,10 @@ class DBRequest(Base):
         foreign_keys="[DBRequestTracking.request_id]",
         back_populates="request",
     )
+
+    @property
+    def assignee(self):
+        if not self.req_tracking:
+            return self.requester
+        latest = max(self.req_tracking, key=lambda t: t.created_at)
+        return latest.user

@@ -47,6 +47,7 @@ class RequestRepository:
                 selectinload(DBRequest.requester),
                 selectinload(DBRequest.type),
                 selectinload(DBRequest.subtype),
+                selectinload(DBRequest.req_tracking),
             )
             .filter(DBRequest.id == request_id)
             .first()
