@@ -1,4 +1,5 @@
 # tests/conftest.py
+import os
 
 import pytest
 from fastapi.testclient import TestClient
@@ -7,7 +8,11 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
-from app.api.dependencies.service_dependency import get_auth_service, get_user_service
+from app.api.dependencies.service_dependency import (
+    get_auth_service,
+    get_email_manager,
+    get_user_service,
+)
 from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
@@ -128,16 +133,18 @@ def valid_request_payload(seeded_request_types):
 
 
 @pytest.fixture(autouse=True)
-def override_auth_service(db_session):
+def override_email_manager():
+    if not os.getenv("CI"):
+        yield
+        return
+
     class DummyEmailManager:
-        async def send_email(self, to, subject, body, html=None):
+        async def send_email(
+            self, to: str, subject: str, body: str, html: str | None = None
+        ):
             return None
 
-    def _override():
-        repo = UserRepository(db_session)
-        return AuthService(repo, DummyEmailManager())
-
-    app.dependency_overrides[get_auth_service] = _override
+    app.dependency_overrides[get_email_manager] = lambda: DummyEmailManager()
     yield
     app.dependency_overrides.clear()
 
