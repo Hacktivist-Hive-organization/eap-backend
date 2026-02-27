@@ -1,7 +1,7 @@
 # app/services/request_tracking_service.py
-from typing import List, Optional
 import asyncio
 import time
+from typing import List, Optional
 
 from fastapi import BackgroundTasks
 from starlette import status
@@ -114,7 +114,8 @@ class RequestTrackingService:
 
         return self.repo.get_requests_for_approver(
             approver_id=current_user.id, statuses=statuses
-          
+        )
+
     def _send_email_task(self, request, status_in: Status):
         requester = request.requester
         link = f"{settings.FRONTEND_URL}/requests/{request.id}"
