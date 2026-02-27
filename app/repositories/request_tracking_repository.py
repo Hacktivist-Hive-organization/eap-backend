@@ -58,8 +58,9 @@ class RequestTrackingRepository:
         """
         stmt = (
             select(DBRequest)
-            .join(DBRequestTracking, DBRequestTracking.request_id == DBRequest.id)
+            .join(DBRequestTracking)
             .where(DBRequestTracking.user_id == approver_id)
+            .distinct()
             .options(
                 selectinload(DBRequest.requester),
                 selectinload(DBRequest.type),
