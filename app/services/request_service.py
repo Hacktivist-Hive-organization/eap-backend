@@ -129,7 +129,10 @@ class RequestService:
             comment="Request submitted and assigned to approver",
         )
 
-        return request
+        # expire_on_commit=False keeps req_tracking stale; expire it so the
+        # next selectinload query picks up the newly committed tracking entry
+        self.request_repo.db.expire(request, ["req_tracking"])
+        return self.request_repo.get_request_details(request.id)
 
     def create_and_submit_request(self, request_in, current_user_id: int):
         self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)

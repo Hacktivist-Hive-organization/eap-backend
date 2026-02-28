@@ -27,7 +27,17 @@ class RequestTrackingService:
         self.email_manager = email_manager
 
     def get_request_tracking_by_request_id(self, request_id: int, user_id: int):
-        if not self.request_repo.is_request_owned_by_user(request_id, user_id):
+        request = self.request_repo.get_request_details(request_id)
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        is_requester = request.requester_id == user_id
+        is_approver = bool(
+            self.repo.get_tracking_by_request_user_id(request_id, user_id)
+        )
+        if not (is_requester or is_approver):
             raise BusinessException(
                 message="You do not have permission to track this request",
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -55,17 +65,24 @@ class RequestTrackingService:
         request_tracking = self.repo.get_tracking_by_request_user_id(
             request_id, user_id
         )
-        if not request_tracking:
-            raise BusinessException(
-                message="You are not authorized to process this request",
-                status_code=status.HTTP_403_FORBIDDEN,
-            )
+
+        if status_in == Status.CANCELLED:
+            # Requester (owner) or assigned approver can cancel
+            if user_id != request.requester_id and not request_tracking:
+                raise BusinessException(
+                    message="You are not authorized to cancel this request",
+                    status_code=status.HTTP_403_FORBIDDEN,
+                )
+        else:
+            # Only the assigned approver can approve or reject
+            if not request_tracking:
+                raise BusinessException(
+                    message="You are not authorized to process this request",
+                    status_code=status.HTTP_403_FORBIDDEN,
+                )
 
         # check if request status = submitted
-        if (
-            request.current_status != Status.SUBMITTED
-            or request_tracking.status != Status.SUBMITTED
-        ):
+        if request.current_status != Status.SUBMITTED:
             raise BusinessException(
                 message=f"Request cannot be {status_in.value} because it is in {request.current_status.value} status",
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -98,6 +115,23 @@ class RequestTrackingService:
         if status_in in [Status.REJECTED, Status.APPROVED] and background_tasks:
             background_tasks.add_task(self._send_email_task, request, status_in)
 
+        return request
+
+    def get_request_by_id_for_approver(self, request_id: int, user_id: int):
+        request = self.request_repo.get_request_details(request_id)
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        request_tracking = self.repo.get_tracking_by_request_user_id(
+            request_id, user_id
+        )
+        if not request_tracking:
+            raise BusinessException(
+                message="You are not authorized to view this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
         return request
 
     def get_requests_for_approver(
