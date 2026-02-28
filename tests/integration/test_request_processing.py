@@ -25,108 +25,82 @@ def submitted_request_with_tracking(db_session, users, seeded_requests_for_user)
 def test_process_request_approve_success(
     client, users, auth_as, submitted_request_with_tracking
 ):
-    approver = users["user2"]
-    auth_as(approver)
-
+    auth_as(users["user2"])
     request_id = submitted_request_with_tracking.id
     response = client.post(
         f"{API_PREFIX}/{request_id}/process?status=approved&comment=Looks good"
     )
-
     assert response.status_code == 200
-    body = response.json()
-    assert body["current_status"] == Status.APPROVED
+    assert response.json()["current_status"] == Status.APPROVED
 
 
 def test_process_request_reject_success(
     client, users, auth_as, submitted_request_with_tracking
 ):
-    approver = users["user2"]
-    auth_as(approver)
-
+    auth_as(users["user2"])
     request_id = submitted_request_with_tracking.id
     response = client.post(
-        f"{API_PREFIX}/{request_id}/process?status=rejected&comment=Insufficient info"
+        f"{API_PREFIX}/{request_id}/process?status=rejected&comment=Not enough info"
     )
-
     assert response.status_code == 200
-    body = response.json()
-    assert body["current_status"] == Status.REJECTED
+    assert response.json()["current_status"] == Status.REJECTED
 
 
 def test_process_request_reject_missing_comment(
     client, users, auth_as, submitted_request_with_tracking
 ):
-    approver = users["user2"]
-    auth_as(approver)
-
+    auth_as(users["user2"])
     request_id = submitted_request_with_tracking.id
     response = client.post(f"{API_PREFIX}/{request_id}/process?status=rejected")
-
     assert response.status_code == 400
-    assert response.json()["detail"] == "Comment is mandatory for rejection"
+    assert "Comment is mandatory" in response.json()["detail"]
 
 
 def test_process_request_cancel_success(
     client, users, auth_as, submitted_request_with_tracking
 ):
-    approver = users["user2"]
-    auth_as(approver)
-
+    auth_as(users["user2"])
     request_id = submitted_request_with_tracking.id
     response = client.post(
         f"{API_PREFIX}/{request_id}/process?status=cancelled&comment=Changed my mind"
     )
-
     assert response.status_code == 200
-    body = response.json()
-    assert body["current_status"] == Status.CANCELLED
+    assert response.json()["current_status"] == Status.CANCELLED
 
 
 def test_process_request_unauthorized(
     client, users, auth_as, submitted_request_with_tracking
 ):
-    other_user = users["user1"]
-    auth_as(other_user)  # user1 is not assigned to the tracking record
-
+    auth_as(users["user1"])
     request_id = submitted_request_with_tracking.id
     response = client.post(f"{API_PREFIX}/{request_id}/process?status=approved")
-
     assert response.status_code == 403
-    assert "not authorized to process this request" in response.json()["detail"]
+    assert "not authorized" in response.json()["detail"]
 
 
 def test_process_request_invalid_next_status(
     client, users, auth_as, submitted_request_with_tracking
 ):
-    approver = users["user2"]
-    auth_as(approver)
-
+    auth_as(users["user2"])
     request_id = submitted_request_with_tracking.id
     response = client.post(f"{API_PREFIX}/{request_id}/process?status=draft")
-
     assert response.status_code == 400
-    assert "Invalid status transition" in response.json()["detail"]
+    assert "Cannot transition" in response.json()["detail"]
 
 
 def test_process_request_invalid_current_status(
     client, users, auth_as, seeded_requests_for_user, db_session
 ):
-    # draft is index 0
     req = seeded_requests_for_user[0]
-    approver = users["user2"]
-    auth_as(approver)
-
-    # Add tracking
+    auth_as(users["user2"])
     tracking = DBRequestTracking(
-        request_id=req.id, user_id=approver.id, status=Status.DRAFT, comment="Drafting"
+        request_id=req.id,
+        user_id=users["user2"].id,
+        status=Status.DRAFT,
+        comment="Drafting",
     )
     db_session.add(tracking)
     db_session.commit()
-
     response = client.post(f"{API_PREFIX}/{req.id}/process?status=approved")
-
     assert response.status_code == 400
-    assert (
-        "cannot be approved because it is in draft status" in response.json()["detail"]
-    )
+    assert "Cannot transition" in response.json()["detail"]

@@ -1,13 +1,5 @@
 # app/common/request_state_config.py
-
-# app/common/request_state_config.py
 from app.common.enums import Status
-
-# key = (from_status, to_status)
-# roles
-# comment_required
-# notify_roles
-# template = (templates.py)
 
 REQUEST_STATE_CONFIG = {
     (Status.DRAFT, Status.SUBMITTED): {
@@ -29,7 +21,7 @@ REQUEST_STATE_CONFIG = {
         "template": "REQUEST_REJECTED",
     },
     (Status.SUBMITTED, Status.CANCELLED): {
-        "roles": ["requester", "approver"],
+        "roles": ["requester"],
         "comment_required": False,
         "notify_roles": [],
         "template": None,
