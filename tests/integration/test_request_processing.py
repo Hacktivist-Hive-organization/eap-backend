@@ -56,10 +56,22 @@ def test_process_request_reject_missing_comment(
     assert "Comment is mandatory" in response.json()["detail"]
 
 
-def test_process_request_cancel_success(
+def test_cancel_request_unauthorized(
     client, users, auth_as, submitted_request_with_tracking
 ):
     auth_as(users["user2"])
+    request_id = submitted_request_with_tracking.id
+    response = client.post(
+        f"{API_PREFIX}/{request_id}/process?status=cancelled&comment=Changed my mind"
+    )
+    assert response.status_code == 403
+    assert "not authorized" in response.json()["detail"]
+
+
+def test_cancel_request_success(
+    client, users, auth_as, submitted_request_with_tracking
+):
+    auth_as(users["user1"])
     request_id = submitted_request_with_tracking.id
     response = client.post(
         f"{API_PREFIX}/{request_id}/process?status=cancelled&comment=Changed my mind"
