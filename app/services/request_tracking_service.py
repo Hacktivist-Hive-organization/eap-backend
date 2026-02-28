@@ -1,4 +1,5 @@
 # app/services/request_tracking_service.py
+
 import asyncio
 import time
 from typing import List, Optional
@@ -8,9 +9,15 @@ from starlette import status
 
 from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
+from app.common.request_state_config import REQUEST_STATE_CONFIG
+from app.common.request_state_machine import RequestStateMachine
 from app.core.config import settings
 from app.infrastructure.email.manager import EmailManager
-from app.infrastructure.email.templates import REQUEST_APPROVED, REQUEST_REJECTED
+from app.infrastructure.email.templates import (
+    REQUEST_APPROVED,
+    REQUEST_REJECTED,
+    REQUEST_SUBMITTED,
+)
 from app.repositories import RequestRepository, RequestTrackingRepository
 
 
@@ -33,15 +40,18 @@ class RequestTrackingService:
                 message="Request not found",
                 status_code=status.HTTP_404_NOT_FOUND,
             )
+
         is_requester = request.requester_id == user_id
         is_approver = bool(
             self.repo.get_tracking_by_request_user_id(request_id, user_id)
         )
+
         if not (is_requester or is_approver):
             raise BusinessException(
                 message="You do not have permission to track this request",
                 status_code=status.HTTP_403_FORBIDDEN,
             )
+
         return self.repo.get_request_tracking_by_request_id(request_id)
 
     def process_request(
@@ -49,61 +59,58 @@ class RequestTrackingService:
         request_id: int,
         status_in: Status,
         user_id: int,
-        comment: str,
-        background_tasks: BackgroundTasks | None = None,
+        comment: Optional[str],
+        background_tasks: Optional[BackgroundTasks] = None,
     ):
         request = self.request_repo.get_request_details(request_id)
-
-        # check if the request exists
         if not request:
             raise BusinessException(
                 message="Request not found",
                 status_code=status.HTTP_404_NOT_FOUND,
             )
 
-        # check if the request is already assigned to the user
         request_tracking = self.repo.get_tracking_by_request_user_id(
             request_id, user_id
         )
+        is_requester = request.requester_id == user_id
+        is_assigned_approver = bool(request_tracking)
 
         if status_in == Status.CANCELLED:
-            # Requester (owner) or assigned approver can cancel
-            if user_id != request.requester_id and not request_tracking:
-                raise BusinessException(
-                    message="You are not authorized to cancel this request",
-                    status_code=status.HTTP_403_FORBIDDEN,
-                )
-        else:
-            # Only the assigned approver can approve or reject
-            if not request_tracking:
+            if not is_requester and not is_assigned_approver:
                 raise BusinessException(
                     message="You are not authorized to process this request",
                     status_code=status.HTTP_403_FORBIDDEN,
                 )
+        elif status_in in [Status.APPROVED, Status.REJECTED]:
+            if not is_assigned_approver:
+                raise BusinessException(
+                    message="You are not authorized to process this request",
+                    status_code=status.HTTP_403_FORBIDDEN,
+                )
+        else:
+            raise BusinessException(
+                message="Invalid status transition",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
 
-        # check if request status = submitted
-        if request.current_status != Status.SUBMITTED:
+        if (
+            status_in in [Status.APPROVED, Status.REJECTED]
+            and request.current_status != Status.SUBMITTED
+        ):
             raise BusinessException(
                 message=f"Request cannot be {status_in.value} because it is in {request.current_status.value} status",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        # for reject request, comment must be mandatory
         if status_in == Status.REJECTED and not comment:
             raise BusinessException(
                 message="Comment is mandatory for rejection",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        if status_in not in [Status.APPROVED, Status.REJECTED, Status.CANCELLED]:
-            raise BusinessException(
-                message="Invalid status transition",
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
         try:
             self.request_repo.update_request_status(request, status_in, commit=False)
             self.repo.create(comment, request_id, status_in, user_id, commit=False)
-
             self.repo.db.commit()
         except Exception:
             self.repo.db.rollback()
@@ -112,8 +119,19 @@ class RequestTrackingService:
                 status_code=status.HTTP_417_EXPECTATION_FAILED,
             )
 
-        if status_in in [Status.REJECTED, Status.APPROVED] and background_tasks:
-            background_tasks.add_task(self._send_email_task, request, status_in)
+        if background_tasks:
+            template = (
+                REQUEST_REJECTED
+                if status_in == Status.REJECTED
+                else (
+                    REQUEST_APPROVED
+                    if status_in == Status.APPROVED
+                    else REQUEST_SUBMITTED
+                )
+            )
+            background_tasks.add_task(
+                self._send_email_task, request, status_in, template
+            )
 
         return request
 
@@ -124,6 +142,7 @@ class RequestTrackingService:
                 message="Request not found",
                 status_code=status.HTTP_404_NOT_FOUND,
             )
+
         request_tracking = self.repo.get_tracking_by_request_user_id(
             request_id, user_id
         )
@@ -132,14 +151,12 @@ class RequestTrackingService:
                 message="You are not authorized to view this request",
                 status_code=status.HTTP_403_FORBIDDEN,
             )
+
         return request
 
     def get_requests_for_approver(
         self, current_user, statuses: Optional[List[Status]] = None
     ) -> list:
-        """
-        Returns requests assigned to the current approver, optionally filtered by statuses.
-        """
         if current_user.role != UserRole.APPROVER:
             raise BusinessException(
                 message="User is not an approver",
@@ -150,17 +167,26 @@ class RequestTrackingService:
             approver_id=current_user.id, statuses=statuses
         )
 
-    def _send_email_task(self, request, status_in: Status):
-        requester = request.requester
+    def _send_email_task(self, request, status_in: Status, template):
+        recipients: List[str] = []
+
+        if status_in == Status.APPROVED or status_in == Status.REJECTED:
+            recipients.append(request.requester.email)
+            for tracking in request.trackings:
+                recipients.append(tracking.user.email)
+        elif status_in == Status.SUBMITTED:
+            for tracking in request.trackings:
+                recipients.append(tracking.user.email)
+
+        if not recipients:
+            return
+
         link = f"{settings.FRONTEND_URL}/requests/{request.id}"
-        template = (
-            REQUEST_REJECTED if status_in == Status.REJECTED else REQUEST_APPROVED
-        )
 
         email_body = template.substitute(
             request_code=f"REQ-{request.id}",
             request_title=request.title,
-            user_name=f"{requester.first_name} {requester.last_name}",
+            user_name=f"{request.requester.first_name} {request.requester.last_name}",
             request_id=request.id,
             request_type=f"{request.type.name} > {request.subtype.name}",
             priority=request.priority.value,
@@ -170,14 +196,20 @@ class RequestTrackingService:
         )
 
         subject_prefix = (
-            "Request Rejected" if status_in == Status.REJECTED else "Request Approved"
+            "Request Rejected"
+            if status_in == Status.REJECTED
+            else (
+                "Request Approved"
+                if status_in == Status.APPROVED
+                else "Request Submitted"
+            )
         )
 
         time.sleep(10)
 
         asyncio.run(
             self.email_manager.send_email(
-                to=requester.email,
+                to=",".join(recipients),
                 subject=f"{subject_prefix} - REQ-{request.id} - {request.title}",
                 body=email_body,
             )
