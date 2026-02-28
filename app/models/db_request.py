@@ -51,6 +51,6 @@ class DBRequest(Base):
     @property
     def assignee(self):
         if not self.req_tracking:
-            return self.requester
+            return None
         latest = max(self.req_tracking, key=lambda t: t.created_at)
         return latest.user
