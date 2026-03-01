@@ -12,11 +12,6 @@ from app.common.exceptions import BusinessException
 from app.common.request_state_machine import RequestStateMachine
 from app.core.config import settings
 from app.infrastructure.email.manager import EmailManager
-from app.infrastructure.email.templates import (
-    REQUEST_APPROVED,
-    REQUEST_REJECTED,
-    REQUEST_SUBMITTED,
-)
 from app.repositories import RequestRepository, RequestTrackingRepository
 
 
@@ -123,11 +118,7 @@ class RequestTrackingService:
         link = f"{settings.FRONTEND_URL}/requests/{request.id}"
 
         template_name = config.get("template")
-        template = {
-            "REQUEST_APPROVED": REQUEST_APPROVED,
-            "REQUEST_REJECTED": REQUEST_REJECTED,
-            "REQUEST_SUBMITTED": REQUEST_SUBMITTED,
-        }.get(template_name)
+        template = self.email_manager.get_template(template_name)
 
         if not template:
             return
