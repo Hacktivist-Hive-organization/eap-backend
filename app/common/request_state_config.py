@@ -28,7 +28,7 @@ REQUEST_STATE_CONFIG = {
             "roles": [UserRole.REQUESTER],
             "comment_required": False,
             "notify_roles": [UserRole.REQUESTER, UserRole.APPROVER],
-            "template": None,
+            "template": "REQUEST_CANCELLED",
         },
     },
     Status.APPROVED: {
@@ -36,7 +36,7 @@ REQUEST_STATE_CONFIG = {
             "roles": [UserRole.APPROVER],
             "comment_required": False,
             "notify_roles": [],
-            "template": None,
+            "template": "REQUEST_IN_PROGRESS",
         }
     },
     Status.IN_PROGRESS: {
@@ -44,13 +44,13 @@ REQUEST_STATE_CONFIG = {
             "roles": [UserRole.ADMIN],
             "comment_required": False,
             "notify_roles": [],
-            "template": None,
+            "template": "REQUEST_COMPLETED",
         },
         Status.REJECTED: {
             "roles": [UserRole.ADMIN],
             "comment_required": False,
             "notify_roles": [],
-            "template": None,
+            "template": "REQUEST_REJECTED",
         },
     },
 }
