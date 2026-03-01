@@ -132,23 +132,6 @@ def valid_request_payload(seeded_request_types):
     return _factory
 
 
-# @pytest.fixture(autouse=True)
-# def override_email_manager():
-#     if not os.getenv("CI"):
-#         yield
-#         return
-#
-#     class DummyEmailManager:
-#         async def send_email(
-#             self, to: str, subject: str, body: str, html: str | None = None
-#         ):
-#             return None
-#
-#     app.dependency_overrides[get_email_manager] = lambda: DummyEmailManager()
-#     yield
-#     app.dependency_overrides.clear()
-
-
 @pytest.fixture
 def seeded_requests_for_user(db_session, users, seeded_request_types):
     """
