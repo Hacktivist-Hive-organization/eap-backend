@@ -9,15 +9,11 @@ class RequestStateMachine:
 
     @classmethod
     def allowed_next_statuses(cls, current_status: Status):
-        return [
-            to_status
-            for (from_status, to_status) in REQUEST_STATE_CONFIG
-            if from_status == current_status
-        ]
+        return list(REQUEST_STATE_CONFIG.get(current_status, {}).keys())
 
     @classmethod
     def get_transition_config(cls, from_status: Status, to_status: Status):
-        return REQUEST_STATE_CONFIG.get((from_status, to_status), {})
+        return REQUEST_STATE_CONFIG.get(from_status, {}).get(to_status)
 
     @classmethod
     def validate(
@@ -26,7 +22,7 @@ class RequestStateMachine:
         from_status = request.current_status
         config = cls.get_transition_config(from_status, status_in)
 
-        if not config:
+        if config is None:
             raise BusinessException(
                 message=f"Cannot transition from {from_status.value} to {status_in.value}",
                 status_code=400,

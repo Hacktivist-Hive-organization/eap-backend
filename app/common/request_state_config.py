@@ -3,28 +3,54 @@
 from app.common.enums import Status, UserRole
 
 REQUEST_STATE_CONFIG = {
-    (Status.DRAFT, Status.SUBMITTED): {
-        "roles": [UserRole.REQUESTER],
-        "comment_required": False,
-        "notify_roles": [UserRole.APPROVER],
-        "template": "REQUEST_SUBMITTED",
+    Status.DRAFT: {
+        Status.SUBMITTED: {
+            "roles": [UserRole.REQUESTER],
+            "comment_required": False,
+            "notify_roles": [UserRole.APPROVER],
+            "template": "REQUEST_SUBMITTED",
+        },
     },
-    (Status.SUBMITTED, Status.APPROVED): {
-        "roles": [UserRole.APPROVER],
-        "comment_required": False,
-        "notify_roles": [UserRole.REQUESTER],
-        "template": "REQUEST_APPROVED",
+    Status.SUBMITTED: {
+        Status.APPROVED: {
+            "roles": [UserRole.APPROVER],
+            "comment_required": False,
+            "notify_roles": [UserRole.REQUESTER],
+            "template": "REQUEST_APPROVED",
+        },
+        Status.REJECTED: {
+            "roles": [UserRole.APPROVER],
+            "comment_required": True,
+            "notify_roles": [UserRole.REQUESTER],
+            "template": "REQUEST_REJECTED",
+        },
+        Status.CANCELLED: {
+            "roles": [UserRole.REQUESTER],
+            "comment_required": False,
+            "notify_roles": [],
+            "template": None,
+        },
     },
-    (Status.SUBMITTED, Status.REJECTED): {
-        "roles": [UserRole.APPROVER],
-        "comment_required": True,
-        "notify_roles": [UserRole.REQUESTER],
-        "template": "REQUEST_REJECTED",
+    Status.APPROVED: {
+        Status.IN_PROGRESS: {
+            "roles": [UserRole.APPROVER],
+            "comment_required": False,
+            "notify_roles": [],
+            "template": None,
+        }
     },
-    (Status.SUBMITTED, Status.CANCELLED): {
-        "roles": [UserRole.REQUESTER],
-        "comment_required": False,
-        "notify_roles": [],
-        "template": None,
+    Status.IN_PROGRESS: {
+        Status.COMPLETED: {
+            "roles": [UserRole.ADMIN],
+            "comment_required": False,
+            "notify_roles": [],
+            "template": None,
+        },
+        Status.REJECTED: {
+            "roles": [UserRole.ADMIN],
+            "comment_required": False,
+            "notify_roles": [],
+            "template": None,
+        },
     },
 }
