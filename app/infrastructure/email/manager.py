@@ -11,10 +11,8 @@ from app.infrastructure.email.templates import TEMPLATE_REGISTRY
 class EmailManager:
     def __init__(self):
         name = settings.EMAIL_SERVICE.lower()
-
         if name not in EMAIL_PROVIDERS:
             raise ConfigurationException(f"Email provider '{name}' not registered")
-
         self._service = EMAIL_PROVIDERS[name]()
 
     async def send_email(
