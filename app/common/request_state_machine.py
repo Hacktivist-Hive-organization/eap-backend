@@ -8,10 +8,6 @@ from app.common.request_state_config import REQUEST_STATE_CONFIG
 class RequestStateMachine:
 
     @classmethod
-    def allowed_next_statuses(cls, current_status: Status):
-        return list(REQUEST_STATE_CONFIG.get(current_status, {}).keys())
-
-    @classmethod
     def get_transition_config(cls, from_status: Status, to_status: Status):
         return REQUEST_STATE_CONFIG.get(from_status, {}).get(to_status)
 
