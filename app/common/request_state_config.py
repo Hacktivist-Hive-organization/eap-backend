@@ -1,4 +1,5 @@
 # app/common/request_state_config.py
+
 from app.common.enums import Status
 
 REQUEST_STATE_CONFIG = {

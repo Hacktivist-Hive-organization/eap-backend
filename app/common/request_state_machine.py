@@ -24,7 +24,6 @@ class RequestStateMachine:
         cls, request, user_id: int, comment: str, request_tracking, status_in: Status
     ):
         from_status = request.current_status
-        transition_key = (from_status, status_in)
         config = cls.get_transition_config(from_status, status_in)
 
         if not config:

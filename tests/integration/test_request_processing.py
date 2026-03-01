@@ -40,7 +40,7 @@ def test_process_request_reject_success(
     auth_as(users["user2"])
     request_id = submitted_request_with_tracking.id
     response = client.post(
-        f"{API_PREFIX}/{request_id}/process?status=rejected&comment=Not enough info"
+        f"{API_PREFIX}/{request_id}/process?status=rejected&comment=Insufficient info"
     )
     assert response.status_code == 200
     assert response.json()["current_status"] == Status.REJECTED
