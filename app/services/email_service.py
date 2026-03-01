@@ -15,16 +15,16 @@ class RequestEmailService:
     def send_status_email(self, request, previous_status, new_status):
         config = REQUEST_STATE_CONFIG.get(previous_status, {}).get(new_status)
         if not config or not config.get("template"):
-            return  # no template → do nothing
+            return
 
         notify_roles = config.get("notify_roles", [])
         if not notify_roles:
-            return  # no roles to notify → do nothing
+            return
 
         template_name = config["template"]
         template = self.email_manager.get_template(template_name)
         if not template:
-            return  # missing template → do nothing
+            return
 
         recipients = []
         for role in notify_roles:
@@ -33,7 +33,7 @@ class RequestEmailService:
                 recipients.append(attr.email)
 
         if not recipients:
-            return  # no actual email addresses → do nothing
+            return
 
         link = f"{settings.FRONTEND_URL}/requests/{request.id}"
 
@@ -52,7 +52,6 @@ class RequestEmailService:
 
             subject_prefix = template_name.replace("REQUEST_", "").capitalize()
 
-            # Remove time.sleep in real async execution if using background tasks
             time.sleep(10)
 
             asyncio.run(
