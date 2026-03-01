@@ -7,7 +7,7 @@ REQUEST_STATE_CONFIG = {
         Status.SUBMITTED: {
             "roles": [UserRole.REQUESTER],
             "comment_required": False,
-            "notify_roles": [UserRole.APPROVER],
+            "notify_roles": [UserRole.REQUESTER, UserRole.APPROVER],
             "template": "REQUEST_SUBMITTED",
         },
     },
@@ -27,7 +27,7 @@ REQUEST_STATE_CONFIG = {
         Status.CANCELLED: {
             "roles": [UserRole.REQUESTER],
             "comment_required": False,
-            "notify_roles": [],
+            "notify_roles": [UserRole.APPROVER, UserRole.APPROVER],
             "template": None,
         },
     },
