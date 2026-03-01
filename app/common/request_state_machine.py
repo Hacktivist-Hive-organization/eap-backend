@@ -33,15 +33,15 @@ class RequestStateMachine:
             )
 
         roles = config.get("roles", [])
-        if UserRole.ADMIN.value not in roles:
+        if UserRole.ADMIN not in roles:
             is_requester = request.requester_id == user_id
             is_approver = bool(request_tracking)
-            if "requester" in roles and not is_requester:
+            if UserRole.REQUESTER in roles and not is_requester:
                 raise BusinessException(
                     message="You are not authorized to perform this action",
                     status_code=403,
                 )
-            if "approver" in roles and not is_approver:
+            if UserRole.APPROVER in roles and not is_approver:
                 raise BusinessException(
                     message="You are not authorized to perform this action",
                     status_code=403,
