@@ -30,6 +30,7 @@ jobs:
       - name: Run tests
         env:
           ENV_FILE: ".env.test"
+          EMAIL_SERVICE: dummy
         run: pytest --disable-warnings -q
 
 
