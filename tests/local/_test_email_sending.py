@@ -3,7 +3,6 @@ from pathlib import Path
 from string import Template
 from types import SimpleNamespace
 
-from app.common.enums import Status, UserRole
 from app.common.request_state_config import REQUEST_STATE_CONFIG
 from app.infrastructure.email.templates import TEMPLATE_REGISTRY
 
@@ -14,7 +13,6 @@ def test_request_email_config_logging_realistic():
     if LOG_FILE.exists():
         LOG_FILE.unlink()
 
-    # Имитация "реального запроса"
     mock_request = SimpleNamespace(
         id=1,
         title="Test Request",
@@ -40,7 +38,6 @@ def test_request_email_config_logging_realistic():
                 template_name = config.get("template")
                 notify_roles = config.get("notify_roles", [])
 
-                # Если нет шаблона или нет получателей, пропускаем
                 if not template_name or not notify_roles:
                     continue
 
@@ -49,7 +46,6 @@ def test_request_email_config_logging_realistic():
                     f.write(f"Missing template for {from_status} -> {to_status}\n")
                     continue
 
-                # Разделяем переходы
                 f.write("=" * 50 + "\n")
                 f.write(
                     f"{from_status.value} -> {to_status.value} \n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
@@ -57,10 +53,9 @@ def test_request_email_config_logging_realistic():
                 f.write("=" * 50 + "\n")
 
                 for role in notify_roles:
-                    # Получаем объект пользователя по роли
                     user_obj = getattr(mock_request, role.value.lower(), None)
                     if not user_obj or not getattr(user_obj, "email", None):
-                        continue  # реальная логика: пустой список → ничего не делаем
+                        continue
 
                     email_body = template.substitute(
                         request_code=f"REQ-{mock_request.id}",
