@@ -1,7 +1,5 @@
 # app/services/request_tracking_service.py
 
-import asyncio
-import time
 from typing import List
 
 from fastapi import BackgroundTasks
@@ -9,9 +7,7 @@ from starlette import status
 
 from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
-from app.common.request_state_config import REQUEST_STATE_CONFIG
 from app.common.request_state_machine import RequestStateMachine
-from app.core.config import settings
 from app.infrastructure.email.manager import EmailManager
 from app.repositories import RequestRepository, RequestTrackingRepository
 from app.services.email_service import RequestEmailService
