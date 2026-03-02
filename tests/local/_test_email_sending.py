@@ -1,3 +1,5 @@
+# tests/local/_test_email_sending.py
+
 from datetime import datetime
 from pathlib import Path
 from string import Template
@@ -6,10 +8,13 @@ from types import SimpleNamespace
 from app.common.request_state_config import REQUEST_STATE_CONFIG
 from app.infrastructure.email.templates import TEMPLATE_REGISTRY
 
-LOG_FILE = Path(__file__).parents[2] / "dummy_print_email_sending.txt"
+TESTS_ROOT = Path(__file__).resolve().parents[1]
+LOGS_DIR = TESTS_ROOT / "logs"
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+LOG_FILE = LOGS_DIR / "email_request_processing.log"
 
 
-def test_request_email_config_logging_realistic():
+def test_request_email_config():
     if LOG_FILE.exists():
         LOG_FILE.unlink()
 
@@ -22,17 +27,23 @@ def test_request_email_config_logging_realistic():
         created_at=datetime.now(),
         current_status=None,
         requester=SimpleNamespace(
-            email="requester@example.com", first_name="Requester", last_name="User"
+            email="requester@example.com",
+            first_name="Requester",
+            last_name="User",
         ),
         approver=SimpleNamespace(
-            email="approver@example.com", first_name="Approver", last_name="User"
+            email="approver@example.com",
+            first_name="Approver",
+            last_name="User",
         ),
         admin=SimpleNamespace(
-            email="admin@example.com", first_name="Admin", last_name="User"
+            email="admin@example.com",
+            first_name="Admin",
+            last_name="User",
         ),
     )
 
-    with open(LOG_FILE, "w") as f:
+    with LOG_FILE.open("w", encoding="utf-8") as f:
         for from_status, transitions in REQUEST_STATE_CONFIG.items():
             for to_status, config in transitions.items():
                 template_name = config.get("template")
@@ -43,14 +54,26 @@ def test_request_email_config_logging_realistic():
 
                 template: Template = TEMPLATE_REGISTRY.get(template_name)
                 if not template:
-                    f.write(f"Missing template for {from_status} -> {to_status}\n")
+                    f.write(
+                        "\n"
+                        + "!" * 80
+                        + "\nMISSING TEMPLATE\n"
+                        + f"{from_status.value} -> {to_status.value}\n"
+                        + "!" * 80
+                        + "\n\n"
+                    )
                     continue
 
-                f.write("=" * 50 + "\n")
-                f.write(
-                    f"{from_status.value} -> {to_status.value} \n{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                header = (
+                    "\n"
+                    + "═" * 80
+                    + "\n"
+                    + f" TRANSITION: {from_status.value} → {to_status.value}\n"
+                    + f" GENERATED: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
+                    + "═" * 80
+                    + "\n"
                 )
-                f.write("=" * 50 + "\n")
+                f.write(header)
 
                 for role in notify_roles:
                     user_obj = getattr(mock_request, role.value.lower(), None)
@@ -72,9 +95,19 @@ def test_request_email_config_logging_realistic():
                     )
 
                     f.write(
-                        f"To: {user_obj.email}\nSubject: {template_name}\n{email_body}\n"
+                        "\n"
+                        + "─" * 60
+                        + "\n"
+                        + f" ROLE: {role.value}\n"
+                        + f" TO: {user_obj.email}\n"
+                        + f" SUBJECT: {template_name}\n"
+                        + "─" * 60
+                        + "\n"
+                        + f"{email_body}\n"
+                        + "─" * 60
+                        + "\n"
                     )
-                    f.write("-" * 50 + "\n")
+
+        f.write("\n" + "█" * 80 + "\nEND OF LOG\n" + "█" * 80 + "\n")
 
     assert LOG_FILE.exists()
-    print(LOG_FILE.read_text())
