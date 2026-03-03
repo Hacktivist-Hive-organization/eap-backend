@@ -13,7 +13,7 @@ def seed_users(db: Session):
         email="admin@eap.local",
         first_name="System",
         last_name="Admin",
-        hashed_password=hash_password("admin123!"),
+        hashed_password=hash_password("Password123!"),
         role=UserRole.ADMIN,
         is_active=True,
     )
@@ -22,7 +22,7 @@ def seed_users(db: Session):
         email="approver-hardware@eap.local",
         first_name="Hardware",
         last_name="Approver",
-        hashed_password=hash_password("hardware123!"),
+        hashed_password=hash_password("Password123!"),
         role=UserRole.APPROVER,
         is_active=True,
     )
@@ -30,7 +30,7 @@ def seed_users(db: Session):
         email="approver-hardware-2@eap.local",
         first_name="Hardware",
         last_name="Approver",
-        hashed_password=hash_password("hardware123!"),
+        hashed_password=hash_password("Password123!"),
         role=UserRole.APPROVER,
         is_active=True,
     )
@@ -39,7 +39,7 @@ def seed_users(db: Session):
         email="approver-software@eap.local",
         first_name="Software",
         last_name="Approver",
-        hashed_password=hash_password("software123!"),
+        hashed_password=hash_password("Password123!"),
         role=UserRole.APPROVER,
         is_active=True,
     )
@@ -48,7 +48,7 @@ def seed_users(db: Session):
         email="approver-software-2@eap.local",
         first_name="Software",
         last_name="Approver",
-        hashed_password=hash_password("software123!"),
+        hashed_password=hash_password("Password123!"),
         role=UserRole.APPROVER,
         is_active=True,
     )
@@ -57,7 +57,7 @@ def seed_users(db: Session):
         email="approver-services@eap.local",
         first_name="Services",
         last_name="Approver",
-        hashed_password=hash_password("services123!"),
+        hashed_password=hash_password("Password123!"),
         role=UserRole.APPROVER,
         is_active=True,
     )
@@ -66,7 +66,7 @@ def seed_users(db: Session):
         email="approver-services-2@eap.local",
         first_name="Services",
         last_name="Approver",
-        hashed_password=hash_password("services123!"),
+        hashed_password=hash_password("Password123!"),
         role=UserRole.APPROVER,
         is_active=True,
     )
