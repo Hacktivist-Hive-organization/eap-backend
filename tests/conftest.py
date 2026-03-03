@@ -10,13 +10,11 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import (
-    get_email_manager,
     get_user_service,
 )
 from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
-from app.infrastructure.email.manager import EmailManager
 from app.main import app
 from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
@@ -112,23 +110,6 @@ def valid_request_payload(seeded_request_types):
         }
 
     return _factory
-
-
-@pytest.fixture(autouse=True)
-def override_email_manager():
-    if not os.getenv("CI"):
-        yield
-        return
-
-    class DummyEmailManager(EmailManager):
-        async def send_email(
-            self, to: str, subject: str, body: str, html: str | None = None
-        ):
-            return None
-
-    app.dependency_overrides[get_email_manager] = lambda: DummyEmailManager()
-    yield
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture
