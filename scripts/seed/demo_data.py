@@ -22,7 +22,7 @@ def seed_demo_data():
             email="user1@example.com",
             first_name="User",
             last_name="One",
-            hashed_password=hash_password("user123!"),
+            hashed_password=hash_password("Password123!"),
             role=UserRole.REQUESTER,
             is_active=True,
         )
@@ -30,7 +30,7 @@ def seed_demo_data():
             email="user2@example.com",
             first_name="User",
             last_name="Two",
-            hashed_password=hash_password("user456!"),
+            hashed_password=hash_password("Password123!"),
             role=UserRole.APPROVER,
             is_active=True,
         )
