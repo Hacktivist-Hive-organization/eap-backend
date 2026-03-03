@@ -16,17 +16,17 @@ from app.common.utils import (
     normalize_email,
 )
 from app.core.config import settings
-from app.infrastructure.email.manager import EmailManager
 from app.models.db_user import DbUser
 from app.repositories.user_repository import UserRepository
+from app.services.email_service import EmailService
 
 RESET_TOKEN_EXPIRE_MINUTES = 15
 
 
 class AuthService:
-    def __init__(self, repo: UserRepository, email_manager: EmailManager):
+    def __init__(self, repo: UserRepository, email_service: EmailService):
         self.repo = repo
-        self.email_manager = email_manager
+        self.email_service = email_service
 
     def register(
         self, email: str, password: str, first_name: str, last_name: str
@@ -128,7 +128,7 @@ class AuthService:
         subject = "Password reset"
         body = f"Use the following link to reset your password: {reset_link}"
 
-        await self.email_manager.send_email(
+        await self.email_service.send_email(
             to=user.email,
             subject=subject,
             body=body,
