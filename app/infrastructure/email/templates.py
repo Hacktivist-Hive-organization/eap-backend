@@ -44,7 +44,7 @@ Status: $status
 View Request Details: $link
 
 Best regards,
-EAP System
+Desk-X System
 """
 )
 
@@ -67,7 +67,7 @@ Status: $status
 View Request Details: $link
 
 Best regards,
-EAP System
+Desk-X System
 """
 )
 
@@ -90,7 +90,7 @@ Status: $status
 View Request Details: $link
 
 Best regards,
-EAP System
+Desk-X System
 """
 )
 
@@ -113,7 +113,7 @@ Status: $status
 View Request Details: $link
 
 Best regards,
-EAP System
+Desk-X System
 """
 )
 
@@ -136,7 +136,7 @@ Status: $status
 View Request Details: $link
 
 Best regards,
-EAP System
+Desk-X System
 """
 )
 
