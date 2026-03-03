@@ -9,15 +9,29 @@ from app.infrastructure.email.manager import EmailManager
 from app.main import app
 
 
+class DummyEmailManager(EmailManager):
+    def __init__(self):
+        self._service = None
+
+    async def send_email(self, to, subject, body, html=None):
+        return None
+
+
 class FailingEmailManager(EmailManager):
+    def __init__(self):
+        self._service = None
+
     async def send_email(self, to, subject, body, html=None):
         raise ExternalServiceException("failure")
 
 
 @pytest.fixture
 def client_with_success():
+    dummy_manager = DummyEmailManager()
+    app.dependency_overrides[get_email_manager] = lambda: dummy_manager
     with TestClient(app) as c:
         yield c
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
