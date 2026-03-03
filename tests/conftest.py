@@ -1,7 +1,5 @@
 # tests/conftest.py
 
-import os
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -10,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import (
+    get_email_manager,
     get_user_service,
 )
 from app.common.enums import Priority, Status
@@ -33,16 +32,12 @@ def db_session():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-
-    testing_session_local = sessionmaker(
-        bind=engine,
-        autoflush=False,
-        autocommit=False,
-        expire_on_commit=False,
+    TestingSessionLocal = sessionmaker(
+        bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
     )
 
     Base.metadata.create_all(bind=engine)
-    session = testing_session_local()
+    session = TestingSessionLocal()
 
     try:
         yield session
@@ -59,8 +54,8 @@ def client(db_session):
         finally:
             pass
 
-    user_repository = UserRepository(db_session)
-    user_service = UserService(user_repository)
+    user_repo = UserRepository(db_session)
+    user_service = UserService(user_repo)
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_user_service] = lambda: user_service
@@ -104,12 +99,27 @@ def valid_request_payload(seeded_request_types):
             "subtype_id": data["laptop"].id,
             "title": title,
             "description": "This is a valid description with at least 20 chars",
-            "business_justification": "Business justification long enough for validation",
+            "business_justification": "Business justification is long enough for validation",
             "priority": "medium",
             "current_status": current_status.value,
         }
 
     return _factory
+
+
+@pytest.fixture(autouse=True)
+def override_email_manager():
+    """
+    Automatically override EmailManager in tests (Dummy provider)
+    """
+
+    class DummyEmailManager(get_email_manager().__class__):
+        async def send_email(self, to, subject, body, html=None):
+            return None
+
+    app.dependency_overrides[get_email_manager] = lambda: DummyEmailManager()
+    yield
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -172,5 +182,4 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
 
     db_session.add_all(requests)
     db_session.commit()
-
     return requests

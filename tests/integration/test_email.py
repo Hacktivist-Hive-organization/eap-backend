@@ -16,14 +16,15 @@ class FailingEmailManager(EmailManager):
 
 @pytest.fixture
 def client_with_success():
+    # Uses DummyEmailManager from conftest override
     with TestClient(app) as c:
         yield c
 
 
 @pytest.fixture
 def client_with_failure():
-    failing_service = FailingEmailManager()
-    app.dependency_overrides[get_email_manager] = lambda: failing_service
+    failing_manager = FailingEmailManager()
+    app.dependency_overrides[get_email_manager] = lambda: failing_manager
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
