@@ -1,4 +1,5 @@
 # tests/conftest.py
+
 import os
 
 import pytest
@@ -15,6 +16,7 @@ from app.api.dependencies.service_dependency import (
 from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
+from app.infrastructure.email.manager import EmailManager
 from app.main import app
 from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
@@ -48,7 +50,6 @@ def db_session():
         yield session
     finally:
         session.close()
-
         Base.metadata.drop_all(bind=engine)
 
 
@@ -74,8 +75,7 @@ def client(db_session):
 
 @pytest.fixture
 def users(db_session):
-    users = seed_user(db_session)
-    return users
+    return seed_user(db_session)
 
 
 @pytest.fixture
@@ -85,16 +85,6 @@ def dashboard_approvers(db_session):
 
 @pytest.fixture(scope="function")
 def seeded_request_types(db_session):
-    """
-    Seeds request types and subtypes.
-    Returns a dict like:
-    {
-        "hardware": <DbRequestType>,
-        "software": <DbRequestType>,
-        "laptop": <DbRequestSubtype>,
-        "license": <DbRequestSubtype>,
-    }
-    """
     return seed_types_and_subtypes(db_session)
 
 
@@ -109,12 +99,6 @@ def auth_as():
 
 @pytest.fixture
 def valid_request_payload(seeded_request_types):
-    """
-    Returns a factory function to generate valid request payloads.
-    Usage:
-        payload = valid_request_payload(title="My Request", status=Status.DRAFT)
-    """
-
     def _factory(title="Default Title", current_status=Status.DRAFT):
         data = seeded_request_types
         return {
@@ -122,7 +106,7 @@ def valid_request_payload(seeded_request_types):
             "subtype_id": data["laptop"].id,
             "title": title,
             "description": "This is a valid description with at least 20 chars",
-            "business_justification": "Business justification is long enough for validation",
+            "business_justification": "Business justification long enough for validation",
             "priority": "medium",
             "current_status": current_status.value,
         }
@@ -136,7 +120,7 @@ def override_email_manager():
         yield
         return
 
-    class DummyEmailManager:
+    class DummyEmailManager(EmailManager):
         async def send_email(
             self, to: str, subject: str, body: str, html: str | None = None
         ):
@@ -149,11 +133,6 @@ def override_email_manager():
 
 @pytest.fixture
 def seeded_requests_for_user(db_session, users, seeded_request_types):
-    """
-    Seeds multiple requests with different statuses
-    for user1. Returns created requests.
-    """
-
     owner = users["user1"]
     data = seeded_request_types
 
@@ -178,7 +157,6 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             current_status=Status.SUBMITTED,
             requester_id=owner.id,
         ),
-        # APPROVED
         DBRequest(
             type_id=data["hardware"].id,
             subtype_id=data["laptop"].id,
@@ -199,7 +177,6 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             current_status=Status.APPROVED,
             requester_id=owner.id,
         ),
-        # REJECTED
         DBRequest(
             type_id=data["hardware"].id,
             subtype_id=data["laptop"].id,

@@ -7,12 +7,6 @@ from app.api.dependencies.service_dependency import get_email_manager
 from app.common.exceptions import ExternalServiceException
 from app.infrastructure.email.manager import EmailManager
 from app.main import app
-from app.services.email_service import EmailService
-
-
-class DummyEmailManager(EmailManager):
-    async def send_email(self, to, subject, body, html=None):
-        return None
 
 
 class FailingEmailManager(EmailManager):
@@ -22,17 +16,14 @@ class FailingEmailManager(EmailManager):
 
 @pytest.fixture
 def client_with_success():
-    service = EmailService(manager=DummyEmailManager())
-    app.dependency_overrides[get_email_manager] = lambda: service
     with TestClient(app) as c:
         yield c
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def client_with_failure():
-    service = EmailService(manager=FailingEmailManager())
-    app.dependency_overrides[get_email_manager] = lambda: service
+    failing_service = FailingEmailManager()
+    app.dependency_overrides[get_email_manager] = lambda: failing_service
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
