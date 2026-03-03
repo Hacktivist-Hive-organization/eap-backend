@@ -9,7 +9,6 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import (
-    get_auth_service,
     get_email_manager,
     get_user_service,
 )
@@ -19,7 +18,6 @@ from app.database.session import get_db
 from app.main import app
 from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
-from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from tests.integration.helpers import (
     seed_dashboard_approvers,
