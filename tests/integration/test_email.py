@@ -16,7 +16,6 @@ class FailingEmailManager(EmailManager):
 
 @pytest.fixture
 def client_with_success():
-    # Uses DummyEmailManager from conftest override
     with TestClient(app) as c:
         yield c
 

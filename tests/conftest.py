@@ -7,10 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
-from app.api.dependencies.service_dependency import (
-    get_email_manager,
-    get_user_service,
-)
+from app.api.dependencies.service_dependency import get_email_manager, get_user_service
 from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
@@ -35,10 +32,8 @@ def db_session():
     TestingSessionLocal = sessionmaker(
         bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
     )
-
     Base.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
-
     try:
         yield session
     finally:
@@ -107,26 +102,10 @@ def valid_request_payload(seeded_request_types):
     return _factory
 
 
-@pytest.fixture(autouse=True)
-def override_email_manager():
-    """
-    Automatically override EmailManager in tests (Dummy provider)
-    """
-
-    class DummyEmailManager(get_email_manager().__class__):
-        async def send_email(self, to, subject, body, html=None):
-            return None
-
-    app.dependency_overrides[get_email_manager] = lambda: DummyEmailManager()
-    yield
-    app.dependency_overrides.clear()
-
-
 @pytest.fixture
 def seeded_requests_for_user(db_session, users, seeded_request_types):
     owner = users["user1"]
     data = seeded_request_types
-
     requests = [
         DBRequest(
             type_id=data["hardware"].id,
@@ -179,7 +158,17 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             requester_id=owner.id,
         ),
     ]
-
     db_session.add_all(requests)
     db_session.commit()
     return requests
+
+
+@pytest.fixture(autouse=True)
+def disable_email_sending():
+    class DummyEmailManager:
+        async def send_email(self, to, subject, body, html=None):
+            return None
+
+    app.dependency_overrides[get_email_manager] = lambda: DummyEmailManager()
+    yield
+    app.dependency_overrides.clear()
