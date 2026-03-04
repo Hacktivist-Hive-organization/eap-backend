@@ -134,5 +134,5 @@ def seed_demo_data():
 
     print("Seeded demo users, request types, subtypes, and requests successfully.")
     print("User credentials for login:")
-    print(" - Email: user1@example.com / Password: user123!")
-    print(" - Email: user2@example.com / Password: user456!")
+    print(" - Email: user1@example.com / Password: Password123!")
+    print(" - Email: user2@example.com / Password: Password123!")

@@ -7,8 +7,6 @@ from sqlalchemy.orm import Session
 
 from app.common.enums import Status
 from app.common.exceptions import BusinessException
-from app.infrastructure.email.manager import EmailManager
-from app.infrastructure.email.templates import REQUEST_REJECTED
 from app.repositories import (
     RequestRepository,
     RequestSubtypeRepository,
@@ -16,6 +14,7 @@ from app.repositories import (
     RequestTypeApproverRepository,
     RequestTypeRepository,
 )
+from app.services.email_service import EmailService
 
 
 class RequestService:
@@ -25,7 +24,7 @@ class RequestService:
         request_repo: RequestRepository,
         type_repo: RequestTypeRepository,
         subtype_repo: RequestSubtypeRepository,
-        email_manager: EmailManager,
+        email_service: EmailService,
         approver_repo: RequestTypeApproverRepository,
         tracking_repo: RequestTrackingRepository,
     ):
@@ -34,7 +33,7 @@ class RequestService:
         self.subtype_repo = subtype_repo
         self.approver_repo = approver_repo
         self.tracking_repo = tracking_repo
-        self.email_manager = email_manager
+        self.email_service = email_service
 
     def _validate_type_and_subtype(self, type_id: int, subtype_id: int):
         """

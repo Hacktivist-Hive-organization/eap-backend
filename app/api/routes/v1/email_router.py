@@ -2,12 +2,12 @@
 
 from fastapi import APIRouter, Depends
 
-from app.api.dependencies.service_dependency import get_email_manager
+from app.api.dependencies.service_dependency import get_email_service
 from app.api.schemas.email_schema import (
     EmailTestRequest,
     EmailTestResponse,
 )
-from app.infrastructure.email.manager import EmailManager
+from app.services.email_service import EmailService
 
 router = APIRouter(prefix="", tags=["email"])
 
@@ -15,9 +15,9 @@ router = APIRouter(prefix="", tags=["email"])
 @router.post("/send", response_model=EmailTestResponse)
 async def send_test_email(
     request: EmailTestRequest,
-    manager: EmailManager = Depends(get_email_manager),
+    service: EmailService = Depends(get_email_service),
 ):
-    await manager.send_email(
+    await service.send_email(
         to=str(request.to),
         subject=request.subject,
         body=request.body,

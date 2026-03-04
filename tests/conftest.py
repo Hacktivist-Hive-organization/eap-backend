@@ -1,5 +1,4 @@
 # tests/conftest.py
-import os
 
 import pytest
 from fastapi.testclient import TestClient
@@ -8,18 +7,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
-from app.api.dependencies.service_dependency import (
-    get_auth_service,
-    get_email_manager,
-    get_user_service,
-)
+from app.api.dependencies.service_dependency import get_email_manager, get_user_service
 from app.common.enums import Priority, Status
 from app.database.base import Base
 from app.database.session import get_db
 from app.main import app
 from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
-from app.services.auth_service import AuthService
 from app.services.user_service import UserService
 from tests.integration.helpers import (
     seed_dashboard_approvers,
@@ -35,22 +29,15 @@ def db_session():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-
-    testing_session_local = sessionmaker(
-        bind=engine,
-        autoflush=False,
-        autocommit=False,
-        expire_on_commit=False,
+    TestingSessionLocal = sessionmaker(
+        bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
     )
-
     Base.metadata.create_all(bind=engine)
-    session = testing_session_local()
-
+    session = TestingSessionLocal()
     try:
         yield session
     finally:
         session.close()
-
         Base.metadata.drop_all(bind=engine)
 
 
@@ -62,8 +49,8 @@ def client(db_session):
         finally:
             pass
 
-    user_repository = UserRepository(db_session)
-    user_service = UserService(user_repository)
+    user_repo = UserRepository(db_session)
+    user_service = UserService(user_repo)
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_user_service] = lambda: user_service
@@ -76,8 +63,7 @@ def client(db_session):
 
 @pytest.fixture
 def users(db_session):
-    users = seed_user(db_session)
-    return users
+    return seed_user(db_session)
 
 
 @pytest.fixture
@@ -87,16 +73,6 @@ def dashboard_approvers(db_session):
 
 @pytest.fixture(scope="function")
 def seeded_request_types(db_session):
-    """
-    Seeds request types and subtypes.
-    Returns a dict like:
-    {
-        "hardware": <DbRequestType>,
-        "software": <DbRequestType>,
-        "laptop": <DbRequestSubtype>,
-        "license": <DbRequestSubtype>,
-    }
-    """
     return seed_types_and_subtypes(db_session)
 
 
@@ -111,12 +87,6 @@ def auth_as():
 
 @pytest.fixture
 def valid_request_payload(seeded_request_types):
-    """
-    Returns a factory function to generate valid request payloads.
-    Usage:
-        payload = valid_request_payload(title="My Request", status=Status.DRAFT)
-    """
-
     def _factory(title="Default Title", current_status=Status.DRAFT):
         data = seeded_request_types
         return {
@@ -132,33 +102,10 @@ def valid_request_payload(seeded_request_types):
     return _factory
 
 
-@pytest.fixture(autouse=True)
-def override_email_manager():
-    if not os.getenv("CI"):
-        yield
-        return
-
-    class DummyEmailManager:
-        async def send_email(
-            self, to: str, subject: str, body: str, html: str | None = None
-        ):
-            return None
-
-    app.dependency_overrides[get_email_manager] = lambda: DummyEmailManager()
-    yield
-    app.dependency_overrides.clear()
-
-
 @pytest.fixture
 def seeded_requests_for_user(db_session, users, seeded_request_types):
-    """
-    Seeds multiple requests with different statuses
-    for user1. Returns created requests.
-    """
-
     owner = users["user1"]
     data = seeded_request_types
-
     requests = [
         DBRequest(
             type_id=data["hardware"].id,
@@ -180,7 +127,6 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             current_status=Status.SUBMITTED,
             requester_id=owner.id,
         ),
-        # APPROVED
         DBRequest(
             type_id=data["hardware"].id,
             subtype_id=data["laptop"].id,
@@ -201,7 +147,6 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             current_status=Status.APPROVED,
             requester_id=owner.id,
         ),
-        # REJECTED
         DBRequest(
             type_id=data["hardware"].id,
             subtype_id=data["laptop"].id,
@@ -213,8 +158,17 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
             requester_id=owner.id,
         ),
     ]
-
     db_session.add_all(requests)
     db_session.commit()
-
     return requests
+
+
+@pytest.fixture(autouse=True)
+def disable_email_sending():
+    class DummyEmailManager:
+        async def send_email(self, to, subject, body, html=None):
+            return None
+
+    app.dependency_overrides[get_email_manager] = lambda: DummyEmailManager()
+    yield
+    app.dependency_overrides.clear()
