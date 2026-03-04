@@ -9,6 +9,8 @@ from app.api.routes.v1.request_subtype_router import router as subtype_router
 from app.api.routes.v1.request_tracking_router import router as tracking_router
 from app.api.routes.v1.request_type_router import router as type_router
 from app.api.routes.v1.user_router import router as user_router
+from app.api.routes.v1.admin_router import router as admin_router
+
 
 router = APIRouter()
 
@@ -21,3 +23,5 @@ router.include_router(subtype_router, prefix="/subtypes")
 router.include_router(health_router, prefix="/health")
 router.include_router(email_router, prefix="/email")
 router.include_router(approver_router, prefix="/approver")
+router.include_router(admin_router, prefix="/admin")
+
