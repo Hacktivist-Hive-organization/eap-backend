@@ -47,12 +47,16 @@ class DummyEmailService(EmailService):
 
         log_path = _build_log_path()
         content = html if html else body
+        current_datetime = datetime.now().strftime(f"{DUMMY_LOG_DATE_FORMAT} %H:%M")
 
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(
                 f"{'═' * 50}\n"
+                f"Sent at: {current_datetime}\n"
+                f"{'—' * 25}\n"
                 f"To: {to}\n"
                 f"Subject: {subject}\n"
-                f"{'-' * 50}\n"
+                f"{'-' * 25}\n"
                 f"Body:\n{content}\n"
+                "\n"
             )
