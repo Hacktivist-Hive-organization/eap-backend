@@ -7,7 +7,7 @@ from app.core.config import settings
 from app.infrastructure.email.base import EmailService
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
-DUMMY_LOG_DIR = PROJECT_ROOT / "tests" / "local" / "email_logs"
+DUMMY_LOG_DIR = PROJECT_ROOT / "logs" / "email_dummy_logs"
 DUMMY_LOG_PREFIX = "emails"
 DUMMY_LOG_DATE_FORMAT = "%Y-%m-%d"
 
