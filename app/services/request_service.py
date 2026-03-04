@@ -61,6 +61,9 @@ class RequestService:
         request = self.request_repo.create(request_in, current_user_id)
         return request
 
+    def get_all_requests(self):
+        return self.request_repo.get_all_requests()
+
     def get_requests_by_user(self, user_id: int, statuses: List[Status]):
         return self.request_repo.get_requests_by_user(user_id, statuses)
 
