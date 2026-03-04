@@ -10,7 +10,7 @@ from app.api.dependencies.service_dependency import (
 from app.api.schemas.request_schema import (
     RequestResponseListSchema,
 )
-from app.common.enums import  UserRole
+from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
 from app.common.security_models import CurrentUser
 
@@ -25,7 +25,7 @@ router = APIRouter(tags=["Admin"])
 )
 def get_requests(
     service=Depends(get_request_service),
-    current_user: CurrentUser = Depends(get_current_user)
+    current_user: CurrentUser = Depends(get_current_user),
 ):
     if current_user.role != UserRole.ADMIN:
         raise BusinessException(
