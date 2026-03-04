@@ -16,6 +16,7 @@ from app.api.dependencies.repository_dependency import (
 from app.infrastructure.email.manager import EmailManager
 from app.services import (
     AuthService,
+    EmailService,
     HealthService,
     RequestService,
     RequestSubtypeService,
@@ -31,15 +32,19 @@ def get_email_manager():
     return EmailManager()
 
 
+def get_email_service(email_manager=Depends(get_email_manager)):
+    return EmailService(email_manager)
+
+
 def get_user_service(repo=Depends(get_user_repository)):
     return UserService(repo)
 
 
 def get_auth_service(
     repo=Depends(get_user_repository),
-    email_manager=Depends(get_email_manager),
+    email_service=Depends(get_email_service),
 ):
-    return AuthService(repo, email_manager)
+    return AuthService(repo, email_service)
 
 
 def get_health_service(repo=Depends(get_health_repository)):
@@ -52,13 +57,13 @@ def get_request_service(
     subtype_repo=Depends(get_request_subtype_repository),
     approver_repo=Depends(get_request_type_approver_repository),
     tracking_repo=Depends(get_request_tracking_repository),
-    email_manager=Depends(get_email_manager),
+    email_service=Depends(get_email_service),
 ):
     return RequestService(
         request_repo=request_repo,
         type_repo=type_repo,
         subtype_repo=subtype_repo,
-        email_manager=email_manager,
+        email_service=email_service,
         approver_repo=approver_repo,
         tracking_repo=tracking_repo,
     )
@@ -75,12 +80,12 @@ def get_request_subtype_service(repo=Depends(get_request_subtype_repository)):
 def get_request_tracking_service(
     repo=Depends(get_request_tracking_repository),
     request_repo=Depends(get_request_repository),
-    email_manager=Depends(get_email_manager),
+    email_service=Depends(get_email_service),
 ):
     return RequestTrackingService(
-        repo,
-        request_repo,
-        email_manager,
+        repo=repo,
+        request_repo=request_repo,
+        email_service=email_service,
     )
 
 

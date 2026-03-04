@@ -9,9 +9,9 @@ from starlette import status
 from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
 from app.core.config import settings
-from app.infrastructure.email.manager import EmailManager
 from app.infrastructure.email.templates import REQUEST_APPROVED, REQUEST_REJECTED
 from app.repositories import RequestRepository, RequestTrackingRepository
+from app.services.email_service import EmailService
 
 
 class RequestTrackingService:
@@ -20,11 +20,11 @@ class RequestTrackingService:
         self,
         repo: RequestTrackingRepository,
         request_repo: RequestRepository,
-        email_manager: EmailManager,
+        email_service: EmailService,
     ):
         self.repo = repo
         self.request_repo = request_repo
-        self.email_manager = email_manager
+        self.email_service = email_service
 
     def get_request_tracking_by_request_id(self, request_id: int, user_id: int):
         request = self.request_repo.get_request_details(request_id)
@@ -176,7 +176,7 @@ class RequestTrackingService:
         time.sleep(10)
 
         asyncio.run(
-            self.email_manager.send_email(
+            self.email_service.send_email(
                 to=requester.email,
                 subject=f"{subject_prefix} - REQ-{request.id} - {request.title}",
                 body=email_body,

@@ -1,34 +1,34 @@
 # tests/integration/test_email.py
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.api.dependencies.service_dependency import get_email_manager
 from app.common.exceptions import ExternalServiceException
-from app.infrastructure.email.base import EmailService
+from app.infrastructure.email.manager import EmailManager
 from app.main import app
 
 
-class DummyEmailService(EmailService):
-    async def send(self, to, subject, body, html=None):
+class DummyEmailManager(EmailManager):
+    def __init__(self):
+        self._service = None
+
+    async def send_email(self, to, subject, body, html=None):
         return None
 
 
-class FailingEmailService(EmailService):
-    async def send(self, to, subject, body, html=None):
+class FailingEmailManager(EmailManager):
+    def __init__(self):
+        self._service = None
+
+    async def send_email(self, to, subject, body, html=None):
         raise ExternalServiceException("failure")
-
-
-def _manager(service):
-    class _M:
-        async def send_email(self, to, subject, body, html=None):
-            await service.send(to, subject, body, html)
-
-    return _M()
 
 
 @pytest.fixture
 def client_with_success():
-    app.dependency_overrides[get_email_manager] = lambda: _manager(DummyEmailService())
+    dummy_manager = DummyEmailManager()
+    app.dependency_overrides[get_email_manager] = lambda: dummy_manager
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
@@ -36,9 +36,8 @@ def client_with_success():
 
 @pytest.fixture
 def client_with_failure():
-    app.dependency_overrides[get_email_manager] = lambda: _manager(
-        FailingEmailService()
-    )
+    failing_manager = FailingEmailManager()
+    app.dependency_overrides[get_email_manager] = lambda: failing_manager
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()

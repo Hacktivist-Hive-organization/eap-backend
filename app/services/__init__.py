@@ -1,4 +1,5 @@
 from app.services.auth_service import AuthService
+from app.services.email_service import EmailService
 from app.services.health_service import HealthService
 from app.services.request_service import RequestService
 from app.services.request_subtype_service import RequestSubtypeService
