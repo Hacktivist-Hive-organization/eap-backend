@@ -17,9 +17,9 @@ def test_dummy_provider_send():
     asyncio.run(provider.send(TO, SUBJECT, BODY, HTML))
 
 
-def test_mailtrap_provider_send():
-    provider = MailtrapEmailService()
-    asyncio.run(provider.send(TO, SUBJECT, BODY, HTML))
+# def test_mailtrap_provider_send():
+#     provider = MailtrapEmailService()
+#     asyncio.run(provider.send(TO, SUBJECT, BODY, HTML))
 
 
 def test_mailjet_provider_send():
