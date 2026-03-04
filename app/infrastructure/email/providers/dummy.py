@@ -8,7 +8,7 @@ from app.infrastructure.email.base import EmailService
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 DUMMY_LOG_DIR = PROJECT_ROOT / "tests" / "local" / "email_logs"
-DUMMY_LOG_PREFIX = "email_log"
+DUMMY_LOG_PREFIX = "emails"
 DUMMY_LOG_DATE_FORMAT = "%Y-%m-%d"
 
 # Commonly accepted international date formats:
@@ -27,7 +27,7 @@ DUMMY_LOG_DATE_FORMAT = "%Y-%m-%d"
 
 def _build_log_path() -> Path:
     current_date = datetime.now().strftime(DUMMY_LOG_DATE_FORMAT)
-    return DUMMY_LOG_DIR / f"{DUMMY_LOG_PREFIX}_{current_date}.txt"
+    return DUMMY_LOG_DIR / f"{DUMMY_LOG_PREFIX}_{current_date}.log"
 
 
 class DummyEmailService(EmailService):
