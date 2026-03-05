@@ -1,4 +1,4 @@
-# tests/unit/test_email_providers.py
+# tests/unit/_test_email_providers.py
 
 import asyncio
 
@@ -7,7 +7,7 @@ from app.infrastructure.email.providers.mailjet import MailjetEmailService
 from app.infrastructure.email.providers.mailtrap import MailtrapEmailService
 
 TO = "test@example.com"
-SUBJECT = "test_email_providers.py::test_provider_send"
+SUBJECT = "_test_email_providers.py::test_provider_send"
 BODY = "Body content for test_provider_send"
 HTML = "<b>Body content for test_provider_send</b>"
 
