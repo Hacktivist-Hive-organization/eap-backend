@@ -53,7 +53,7 @@ class DummyEmailService(EmailService):
             f.write(
                 f"{'═' * 50}\n"
                 f"Sent at: {current_datetime}\n"
-                f"{'—' * 25}\n"
+                f"{'—' * 50}\n"
                 f"To: {to}\n"
                 f"Subject: {subject}\n"
                 f"{'-' * 25}\n"
