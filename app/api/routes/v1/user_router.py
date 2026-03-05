@@ -22,7 +22,12 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[AdminUserResponseSchema])
+@router.get(
+    "/",
+    summary="Get all users",
+    description="Returns a list of all users. Accessible only to administrators.",
+    response_model=list[AdminUserResponseSchema],
+)
 def get_all_users(
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(require_role(UserRole.ADMIN)),
@@ -30,7 +35,12 @@ def get_all_users(
     return service.get_all_users()
 
 
-@router.get("/me", response_model=UserBaseResponseSchema)
+@router.get(
+    "/me",
+    summary="Get current user profile",
+    description="Returns the profile information of the currently authenticated user.",
+    response_model=UserBaseResponseSchema,
+)
 def get_me(
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
@@ -38,21 +48,31 @@ def get_me(
     return service.get_user_by_id(current_user.id)
 
 
-@router.get("/{id}", response_model=AdminUserResponseSchema)
+@router.get(
+    "/{user_id}",
+    summary="Get user by ID",
+    description="Returns user information by ID. Accessible to administrators or the user who owns the account.",
+    response_model=AdminUserResponseSchema,
+)
 def get_user_info(
-    id: int,
+    user_id: int,
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    if current_user.role != UserRole.ADMIN and current_user.id != id:
+    if current_user.role != UserRole.ADMIN and current_user.id != user_id:
         raise BusinessException(
             message="You do not have permission to access this user",
             status_code=status.HTTP_403_FORBIDDEN,
         )
-    return service.get_user_by_id(user_id=id)
+    return service.get_user_by_id(user_id=user_id)
 
 
-@router.put("/me", response_model=UserBaseResponseSchema)
+@router.put(
+    "/me",
+    summary="Update current user profile",
+    description="Updates the current user's profile information such as first name and last name.",
+    response_model=UserBaseResponseSchema,
+)
 def update_current_user_profile(
     payload: UserSelfUpdateRequestSchema,
     service: UserService = Depends(get_user_service),
@@ -65,7 +85,12 @@ def update_current_user_profile(
     )
 
 
-@router.patch("/me", response_model=UserBaseResponseSchema)
+@router.patch(
+    "/me",
+    summary="Partially update current user profile",
+    description="Updates one or more fields of the current user's profile. Only provided fields will be changed.",
+    response_model=UserBaseResponseSchema,
+)
 def partially_update_current_user_profile(
     payload: UserSelfPartialUpdateRequestSchema,
     service: UserService = Depends(get_user_service),

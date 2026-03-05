@@ -15,11 +15,16 @@ router = APIRouter()
 
 router.include_router(auth_router, prefix="/auth")
 router.include_router(user_router, prefix="/users")
-router.include_router(request_router, prefix="/requests")
-router.include_router(tracking_router, prefix="/tracking")
-router.include_router(type_router, prefix="/types")
-router.include_router(subtype_router, prefix="/subtypes")
-router.include_router(health_router, prefix="/health")
-router.include_router(email_router, prefix="/email")
+
 router.include_router(approver_router, prefix="/approver")
 router.include_router(admin_router, prefix="/admin")
+
+router.include_router(request_router, prefix="/requests")
+router.include_router(tracking_router, prefix="/tracking")
+
+router.include_router(type_router, prefix="/types")
+router.include_router(subtype_router, prefix="/subtypes")
+
+
+router.include_router(health_router, prefix="/health")
+router.include_router(email_router, prefix="/email")

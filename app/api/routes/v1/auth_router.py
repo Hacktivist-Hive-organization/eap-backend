@@ -17,6 +17,8 @@ router = APIRouter(prefix="", tags=["Authentication"])
 
 @router.post(
     "/register",
+    summary="Register user account",
+    description="Creates a new user account and returns an access token for authenticated requests.",
     response_model=TokenResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
@@ -33,7 +35,12 @@ def register(
     return TokenResponseSchema(access_token=token, user=user)
 
 
-@router.post("/login", response_model=TokenResponseSchema)
+@router.post(
+    "/login",
+    summary="Authenticate user",
+    description="Authenticates a user using email and password and returns an access token.",
+    response_model=TokenResponseSchema,
+)
 def login(
     data: UserLoginRequestSchema,
     service: AuthService = Depends(get_auth_service),
@@ -45,7 +52,12 @@ def login(
     return TokenResponseSchema(access_token=token, user=user)
 
 
-@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+@router.post(
+    "/forgot-password",
+    summary="Request password reset",
+    description="Starts the password reset process. If the provided email exists, a password reset token will be sent to that address.",
+    status_code=status.HTTP_200_OK,
+)
 async def forgot_password(
     data: ForgotPasswordRequestSchema,
     service: AuthService = Depends(get_auth_service),
@@ -54,7 +66,12 @@ async def forgot_password(
     return {"message": "If the email exists, a reset link has been sent."}
 
 
-@router.post("/reset-password", status_code=status.HTTP_200_OK)
+@router.post(
+    "/reset-password",
+    summary="Reset password",
+    description="Resets the user password using the reset token received by email and sets a new password.",
+    status_code=status.HTTP_200_OK,
+)
 def reset_password(
     data: ResetPasswordRequestSchema,
     service: AuthService = Depends(get_auth_service),
