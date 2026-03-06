@@ -17,6 +17,7 @@ class DbUser(TimestampMixin, Base):
     last_name = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.REQUESTER)
+    is_email_verified = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     is_out_of_office = Column(Boolean, default=False)
     last_login = Column(DateTime(timezone=True), nullable=True)

@@ -1,6 +1,6 @@
-# auth_router.py
+# app/api/routes/v1/auth_router.py
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from app.api.dependencies.service_dependency import get_auth_service
 from app.api.schemas.user_schema import (
@@ -17,11 +17,14 @@ router = APIRouter(prefix="", tags=["Authentication"])
 
 @router.post(
     "/register",
+    summary="Register user account",
+    description="Creates a new user account and returns an access token for authenticated requests.",
     response_model=TokenResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
 def register(
     data: UserRegisterRequestSchema,
+    background_tasks: BackgroundTasks,
     service: AuthService = Depends(get_auth_service),
 ):
     token, user = service.register(
@@ -29,11 +32,17 @@ def register(
         password=data.password,
         first_name=data.first_name,
         last_name=data.last_name,
+        background_tasks=background_tasks,
     )
     return TokenResponseSchema(access_token=token, user=user)
 
 
-@router.post("/login", response_model=TokenResponseSchema)
+@router.post(
+    "/login",
+    summary="Authenticate user",
+    description="Authenticates a user using email and password and returns an access token.",
+    response_model=TokenResponseSchema,
+)
 def login(
     data: UserLoginRequestSchema,
     service: AuthService = Depends(get_auth_service),
@@ -45,16 +54,30 @@ def login(
     return TokenResponseSchema(access_token=token, user=user)
 
 
-@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+@router.post(
+    "/forgot-password",
+    summary="Request password reset",
+    description="Starts the password reset process. If the provided email exists, a password reset token will be sent to that address.",
+    status_code=status.HTTP_200_OK,
+)
 async def forgot_password(
     data: ForgotPasswordRequestSchema,
+    background_tasks: BackgroundTasks,
     service: AuthService = Depends(get_auth_service),
 ):
-    await service.forgot_password(email=data.email)
+    await service.forgot_password(
+        email=data.email,
+        background_tasks=background_tasks,
+    )
     return {"message": "If the email exists, a reset link has been sent."}
 
 
-@router.post("/reset-password", status_code=status.HTTP_200_OK)
+@router.post(
+    "/reset-password",
+    summary="Reset password",
+    description="Resets the user password using the reset token received by email and sets a new password.",
+    status_code=status.HTTP_200_OK,
+)
 def reset_password(
     data: ResetPasswordRequestSchema,
     service: AuthService = Depends(get_auth_service),
@@ -64,3 +87,17 @@ def reset_password(
         new_password=data.new_password,
     )
     return {"message": "Password successfully reset."}
+
+
+@router.get(
+    "/verify-email",
+    status_code=status.HTTP_200_OK,
+    summary="Verify user email",
+    description="Verifies a user's email address using the verification token sent to their email.",
+)
+def verify_email(
+    token: str,
+    service: AuthService = Depends(get_auth_service),
+):
+    service.verify_email(token=token)
+    return {"message": "Email successfully verified."}

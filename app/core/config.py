@@ -69,6 +69,11 @@ class Settings(BaseSettings):
     # Frontend
     FRONTEND_URL: str | None = None
 
+    EMAIL_VERIFICATION_REQUIRED: bool = True
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 15
+    EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 60
+
     @property
     def cors_origins(self) -> List[str]:
         origins = self.CORS_ALLOWED_ORIGINS.copy()

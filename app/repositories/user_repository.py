@@ -20,7 +20,13 @@ class UserRepository:
         return self.db.query(DbUser).filter(DbUser.email == email).first()  # type: ignore
 
     def create(
-        self, email: str, hashed_password: str, first_name: str, last_name: str
+        self,
+        email: str,
+        hashed_password: str,
+        first_name: str,
+        last_name: str,
+        is_active: bool = True,
+        is_email_verified: bool = False,
     ) -> DbUser:
         user = DbUser(
             email=email,  # type: ignore
@@ -28,6 +34,7 @@ class UserRepository:
             first_name=first_name,  # type: ignore
             last_name=last_name,  # type: ignore
             is_active=True,  # type: ignore
+            is_email_verified=is_email_verified,  # type: ignore
         )
         self.db.add(user)
         self.db.commit()
