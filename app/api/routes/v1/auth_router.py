@@ -1,6 +1,6 @@
-# auth_router.py
+# app/api/routes/v1/auth_router.py
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from app.api.dependencies.service_dependency import get_auth_service
 from app.api.schemas.user_schema import (
@@ -24,6 +24,7 @@ router = APIRouter(prefix="", tags=["Authentication"])
 )
 def register(
     data: UserRegisterRequestSchema,
+    background_tasks: BackgroundTasks,
     service: AuthService = Depends(get_auth_service),
 ):
     token, user = service.register(
@@ -31,6 +32,7 @@ def register(
         password=data.password,
         first_name=data.first_name,
         last_name=data.last_name,
+        background_tasks=background_tasks,
     )
     return TokenResponseSchema(access_token=token, user=user)
 
@@ -60,9 +62,13 @@ def login(
 )
 async def forgot_password(
     data: ForgotPasswordRequestSchema,
+    background_tasks: BackgroundTasks,
     service: AuthService = Depends(get_auth_service),
 ):
-    await service.forgot_password(email=data.email)
+    await service.forgot_password(
+        email=data.email,
+        background_tasks=background_tasks,
+    )
     return {"message": "If the email exists, a reset link has been sent."}
 
 
@@ -81,3 +87,17 @@ def reset_password(
         new_password=data.new_password,
     )
     return {"message": "Password successfully reset."}
+
+
+@router.get(
+    "/verify-email",
+    status_code=status.HTTP_200_OK,
+    summary="Verify user email",
+    description="Verifies a user's email address using the verification token sent to their email.",
+)
+def verify_email(
+    token: str,
+    service: AuthService = Depends(get_auth_service),
+):
+    service.verify_email(token=token)
+    return {"message": "Email successfully verified."}
