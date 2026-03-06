@@ -1,6 +1,6 @@
 # app/services/auth_service.py
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import BackgroundTasks, status
 
@@ -21,12 +21,6 @@ from app.core.config import settings
 from app.models.db_user import DbUser
 from app.repositories.user_repository import UserRepository
 from app.services.email_service import EmailService
-
-PASSWORD_RESET_TOKEN_EXPIRE_MINUTES = settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES
-EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES = (
-    settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES
-)
-EMAIL_VERIFICATION_REQUIRED = settings.EMAIL_VERIFICATION_REQUIRED
 
 
 class AuthService:
@@ -82,8 +76,8 @@ class AuthService:
 
         hashed_password = hash_password(password)
 
-        is_active = not EMAIL_VERIFICATION_REQUIRED
-        is_email_verified = not EMAIL_VERIFICATION_REQUIRED
+        is_active = not settings.EMAIL_VERIFICATION_REQUIRED
+        is_email_verified = not settings.EMAIL_VERIFICATION_REQUIRED
 
         user = self.repo.create(
             email=normalized_email,
@@ -94,10 +88,10 @@ class AuthService:
             is_email_verified=is_email_verified,
         )
 
-        if EMAIL_VERIFICATION_REQUIRED:
+        if settings.EMAIL_VERIFICATION_REQUIRED:
             verification_token = create_access_token(
                 {"sub": str(user.id), "type": "email_verification"},
-                expires_minutes=EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES,
+                expires_minutes=settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES,
             )
             verification_link = (
                 f"{settings.FRONTEND_URL}/verify-email#{verification_token}"
@@ -132,7 +126,7 @@ class AuthService:
                 message="Invalid email or password",
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(timezone.utc)
         self.repo.update_user(user)
 
         token = create_access_token({"sub": str(user.id)})
@@ -155,7 +149,7 @@ class AuthService:
 
         token = create_access_token(
             {"sub": str(user.id), "type": "password_reset"},
-            expires_minutes=PASSWORD_RESET_TOKEN_EXPIRE_MINUTES,
+            expires_minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES,
         )
 
         reset_link = f"{settings.FRONTEND_URL}/reset-password#{token}"
