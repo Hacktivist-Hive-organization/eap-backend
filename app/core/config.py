@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     DEVELOPMENT_ENVIRONMENT: bool = False
 
     # Email
-    EMAIL_SERVICE: str = "mailtrap"
+    EMAIL_SERVICE: str = "dummy"
 
     # Sender
     MAIL_FROM_EMAIL: str | None = None

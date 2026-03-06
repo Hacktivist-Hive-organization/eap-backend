@@ -7,7 +7,7 @@ from app.core.config import settings
 from app.infrastructure.email.base import EmailService
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
-DUMMY_LOG_DIR = PROJECT_ROOT / "tests" / "local" / "email_logs"
+DUMMY_LOG_DIR = PROJECT_ROOT / "logs" / "email_dummy_logs"
 DUMMY_LOG_PREFIX = "emails"
 DUMMY_LOG_DATE_FORMAT = "%Y-%m-%d"
 
@@ -47,12 +47,16 @@ class DummyEmailService(EmailService):
 
         log_path = _build_log_path()
         content = html if html else body
+        current_datetime = datetime.now().strftime(f"{DUMMY_LOG_DATE_FORMAT} %H:%M")
 
         with open(log_path, "a", encoding="utf-8") as f:
             f.write(
                 f"{'═' * 50}\n"
+                f"Sent at: {current_datetime}\n"
+                f"{'—' * 50}\n"
                 f"To: {to}\n"
                 f"Subject: {subject}\n"
-                f"{'-' * 50}\n"
+                f"{'-' * 25}\n"
                 f"Body:\n{content}\n"
+                "\n"
             )
