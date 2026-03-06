@@ -41,12 +41,14 @@ class Settings(BaseSettings):
     CORS_ALLOWED_ORIGINS: list[str] = [
         "http://localhost:3000",  # React dev server
         "http://localhost:5173",  # Vite server
+        "http://localhost:8080",  # For browser access via Nginx
+        "http://127.0.0.1:8080",  # For browser access via Nginx
     ]
     MIDDLEWARE_CORS: bool = True
     DEVELOPMENT_ENVIRONMENT: bool = False
 
     # Email
-    EMAIL_SERVICE: str = "mailtrap"
+    EMAIL_SERVICE: str = "dummy"
 
     # Sender
     MAIL_FROM_EMAIL: str | None = None

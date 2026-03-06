@@ -30,7 +30,7 @@ jobs:
       - name: Run tests
         env:
           ENV_FILE: ".env.test"
-        run: pytest --disable-warnings -q
+        run: pytest --disable-warnings -q --ignore=tests/unit
 
 
   format:

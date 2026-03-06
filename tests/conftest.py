@@ -8,14 +8,16 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import get_email_manager, get_user_service
-from app.common.enums import Priority, Status
+from app.core.config import settings
 from app.database.base import Base
 from app.database.session import get_db
+from app.infrastructure.email.manager import EmailManager
 from app.main import app
 from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
 from tests.integration.helpers import (
+    seed_admin,
     seed_dashboard_approvers,
     seed_types_and_subtypes,
     seed_user,
@@ -54,16 +56,19 @@ def client(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_user_service] = lambda: user_service
-
     with TestClient(app) as test_client:
         yield test_client
-
     app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def users(db_session):
     return seed_user(db_session)
+
+
+@pytest.fixture
+def dashboard_admin(db_session):
+    return seed_admin(db_session)
 
 
 @pytest.fixture
@@ -87,8 +92,9 @@ def auth_as():
 
 @pytest.fixture
 def valid_request_payload(seeded_request_types):
-    def _factory(title="Default Title", current_status=Status.DRAFT):
+    def _factory(title="Default Title", current_status=None):
         data = seeded_request_types
+
         return {
             "type_id": data["hardware"].id,
             "subtype_id": data["laptop"].id,
@@ -96,7 +102,7 @@ def valid_request_payload(seeded_request_types):
             "description": "This is a valid description with at least 20 chars",
             "business_justification": "Business justification is long enough for validation",
             "priority": "medium",
-            "current_status": current_status.value,
+            "current_status": current_status.value if current_status else "draft",
         }
 
     return _factory
@@ -104,6 +110,8 @@ def valid_request_payload(seeded_request_types):
 
 @pytest.fixture
 def seeded_requests_for_user(db_session, users, seeded_request_types):
+    from app.common.enums import Priority, Status
+
     owner = users["user1"]
     data = seeded_request_types
     requests = [
@@ -164,11 +172,9 @@ def seeded_requests_for_user(db_session, users, seeded_request_types):
 
 
 @pytest.fixture(autouse=True)
-def disable_email_sending():
-    class DummyEmailManager:
-        async def send_email(self, to, subject, body, html=None):
-            return None
-
-    app.dependency_overrides[get_email_manager] = lambda: DummyEmailManager()
+def real_email_manager():
+    settings.EMAIL_SERVICE = getattr(settings, "EMAIL_SERVICE", "mailtrap")
+    email_manager = EmailManager()
+    app.dependency_overrides[get_email_manager] = lambda: email_manager
     yield
     app.dependency_overrides.clear()

@@ -117,9 +117,10 @@ Add:
 }
 ```
 
+Now nginx configs will always open with highlighting.
+
 (The permanent fix did not work for me)
 
-Now nginx configs will always open with highlighting.
 
 ---
 
@@ -136,3 +137,5 @@ The main config file imports this sub-configuration file and uses it:
 ```
 /etc/nginx/sites-enabled/eap-it31.motoppdemo.nl
 ```
+
+What's this file then? /var/www/eap-it31.motoppdemo.nl/index.html looks like it's the file nginx is serving in eap-it31.motoppdemo.nl
