@@ -25,7 +25,6 @@ class UserRepository:
         hashed_password: str,
         first_name: str,
         last_name: str,
-        is_active: bool = True,
         is_email_verified: bool = False,
     ) -> DbUser:
         user = DbUser(
