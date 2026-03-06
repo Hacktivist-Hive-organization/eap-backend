@@ -40,6 +40,10 @@ class RequestRepository:
         )
         return query.order_by(DBRequest.updated_at.desc()).all()
 
+    def get_requests_by_statuses(self, statuses: List[Status]):
+        query = self.db.query(DBRequest).filter(DBRequest.current_status.in_(statuses))
+        return query.order_by(DBRequest.updated_at.desc()).all()
+
     def get_requests_by_user(self, user_id: int, statuses: List[Status]):
         query = self.db.query(DBRequest).filter(DBRequest.requester_id == user_id)
         if statuses:

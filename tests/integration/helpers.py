@@ -165,3 +165,25 @@ def seed_dashboard_approvers(db):
         "dashboard_approver1": dashboard_approver1,
         "dashboard_approver2": dashboard_approver2,
     }
+
+
+def seed_admin(db):
+    # -----------------------------
+    # Create admin
+    # -----------------------------
+
+    dashboard_admin = DbUser(
+        email="dashboard_admin@example.com",
+        first_name="admin",
+        last_name="One",
+        hashed_password="not_a_real_hash",
+        is_active=True,
+        role=UserRole.ADMIN,
+    )
+
+    db.add_all([dashboard_admin])
+    db.commit()
+    db.refresh(dashboard_admin)
+    return {
+        "admin": dashboard_admin,
+    }

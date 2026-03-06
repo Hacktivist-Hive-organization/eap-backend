@@ -63,6 +63,11 @@ class RequestService:
     def get_all_requests(self):
         return self.request_repo.get_all_requests()
 
+    def get_requests_by_statuses(self, statuses: List[Status]):
+        if statuses:
+            return self.request_repo.get_requests_by_statuses(statuses)
+        return self.request_repo.get_all_requests()
+
     def get_requests_by_user(self, user_id: int, statuses: List[Status]):
         return self.request_repo.get_requests_by_user(user_id, statuses)
 
