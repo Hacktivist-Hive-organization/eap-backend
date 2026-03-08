@@ -26,13 +26,14 @@ class UserRepository:
         first_name: str,
         last_name: str,
         is_email_verified: bool = False,
+        is_active: bool = True,
     ) -> DbUser:
         user = DbUser(
             email=email,  # type: ignore
             hashed_password=hashed_password,  # type: ignore
             first_name=first_name,  # type: ignore
             last_name=last_name,  # type: ignore
-            is_active=True,  # type: ignore
+            is_active=is_active,  # type: ignore
             is_email_verified=is_email_verified,  # type: ignore
         )
         self.db.add(user)
