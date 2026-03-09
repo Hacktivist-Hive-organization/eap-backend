@@ -90,3 +90,64 @@ def test_verify_email_user_not_found(client):
     )
 
     assert response.status_code == 404
+
+
+def test_resend_verification_email_success(client, db_session):
+    settings.EMAIL_VERIFICATION_REQUIRED = True
+
+    client.post(
+        f"{API_PREFIX}/register",
+        json=register_payload("resend@example.com"),
+    )
+
+    user = db_session.query(DbUser).filter_by(email="resend@example.com").one()
+    assert user.is_email_verified is False
+
+    response = client.post(
+        f"{API_PREFIX}/resend-verification-email",
+        json={"email": "resend@example.com"},
+    )
+
+    assert response.status_code == 200
+    assert "verification link has been sent" in response.json()["message"].lower()
+
+    db_session.refresh(user)
+    assert user.is_email_verified is False
+
+
+def test_resend_verification_email_already_verified(client, db_session, monkeypatch):
+    monkeypatch.setattr(settings, "EMAIL_VERIFICATION_REQUIRED", True)
+
+    client.post(
+        f"{API_PREFIX}/register",
+        json=register_payload("verified@example.com"),
+    )
+    user = db_session.query(DbUser).filter_by(email="verified@example.com").one()
+    user.is_email_verified = True
+    user.is_active = True
+    db_session.commit()
+
+    response = client.post(
+        f"{API_PREFIX}/resend-verification-email",
+        json={"email": "verified@example.com"},
+    )
+
+    assert response.status_code == 200
+    assert "not required" in response.json()["message"].lower()
+
+
+def test_resend_verification_email_invalid_email(client):
+    response = client.post(
+        f"{API_PREFIX}/resend-verification-email",
+        json={"email": "not-an-email"},
+    )
+    assert response.status_code == 422
+
+
+def test_resend_verification_email_nonexistent_user(client):
+    response = client.post(
+        f"{API_PREFIX}/resend-verification-email",
+        json={"email": "noone@example.com"},
+    )
+    assert response.status_code == 200
+    assert "not required" in response.json()["message"].lower()

@@ -60,3 +60,7 @@ class ForgotPasswordRequestSchema(BaseModel):
 class ResetPasswordRequestSchema(BaseModel):
     token: str
     new_password: str
+
+
+class ResendVerificationEmailRequestSchema(BaseModel):
+    email: str

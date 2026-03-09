@@ -132,9 +132,7 @@ class AuthService:
         token = create_access_token({"sub": str(user.id)})
         return token, user
 
-    async def forgot_password(
-        self, email: str, background_tasks: BackgroundTasks
-    ) -> bool:
+    def forgot_password(self, email: str, background_tasks: BackgroundTasks) -> bool:
         normalized_email = normalize_email(email)
 
         if not is_email_valid(normalized_email):
@@ -197,21 +195,19 @@ class AuthService:
         user.hashed_password = hash_password(new_password)
         self.repo.update_user(user)
 
-    def verify_email(self, token: str) -> None:
+    def verify_email(self, token: str, background_tasks: BackgroundTasks) -> DbUser:
         payload = verify_token(token)
         if payload.get("type") != "email_verification":
             raise BusinessException(
                 message="Invalid token type",
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
-
         user_id = payload.get("sub")
         if not user_id:
             raise BusinessException(
                 message="Invalid token payload",
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
-
         user = self.repo.get_user(int(user_id))
         if not user:
             raise BusinessException(
@@ -222,3 +218,49 @@ class AuthService:
         user.is_active = True
         user.is_email_verified = True
         self.repo.update_user(user)
+
+        subject = "Account verified"
+        body = "Your account has been successfully verified."
+        background_tasks.add_task(
+            self.email_service.send_email,
+            to=user.email,
+            subject=subject,
+            body=body,
+        )
+
+        return user
+
+    def resend_verification_email(
+        self,
+        email: str,
+        background_tasks: BackgroundTasks,
+    ) -> bool:
+        normalized_email = normalize_email(email)
+
+        if not is_email_valid(normalized_email):
+            raise BusinessException(
+                message="Invalid email format",
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            )
+
+        user = self.repo.get_by_email(normalized_email)
+        if not user or user.is_email_verified:
+            return False
+
+        verification_token = create_access_token(
+            {"sub": str(user.id), "type": "email_verification"},
+            expires_minutes=settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES,
+        )
+
+        verification_link = f"{settings.FRONTEND_URL}/verify-email#{verification_token}"
+        subject = "Email verification"
+        body = f"Use the following link to verify your email: {verification_link}"
+
+        background_tasks.add_task(
+            self.email_service.send_email,
+            to=user.email,
+            subject=subject,
+            body=body,
+        )
+
+        return True
