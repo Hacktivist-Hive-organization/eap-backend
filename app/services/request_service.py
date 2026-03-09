@@ -5,8 +5,9 @@ from typing import List
 from fastapi import status
 from sqlalchemy.orm import Session
 
-from app.common.enums import Status
+from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
+from app.common.security_models import CurrentUser
 from app.repositories import (
     RequestRepository,
     RequestSubtypeRepository,
@@ -71,7 +72,7 @@ class RequestService:
     def get_requests_by_user(self, user_id: int, statuses: List[Status]):
         return self.request_repo.get_requests_by_user(user_id, statuses)
 
-    def get_request_details(self, request_id: int, user_id: int):
+    def get_request_details(self, request_id: int, current_user: CurrentUser):
         request = self.request_repo.get_request_details(request_id)
 
         if not request:
@@ -80,9 +81,21 @@ class RequestService:
                 status_code=status.HTTP_404_NOT_FOUND,
             )
 
-        if request.requester_id != user_id:
+        if (
+            request.requester_id != current_user.id
+            and current_user.role != UserRole.ADMIN
+        ):
             raise BusinessException(
                 message="Not authorized to view this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        if (
+            current_user.role == UserRole.ADMIN
+            and request.current_status == Status.DRAFT
+        ):
+            raise BusinessException(
+                message="Request is still in draft state",
                 status_code=status.HTTP_403_FORBIDDEN,
             )
 

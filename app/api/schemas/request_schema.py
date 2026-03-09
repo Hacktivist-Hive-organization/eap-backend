@@ -53,7 +53,7 @@ class RequestResponseSchema(BaseModel):
     business_justification: str
     type: RequestTypeSchema
     subtype: RequestSubtypeSchema
-    requester: AdminUserResponseSchema
+    requester: UserBaseResponseSchema
     assignee: UserBaseResponseSchema | None = None
     created_at: datetime
     updated_at: datetime | None
