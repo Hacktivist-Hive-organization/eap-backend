@@ -89,18 +89,9 @@ class AuthService:
         )
 
         if settings.EMAIL_VERIFICATION_REQUIRED:
-            verification_token = create_jwt_token(str(user.id), "email_verification")
-
-            verification_link = (
-                f"{settings.FRONTEND_URL}/verify-email#{verification_token}"
-            )
-            subject = "Email verification"
-            body = f"Use the following link to verify your email: {verification_link}"
-            background_tasks.add_task(
-                self.email_service.send_email,
-                to=user.email,
-                subject=subject,
-                body=body,
+            verification_token = create_jwt_token(user.id, "email_verification")
+            self.email_service.send_verification_email(
+                user.email, verification_token, background_tasks
             )
 
         token = create_jwt_token(user.id, "access")
@@ -145,15 +136,8 @@ class AuthService:
 
         token = create_jwt_token(user.id, "password_reset")
 
-        reset_link = f"{settings.FRONTEND_URL}/reset-password#{token}"
-        subject = "Password reset"
-        body = f"Use the following link to reset your password: {reset_link}"
-
-        background_tasks.add_task(
-            self.email_service.send_email,
-            to=user.email,
-            subject=subject,
-            body=body,
+        self.email_service.send_password_reset_email(
+            user.email, token, background_tasks
         )
 
         return True
@@ -190,7 +174,7 @@ class AuthService:
         user.hashed_password = hash_password(new_password)
         self.repo.update_user(user)
 
-    def verify_email(self, token: str, background_tasks: BackgroundTasks) -> DbUser:
+    def verify_email(self, token: str, background_tasks: BackgroundTasks) -> None:
         payload = verify_token(token)
         if payload.get("type") != "email_verification":
             raise BusinessException(
@@ -214,16 +198,7 @@ class AuthService:
         user.is_email_verified = True
         self.repo.update_user(user)
 
-        subject = "Account verified"
-        body = "Your account has been successfully verified."
-        background_tasks.add_task(
-            self.email_service.send_email,
-            to=user.email,
-            subject=subject,
-            body=body,
-        )
-
-        return user
+        self.email_service.send_account_verified_email(user.email, background_tasks)
 
     def resend_verification_email(
         self,
@@ -243,16 +218,8 @@ class AuthService:
             return False
 
         verification_token = create_jwt_token(user.id, "email_verification")
-
-        verification_link = f"{settings.FRONTEND_URL}/verify-email#{verification_token}"
-        subject = "Email verification"
-        body = f"Use the following link to verify your email: {verification_link}"
-
-        background_tasks.add_task(
-            self.email_service.send_email,
-            to=user.email,
-            subject=subject,
-            body=body,
+        self.email_service.send_verification_email(
+            user.email, verification_token, background_tasks
         )
 
         return True

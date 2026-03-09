@@ -3,6 +3,10 @@
 import re
 from typing import Protocol
 
+from fastapi import BackgroundTasks
+
+from app.core.config import settings
+
 
 class EmailManagerProtocol(Protocol):
     async def send_email(
@@ -32,4 +36,50 @@ class EmailService:
             subject=subject,
             body=body,
             html=html,
+        )
+
+    def send_verification_email(
+        self,
+        to: str,
+        token: str,
+        background_tasks: BackgroundTasks,
+    ):
+        link = f"{settings.FRONTEND_URL}/verify-email#{token}"
+        subject = "Email verification"
+        body = f"Use the following link to verify your email: {link}"
+        background_tasks.add_task(
+            self.send_email,
+            to=to,
+            subject=subject,
+            body=body,
+        )
+
+    def send_account_verified_email(
+        self,
+        to: str,
+        background_tasks: BackgroundTasks,
+    ):
+        subject = "Account verified"
+        body = "Your account has been successfully verified."
+        background_tasks.add_task(
+            self.send_email,
+            to=to,
+            subject=subject,
+            body=body,
+        )
+
+    def send_password_reset_email(
+        self,
+        to: str,
+        token: str,
+        background_tasks: BackgroundTasks,
+    ):
+        link = f"{settings.FRONTEND_URL}/reset-password#{token}"
+        subject = "Password reset"
+        body = f"Use the following link to reset your password: {link}"
+        background_tasks.add_task(
+            self.send_email,
+            to=to,
+            subject=subject,
+            body=body,
         )
