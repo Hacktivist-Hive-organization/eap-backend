@@ -5,7 +5,6 @@ import pytest
 from app.common.enums import Status
 from app.core.config import settings
 from app.main import app
-from app.models import DBRequestTypeApprover
 
 API_PREFIX = f"{settings.API_V1_PREFIX}/requests"
 API_SUBMIT = f"{settings.API_V1_PREFIX}/requests/submit"
