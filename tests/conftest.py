@@ -17,7 +17,7 @@ from app.models import DBRequest
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
 from tests.integration.helpers import (
-    seed_admin,
+    seed_admins,
     seed_dashboard_approvers,
     seed_types_and_subtypes,
     seed_user,
@@ -68,7 +68,7 @@ def users(db_session):
 
 @pytest.fixture
 def dashboard_admin(db_session):
-    return seed_admin(db_session)
+    return seed_admins(db_session)
 
 
 @pytest.fixture

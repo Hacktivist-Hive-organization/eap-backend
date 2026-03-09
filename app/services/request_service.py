@@ -1,12 +1,13 @@
 # app/services/request_service.py
 
-from typing import List
+from typing import List, Optional
 
-from fastapi import status
+from fastapi import BackgroundTasks, status
 from sqlalchemy.orm import Session
 
-from app.common.enums import Status
+from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
+from app.common.security_models import CurrentUser
 from app.repositories import (
     RequestRepository,
     RequestSubtypeRepository,
@@ -164,3 +165,101 @@ class RequestService:
             comment="Request submitted and assigned to approver",
         )
         return request
+
+    def admin_process_request(
+        self,
+        request_id: int,
+        status_in: Status,
+        user: CurrentUser,
+        comment: Optional[str] = None,
+        background_tasks: BackgroundTasks | None = None,
+    ):
+        if user.role != UserRole.ADMIN:
+            raise BusinessException(
+                message="You do not have permission to perform this action",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        allowed_status = {Status.IN_PROGRESS, Status.COMPLETED, Status.REJECTED}
+
+        if status_in not in allowed_status:
+            raise BusinessException(
+                message="Invalid status transition, Status should be "
+                "in_progress, completed or rejected",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        request = self.request_repo.get_request_details(request_id)
+        # check if the request exists
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.current_status in [Status.DRAFT, Status.SUBMITTED]:
+            raise BusinessException(
+                message="Request must be approved first",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.current_status in [Status.REJECTED, Status.COMPLETED]:
+            raise BusinessException(
+                message=f"Request already {request.current_status.value}",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if (
+            request.assignee
+            and request.assignee.role == UserRole.ADMIN
+            and request.assignee.id != user.id
+        ):
+            raise BusinessException(
+                message="Another admin already working on this request",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+        elif (
+            request.current_status == Status.IN_PROGRESS
+            and status_in == Status.IN_PROGRESS
+        ):
+            raise BusinessException(
+                message="Invalid status transition, You are already assigned to this request.",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # for reject request, comment must be mandatory
+        if (
+            status_in in [Status.COMPLETED, Status.REJECTED]
+            and request.current_status != Status.IN_PROGRESS
+        ):
+            raise BusinessException(
+                message="Please Assign the request to yourself first",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        if status_in == Status.REJECTED and not comment:
+            raise BusinessException(
+                message="Comment is mandatory for rejection",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        db = self.request_repo.db
+        try:
+            updated_request = self.request_repo.update_request_status(
+                request, status_in
+            )
+
+            # create tracking record (this determines the assignee)
+            self.tracking_repo.create(
+                comment, request_id, status_in, user.id, commit=False
+            )
+            self.tracking_repo.db.commit()
+            db.refresh(updated_request)
+        except Exception:
+            self.tracking_repo.db.rollback()
+            raise BusinessException(
+                message="Database error, Please contact your administrator",
+                status_code=status.HTTP_417_EXPECTATION_FAILED,
+            )
+
+        return updated_request
