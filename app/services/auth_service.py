@@ -6,12 +6,12 @@ from fastapi import BackgroundTasks, status
 
 from app.common.exceptions import BusinessException
 from app.common.security import (
-    create_access_token,
     hash_password,
     verify_password,
     verify_token,
 )
 from app.common.utils import (
+    create_jwt_token,
     is_email_valid,
     is_password_strong,
     is_required_fields_filled,
@@ -89,10 +89,8 @@ class AuthService:
         )
 
         if settings.EMAIL_VERIFICATION_REQUIRED:
-            verification_token = create_access_token(
-                {"sub": str(user.id), "type": "email_verification"},
-                expires_minutes=settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES,
-            )
+            verification_token = create_jwt_token(str(user.id), "email_verification")
+
             verification_link = (
                 f"{settings.FRONTEND_URL}/verify-email#{verification_token}"
             )
@@ -105,7 +103,7 @@ class AuthService:
                 body=body,
             )
 
-        token = create_access_token({"sub": str(user.id)})
+        token = create_jwt_token(user.id, "access")
 
         return token, user
 
@@ -129,7 +127,7 @@ class AuthService:
         user.last_login = datetime.now(timezone.utc)
         self.repo.update_user(user)
 
-        token = create_access_token({"sub": str(user.id)})
+        token = create_jwt_token(user.id, "access")
         return token, user
 
     def forgot_password(self, email: str, background_tasks: BackgroundTasks) -> bool:
@@ -145,10 +143,7 @@ class AuthService:
         if not user:
             return False
 
-        token = create_access_token(
-            {"sub": str(user.id), "type": "password_reset"},
-            expires_minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES,
-        )
+        token = create_jwt_token(user.id, "password_reset")
 
         reset_link = f"{settings.FRONTEND_URL}/reset-password#{token}"
         subject = "Password reset"
@@ -247,10 +242,7 @@ class AuthService:
         if not user or user.is_email_verified:
             return False
 
-        verification_token = create_access_token(
-            {"sub": str(user.id), "type": "email_verification"},
-            expires_minutes=settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES,
-        )
+        verification_token = create_jwt_token(user.id, "email_verification")
 
         verification_link = f"{settings.FRONTEND_URL}/verify-email#{verification_token}"
         subject = "Email verification"

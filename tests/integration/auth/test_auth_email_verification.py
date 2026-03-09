@@ -1,6 +1,6 @@
 # tests/integration/test_auth_email_verification.py
 
-from app.common.security import create_access_token
+from app.common.utils import create_jwt_token
 from app.core.config import settings
 from app.models.db_user import DbUser
 
@@ -46,7 +46,7 @@ def test_verify_email_updates_user(client, db_session, monkeypatch):
 
     user = db_session.query(DbUser).filter_by(email="confirm@example.com").one()
 
-    token = create_access_token({"sub": str(user.id), "type": "email_verification"})
+    token = create_jwt_token(user.id, "email_verification")
 
     response = client.get(
         f"{API_PREFIX}/verify-email",
@@ -71,7 +71,7 @@ def test_verify_email_invalid_token_type(client, db_session, monkeypatch):
 
     user = db_session.query(DbUser).filter_by(email="wrongtoken@example.com").one()
 
-    token = create_access_token({"sub": str(user.id), "type": "password_reset"})
+    token = create_jwt_token(user.id, "password_reset")
 
     response = client.get(
         f"{API_PREFIX}/verify-email",
@@ -82,7 +82,7 @@ def test_verify_email_invalid_token_type(client, db_session, monkeypatch):
 
 
 def test_verify_email_user_not_found(client):
-    token = create_access_token({"sub": "999999", "type": "email_verification"})
+    token = create_jwt_token(999999, "email_verification")
 
     response = client.get(
         f"{API_PREFIX}/verify-email",
