@@ -246,7 +246,7 @@ class RequestService:
         db = self.request_repo.db
         try:
             updated_request = self.request_repo.update_request_status(
-                request, status_in
+                request, status_in, commit=False
             )
 
             # create tracking record (this determines the assignee)
