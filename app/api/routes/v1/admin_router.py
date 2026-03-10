@@ -1,7 +1,7 @@
 # app/api/routes/v1/admin_router.py
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from fastapi import status as http_status
 
 from app.api.dependencies.security_dependencies import get_current_user
@@ -9,6 +9,7 @@ from app.api.dependencies.service_dependency import (
     get_request_service,
 )
 from app.api.schemas.request_schema import (
+    RequestProcessResponseSchema,
     RequestResponseListSchema,
 )
 from app.common.enums import Status, UserRole
@@ -36,4 +37,29 @@ def get_requests(
         )
     return service.get_requests_by_statuses(
         [s.value for s in status] if status else None
+    )
+
+
+@router.patch(
+    "/requests/{request_id}",
+    summary="Process request",
+    description="Process an approved request by changing its status and "
+    "creating a tracking record. Rejecting requires a mandatory "
+    "comment. Requests must be in approved status.",
+    response_model=RequestProcessResponseSchema,
+)
+def process_request(
+    background_tasks: BackgroundTasks,
+    request_id: int,
+    status: Status = Query(...),
+    comment: Optional[str] = Query(None),
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.admin_process_request(
+        request_id=request_id,
+        status_in=status,
+        user=current_user,
+        comment=comment,
+        background_tasks=background_tasks,
     )

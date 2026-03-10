@@ -6,7 +6,7 @@ API_PREFIX = f"{settings.API_V1_PREFIX}/admin"
 def test_get_all_requests_except_draft(
     client, dashboard_admin, auth_as, users, seeded_requests_for_user
 ):
-    admin = dashboard_admin["admin"]
+    admin = dashboard_admin["admin1"]
     auth_as(admin)
 
     response = client.get(f"{API_PREFIX}/requests")
@@ -29,7 +29,7 @@ def test_admin_permission(client, auth_as, users, seeded_requests_for_user):
 def test_get_approved_requests(
     client, dashboard_admin, auth_as, users, seeded_requests_for_user
 ):
-    admin = dashboard_admin["admin"]
+    admin = dashboard_admin["admin1"]
     auth_as(admin)
 
     response = client.get(f"{API_PREFIX}/requests?status=approved")
