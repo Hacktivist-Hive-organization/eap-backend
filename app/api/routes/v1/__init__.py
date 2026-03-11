@@ -1,3 +1,5 @@
+# app/api/routes/v1/__init__.py
+
 from fastapi import APIRouter
 
 from app.api.routes.v1.admin_router import router as admin_router

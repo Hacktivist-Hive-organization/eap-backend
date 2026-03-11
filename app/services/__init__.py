@@ -1,3 +1,5 @@
+# app/services/__init__.py
+
 from app.services.auth_service import AuthService
 from app.services.email_service import EmailService
 from app.services.health_service import HealthService

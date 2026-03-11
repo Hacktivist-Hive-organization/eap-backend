@@ -1,3 +1,5 @@
+# app/models/__init__.py
+
 from app.models.db_request import DBRequest
 from app.models.db_request_subtype import DBRequestSubtype
 from app.models.db_request_tracking import DBRequestTracking

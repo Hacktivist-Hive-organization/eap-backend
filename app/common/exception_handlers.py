@@ -1,3 +1,5 @@
+# app/common/exception_handlers.py
+
 import json
 
 import structlog

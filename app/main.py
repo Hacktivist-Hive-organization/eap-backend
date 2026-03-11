@@ -1,4 +1,4 @@
-# main.py
+# app/main.py
 
 from contextlib import asynccontextmanager
 
