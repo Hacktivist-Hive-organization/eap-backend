@@ -89,7 +89,7 @@ def test_get_request_details_admin_succeed(
     db_session,
 ):
     owner = users["user1"]
-    admin = dashboard_admin["admin"]
+    admin = dashboard_admin["admin1"]
 
     # --- Owner creates request ---
     auth_as(owner)
@@ -116,7 +116,7 @@ def test_get_draft_request_details_admin_forbidden(
     client, seeded_request_types, users, auth_as, valid_request_payload, dashboard_admin
 ):
     owner = users["user1"]
-    admin = dashboard_admin["admin"]
+    admin = dashboard_admin["admin1"]
 
     # --- Owner creates request ---
     auth_as(owner)
