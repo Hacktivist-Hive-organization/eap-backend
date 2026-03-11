@@ -6,12 +6,12 @@ This script automatically inserts a file path comment at the top of Python files
 The path is written relative to the project root.
 
 Example result:
-
+``` python
 # app/services/auth_service.py
 
 import asyncio
 import time
-
+```
 The script removes existing path-like header comments at the beginning of the file before inserting the updated one.
 
 This keeps file headers consistent across the project.
@@ -54,9 +54,11 @@ project_root/
 Run the script from the project root.
 
 Default behavior processes the `app` directory.
+In this case, all matching Python files inside the `app` directory and its subdirectories will be processed.
 
-python scripts/add_file_path_header.py
-
+```bash
+  python scripts/add_file_path_header.py
+```
 
 ## Processing a Specific Directory
 
@@ -64,58 +66,66 @@ You can pass a directory path relative to the project root.
 
 Example:
 
-python scripts/add_file_path_header.py tests
+```bash
+  python scripts/add_file_path_header.py tests
+```
 
-python scripts/add_file_path_header.py tests/integration
-
+```bash
+  python scripts/add_file_path_header.py tests/integration
+```
 
 ## Processing a Single File
 
 You can also pass a specific Python file.
 
 Example:
-
-python scripts/add_file_path_header.py tests/integration/auth/test_auth_email_verification.py
-
+```bash
+  python scripts/add_file_path_header.py   tests/integration/test_users.py
+````
 
 ## Example Transformation
 
-Before:
+### Adding a header when none exists
 
+Before:
+``` python
 from sqlalchemy import Column, Integer
 from sqlalchemy.orm import relationship
-
+```
 
 After running the script:
-
+```python
 # app/models/db_request_type.py
 
 from sqlalchemy import Column, Integer
 from sqlalchemy.orm import relationship
+```
 
-
-If an old header already exists, it will be replaced.
+### If an old header already exists, it will be replaced.
 
 Before:
-
+```python
 # old/path/file.py
 
 from sqlalchemy import Column
+from sqlalchemy.orm import relationship
+```
 
-
-After:
-
+After running the script:
+```python
 # app/models/db_request_type.py
 
 from sqlalchemy import Column
-
+from sqlalchemy.orm import relationship
+```
 
 ## Lock Protection
 
 To prevent concurrent execution, the script creates a lock file:
 
-.add_path_header.lock
-
+```bash
+  .add_path_header.lock
+```
 If the script is already running, another execution will exit with a message:
 
 Script already running. Exiting.
@@ -125,13 +135,15 @@ If the script crashes unexpectedly, you may need to remove the lock file manuall
 
 Linux / macOS:
 
-rm .add_path_header.lock
-
+```bash
+    rm .add_path_header.lock
+```
 
 Windows:
 
-del .add_path_header.lock
-
+```bash
+    del .add_path_header.lock
+```
 
 ## Notes
 
