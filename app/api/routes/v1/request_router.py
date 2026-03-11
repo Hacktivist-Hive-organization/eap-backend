@@ -89,7 +89,7 @@ def get_request_details(
     service=Depends(get_request_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    return service.get_request_details(request_id, current_user.id)
+    return service.get_request_details(request_id, current_user)
 
 
 @router.post(
