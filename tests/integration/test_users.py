@@ -1,4 +1,4 @@
-# user_test.py
+# tests/integration/test_users.py
 
 from app.common.enums import UserRole
 from app.common.security import hash_password

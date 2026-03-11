@@ -1,4 +1,5 @@
-# tests/integration/test_admin_requests.py
+# tests/integration/test_admin_process_request.py
+
 import os
 
 import pytest
