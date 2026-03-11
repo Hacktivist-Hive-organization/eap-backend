@@ -14,6 +14,7 @@ class RequestTrackingResponseSchema(BaseModel):
     user: UserBaseResponseSchema
     comment: Optional[str] = None
     status: Status
+    created_at: datetime
 
     class ConfigDict:
         from_attributes = True
