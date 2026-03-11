@@ -24,7 +24,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
 
 
-def create_access_token(
+def create_token(
     data: dict, expires_minutes: int = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 ) -> str:
     to_encode = data.copy()

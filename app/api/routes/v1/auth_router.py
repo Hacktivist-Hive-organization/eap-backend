@@ -5,6 +5,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, status
 from app.api.dependencies.service_dependency import get_auth_service
 from app.api.schemas.user_schema import (
     ForgotPasswordRequestSchema,
+    ResendVerificationEmailRequestSchema,
     ResetPasswordRequestSchema,
     TokenResponseSchema,
     UserLoginRequestSchema,
@@ -60,12 +61,12 @@ def login(
     description="Starts the password reset process. If the provided email exists, a password reset token will be sent to that address.",
     status_code=status.HTTP_200_OK,
 )
-async def forgot_password(
+def forgot_password(
     data: ForgotPasswordRequestSchema,
     background_tasks: BackgroundTasks,
     service: AuthService = Depends(get_auth_service),
 ):
-    await service.forgot_password(
+    service.forgot_password(
         email=data.email,
         background_tasks=background_tasks,
     )
@@ -91,13 +92,38 @@ def reset_password(
 
 @router.get(
     "/verify-email",
-    status_code=status.HTTP_200_OK,
     summary="Verify user email",
     description="Verifies a user's email address using the verification token sent to their email.",
+    status_code=status.HTTP_200_OK,
 )
 def verify_email(
     token: str,
+    background_tasks: BackgroundTasks,
     service: AuthService = Depends(get_auth_service),
 ):
-    service.verify_email(token=token)
+    service.verify_email(token, background_tasks)
     return {"message": "Email successfully verified."}
+
+
+@router.post(
+    "/resend-verification-email",
+    summary="Resend verification email",
+    description="Resends the email verification link if the account exists and the email is not yet verified.",
+    status_code=status.HTTP_200_OK,
+)
+def resend_verification_email(
+    data: ResendVerificationEmailRequestSchema,
+    background_tasks: BackgroundTasks,
+    service: AuthService = Depends(get_auth_service),
+):
+    sent = service.resend_verification_email(
+        email=data.email,
+        background_tasks=background_tasks,
+    )
+
+    if sent:
+        message = "A verification link has been sent to your email."
+    else:
+        message = "Email verification is not required or email does not exist."
+
+    return {"message": message}

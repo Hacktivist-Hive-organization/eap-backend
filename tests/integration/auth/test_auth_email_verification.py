@@ -1,6 +1,6 @@
 # tests/integration/auth/test_auth_email_verification.py
 
-from app.common.security import create_access_token
+from app.common.utils import create_jwt_token
 from app.core.config import settings
 from app.models.db_user import DbUser
 
@@ -46,7 +46,7 @@ def test_verify_email_updates_user(client, db_session, monkeypatch):
 
     user = db_session.query(DbUser).filter_by(email="confirm@example.com").one()
 
-    token = create_access_token({"sub": str(user.id), "type": "email_verification"})
+    token = create_jwt_token(user.id, "email_verification")
 
     response = client.get(
         f"{API_PREFIX}/verify-email",
@@ -71,7 +71,7 @@ def test_verify_email_invalid_token_type(client, db_session, monkeypatch):
 
     user = db_session.query(DbUser).filter_by(email="wrongtoken@example.com").one()
 
-    token = create_access_token({"sub": str(user.id), "type": "password_reset"})
+    token = create_jwt_token(user.id, "password_reset")
 
     response = client.get(
         f"{API_PREFIX}/verify-email",
@@ -82,7 +82,7 @@ def test_verify_email_invalid_token_type(client, db_session, monkeypatch):
 
 
 def test_verify_email_user_not_found(client):
-    token = create_access_token({"sub": "999999", "type": "email_verification"})
+    token = create_jwt_token(999999, "email_verification")
 
     response = client.get(
         f"{API_PREFIX}/verify-email",
@@ -90,3 +90,64 @@ def test_verify_email_user_not_found(client):
     )
 
     assert response.status_code == 404
+
+
+def test_resend_verification_email_success(client, db_session):
+    settings.EMAIL_VERIFICATION_REQUIRED = True
+
+    client.post(
+        f"{API_PREFIX}/register",
+        json=register_payload("resend@example.com"),
+    )
+
+    user = db_session.query(DbUser).filter_by(email="resend@example.com").one()
+    assert user.is_email_verified is False
+
+    response = client.post(
+        f"{API_PREFIX}/resend-verification-email",
+        json={"email": "resend@example.com"},
+    )
+
+    assert response.status_code == 200
+    assert "verification link has been sent" in response.json()["message"].lower()
+
+    db_session.refresh(user)
+    assert user.is_email_verified is False
+
+
+def test_resend_verification_email_already_verified(client, db_session, monkeypatch):
+    monkeypatch.setattr(settings, "EMAIL_VERIFICATION_REQUIRED", True)
+
+    client.post(
+        f"{API_PREFIX}/register",
+        json=register_payload("verified@example.com"),
+    )
+    user = db_session.query(DbUser).filter_by(email="verified@example.com").one()
+    user.is_email_verified = True
+    user.is_active = True
+    db_session.commit()
+
+    response = client.post(
+        f"{API_PREFIX}/resend-verification-email",
+        json={"email": "verified@example.com"},
+    )
+
+    assert response.status_code == 200
+    assert "not required" in response.json()["message"].lower()
+
+
+def test_resend_verification_email_invalid_email(client):
+    response = client.post(
+        f"{API_PREFIX}/resend-verification-email",
+        json={"email": "not-an-email"},
+    )
+    assert response.status_code == 422
+
+
+def test_resend_verification_email_nonexistent_user(client):
+    response = client.post(
+        f"{API_PREFIX}/resend-verification-email",
+        json={"email": "noone@example.com"},
+    )
+    assert response.status_code == 200
+    assert "not required" in response.json()["message"].lower()

@@ -6,12 +6,12 @@ from fastapi import BackgroundTasks, status
 
 from app.common.exceptions import BusinessException
 from app.common.security import (
-    create_access_token,
     hash_password,
     verify_password,
     verify_token,
 )
 from app.common.utils import (
+    create_jwt_token,
     is_email_valid,
     is_password_strong,
     is_required_fields_filled,
@@ -89,23 +89,12 @@ class AuthService:
         )
 
         if settings.EMAIL_VERIFICATION_REQUIRED:
-            verification_token = create_access_token(
-                {"sub": str(user.id), "type": "email_verification"},
-                expires_minutes=settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES,
-            )
-            verification_link = (
-                f"{settings.FRONTEND_URL}/verify-email#{verification_token}"
-            )
-            subject = "Email verification"
-            body = f"Use the following link to verify your email: {verification_link}"
-            background_tasks.add_task(
-                self.email_service.send_email,
-                to=user.email,
-                subject=subject,
-                body=body,
+            verification_token = create_jwt_token(user.id, "email_verification")
+            self.email_service.send_verification_email(
+                user.email, verification_token, background_tasks
             )
 
-        token = create_access_token({"sub": str(user.id)})
+        token = create_jwt_token(user.id, "access")
 
         return token, user
 
@@ -129,12 +118,10 @@ class AuthService:
         user.last_login = datetime.now(timezone.utc)
         self.repo.update_user(user)
 
-        token = create_access_token({"sub": str(user.id)})
+        token = create_jwt_token(user.id, "access")
         return token, user
 
-    async def forgot_password(
-        self, email: str, background_tasks: BackgroundTasks
-    ) -> bool:
+    def forgot_password(self, email: str, background_tasks: BackgroundTasks) -> bool:
         normalized_email = normalize_email(email)
 
         if not is_email_valid(normalized_email):
@@ -147,20 +134,10 @@ class AuthService:
         if not user:
             return False
 
-        token = create_access_token(
-            {"sub": str(user.id), "type": "password_reset"},
-            expires_minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES,
-        )
+        token = create_jwt_token(user.id, "password_reset")
 
-        reset_link = f"{settings.FRONTEND_URL}/reset-password#{token}"
-        subject = "Password reset"
-        body = f"Use the following link to reset your password: {reset_link}"
-
-        background_tasks.add_task(
-            self.email_service.send_email,
-            to=user.email,
-            subject=subject,
-            body=body,
+        self.email_service.send_password_reset_email(
+            user.email, token, background_tasks
         )
 
         return True
@@ -197,21 +174,19 @@ class AuthService:
         user.hashed_password = hash_password(new_password)
         self.repo.update_user(user)
 
-    def verify_email(self, token: str) -> None:
+    def verify_email(self, token: str, background_tasks: BackgroundTasks) -> None:
         payload = verify_token(token)
         if payload.get("type") != "email_verification":
             raise BusinessException(
                 message="Invalid token type",
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
-
         user_id = payload.get("sub")
         if not user_id:
             raise BusinessException(
                 message="Invalid token payload",
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
-
         user = self.repo.get_user(int(user_id))
         if not user:
             raise BusinessException(
@@ -222,3 +197,29 @@ class AuthService:
         user.is_active = True
         user.is_email_verified = True
         self.repo.update_user(user)
+
+        self.email_service.send_account_verified_email(user.email, background_tasks)
+
+    def resend_verification_email(
+        self,
+        email: str,
+        background_tasks: BackgroundTasks,
+    ) -> bool:
+        normalized_email = normalize_email(email)
+
+        if not is_email_valid(normalized_email):
+            raise BusinessException(
+                message="Invalid email format",
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            )
+
+        user = self.repo.get_by_email(normalized_email)
+        if not user or user.is_email_verified:
+            return False
+
+        verification_token = create_jwt_token(user.id, "email_verification")
+        self.email_service.send_verification_email(
+            user.email, verification_token, background_tasks
+        )
+
+        return True
