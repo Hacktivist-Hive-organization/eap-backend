@@ -39,15 +39,14 @@ Run the script from the project root directory.
 
 Example project structure:
 
+```text
 project_root/
 │
 ├─ app/
 ├─ tests/
 ├─ scripts/
-│  └─ add_file_path_header.py
-│
-└─ pyproject.toml
-
+      └─ add_file_path_header.py
+```
 
 ## Basic Usage
 
