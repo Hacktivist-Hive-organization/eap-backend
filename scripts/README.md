@@ -44,7 +44,7 @@ project_root/
 │
 ├─ app/
 ├─ tests/
-├─ scripts/
+└─ scripts/
       └─ add_file_path_header.py
 ```
 
