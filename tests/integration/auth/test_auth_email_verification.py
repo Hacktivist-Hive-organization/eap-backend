@@ -1,4 +1,4 @@
-# tests/integration/test_auth_email_verification.py
+# tests/integration/auth/test_auth_email_verification.py
 
 from app.common.security import create_access_token
 from app.core.config import settings

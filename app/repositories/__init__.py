@@ -1,3 +1,5 @@
+# app/repositories/__init__.py
+
 from app.repositories.health_repository import HealthRepository
 from app.repositories.request_repository import RequestRepository
 from app.repositories.request_subtype_repository import RequestSubtypeRepository

@@ -1,4 +1,4 @@
-# db_mixins.py
+# app/models/db_mixins.py
 
 from datetime import datetime, timezone
 

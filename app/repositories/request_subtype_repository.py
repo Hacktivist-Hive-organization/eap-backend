@@ -1,4 +1,5 @@
 # app/repositories/request_subtype_repository.py
+
 from sqlalchemy.orm import Session
 
 from app.models import DBRequestSubtype

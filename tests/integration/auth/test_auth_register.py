@@ -1,4 +1,4 @@
-# test_auth_register.py
+# tests/integration/auth/test_auth_register.py
 
 from app.core.config import settings
 from app.models.db_user import DbUser

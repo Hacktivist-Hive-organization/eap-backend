@@ -1,4 +1,4 @@
-# tests/integration/test_email_manager.py
+# tests/integration/email/test_email_manager.py
 
 import asyncio
 

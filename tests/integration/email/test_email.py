@@ -1,4 +1,4 @@
-# tests/integration/test_email.py
+# tests/integration/email/test_email.py
 
 import pytest
 from fastapi.testclient import TestClient

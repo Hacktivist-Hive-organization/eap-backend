@@ -1,4 +1,5 @@
 # app/repositories/request_type_repository.py
+
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import DBRequestType

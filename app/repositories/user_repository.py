@@ -1,4 +1,4 @@
-# user_repository.py
+# app/repositories/user_repository.py
 
 from sqlalchemy.orm import Session
 

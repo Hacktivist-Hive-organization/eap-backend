@@ -1,4 +1,4 @@
-# test_auth_login.py
+# tests/integration/auth/test_auth_login.py
 
 from app.core.config import settings
 

@@ -1,4 +1,4 @@
-# app/api/v1/request_subtype_router.py
+# app/api/routes/v1/request_subtype_router.py
 
 from fastapi import APIRouter, Depends, Response
 
