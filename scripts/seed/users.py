@@ -17,6 +17,14 @@ def seed_users(db: Session):
         role=UserRole.ADMIN,
         is_active=True,
     )
+    admin2 = DbUser(
+        email="admin2@eap.local",
+        first_name="System",
+        last_name="Admin",
+        hashed_password=hash_password("Password123!"),
+        role=UserRole.ADMIN,
+        is_active=True,
+    )
 
     approver_hardware = DbUser(
         email="approver-hardware@eap.local",
@@ -73,6 +81,7 @@ def seed_users(db: Session):
     db.add_all(
         [
             admin,
+            admin2,
             approver_hardware,
             approver_hardware_2,
             approver_software,

@@ -78,7 +78,7 @@ class RequestResponseListSchema(BaseModel):
         from_attributes = True
 
 
-class RequestSubmitResponseSchema(BaseModel):
+class RequestProcessResponseSchema(BaseModel):
     id: int
     title: str
     priority: Priority
@@ -86,6 +86,7 @@ class RequestSubmitResponseSchema(BaseModel):
     type: RequestTypeSchema
     subtype: RequestSubtypeSchema
     requester: AdminUserResponseSchema
+    assignee: UserBaseResponseSchema | None = None
     created_at: datetime
     updated_at: datetime | None
     req_tracking: list[RequestTrackingResponseSchema]

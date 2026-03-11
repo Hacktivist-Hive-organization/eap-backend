@@ -12,9 +12,9 @@ from app.api.dependencies.service_dependency import (
 )
 from app.api.schemas.request_schema import (
     RequestCreateSchema,
+    RequestProcessResponseSchema,
     RequestResponseListSchema,
     RequestResponseSchema,
-    RequestSubmitResponseSchema,
 )
 from app.common.enums import Status
 from app.common.security_models import CurrentUser
@@ -51,7 +51,7 @@ def get_requests_by_user(
 
 @router.post(
     "/submit",
-    response_model=RequestSubmitResponseSchema,
+    response_model=RequestProcessResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
 def create_and_submit_request(
@@ -64,7 +64,7 @@ def create_and_submit_request(
 
 @router.patch(
     "/{request_id}/submit",
-    response_model=RequestSubmitResponseSchema,
+    response_model=RequestProcessResponseSchema,
     status_code=status.HTTP_200_OK,
 )
 def submit_request(
