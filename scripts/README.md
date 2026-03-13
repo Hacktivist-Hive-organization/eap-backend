@@ -79,7 +79,7 @@ You can also pass a specific Python file.
 
 Example:
 ```bash
-  python scripts/add_file_path_header.py   tests/integration/test_users.py
+  python scripts/add_file_path_header.py   tests/integration/users/test_users_read.py
 ````
 
 ## Example Transformation
