@@ -69,16 +69,16 @@ def get_user_info(
 
 @router.patch(
     "/me",
-    summary="Partially update current user profile",
+    summary="Self update user profile",
     description="Updates one or more fields of the current user's profile. Only provided fields will be changed.",
     response_model=UserBaseResponseSchema,
 )
-def partially_update_current_user_profile(
+def update_current_user_profile(
     payload: UserSelfPartialUpdateRequestSchema,
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    return service.partially_update_current_user_profile(
+    return service.update_current_user_profile(
         user_id=current_user.id,
         data=payload.model_dump(exclude_unset=True),
     )

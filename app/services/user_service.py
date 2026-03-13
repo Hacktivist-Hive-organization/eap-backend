@@ -23,7 +23,7 @@ class UserService:
     def get_all_users(self) -> list[DbUser]:
         return self.repo.get_all_users()
 
-    def partially_update_current_user_profile(
+    def update_current_user_profile(
         self,
         user_id: int,
         data: dict,
