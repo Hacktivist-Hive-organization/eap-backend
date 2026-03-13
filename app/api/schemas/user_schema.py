@@ -3,7 +3,9 @@
 from datetime import datetime
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StrictBool, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
+
+from app.common.enums import UserRole
 
 
 class UserRegisterRequestSchema(BaseModel):
@@ -55,11 +57,6 @@ class UserSelfUpdateRequestSchema(BaseModel):
             if not v:
                 raise ValueError("last_name cannot be blank or whitespace")
         return v
-
-
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-
-from app.common.enums import UserRole
 
 
 class UserAdminUpdateRequestSchema(BaseModel):

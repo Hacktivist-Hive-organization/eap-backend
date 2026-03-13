@@ -49,7 +49,7 @@ class UserService:
                 continue
 
             if isinstance(value, str):
-                value = value.strip()  # <-- обрезаем пробелы
+                value = value.strip()
 
             if key in required_fields and (
                 value is None or (isinstance(value, str) and not value)
