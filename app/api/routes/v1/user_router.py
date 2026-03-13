@@ -67,24 +67,6 @@ def get_user_info(
     return service.get_user_by_id(user_id=user_id)
 
 
-@router.put(
-    "/me",
-    summary="Update current user profile",
-    description="Updates the current user's profile information such as first name and last name.",
-    response_model=UserBaseResponseSchema,
-)
-def update_current_user_profile(
-    payload: UserSelfUpdateRequestSchema,
-    service: UserService = Depends(get_user_service),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    return service.update_current_user_profile(
-        user_id=current_user.id,
-        first_name=payload.first_name,
-        last_name=payload.last_name,
-    )
-
-
 @router.patch(
     "/me",
     summary="Partially update current user profile",

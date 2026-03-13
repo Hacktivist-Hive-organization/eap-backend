@@ -23,24 +23,6 @@ class UserService:
     def get_all_users(self) -> list[DbUser]:
         return self.repo.get_all_users()
 
-    def update_current_user_profile(
-        self,
-        user_id: int,
-        first_name: str,
-        last_name: str,
-    ) -> DbUser:
-        user = self.repo.get_user(user_id=user_id)
-        if not user:
-            raise BusinessException(
-                message="User not found",
-                status_code=status.HTTP_404_NOT_FOUND,
-            )
-
-        user.first_name = first_name
-        user.last_name = last_name
-
-        return self.repo.update_user(user)
-
     def partially_update_current_user_profile(
         self,
         user_id: int,
