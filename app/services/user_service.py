@@ -13,7 +13,10 @@ class UserService:
     def __init__(self, repo: UserRepository):
         self.repo = repo
 
-    def get_user_by_id(self, user_id: int) -> DbUser:
+    def get_user_by_id(
+        self,
+        user_id: int,
+    ) -> DbUser:
         user = self.repo.get_user(user_id=user_id)
         if not user:
             raise BusinessException(
@@ -22,8 +25,10 @@ class UserService:
             )
         return user
 
-    def get_user_by_id_for_requester_or_admin(
-        self, user_id: int, current_user: CurrentUser
+    def get_user_by_id_for_current_user(
+        self,
+        user_id: int,
+        current_user: CurrentUser,
     ) -> DbUser:
         if current_user.role != UserRole.ADMIN and current_user.id != user_id:
             raise BusinessException(

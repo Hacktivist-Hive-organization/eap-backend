@@ -64,8 +64,9 @@ def get_user_info(
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    return service.get_user_by_id_for_requester_or_admin(
-        user_id=user_id, current_user=current_user
+    return service.get_user_by_id_for_current_user(
+        user_id=user_id,
+        current_user=current_user,
     )
 
 
