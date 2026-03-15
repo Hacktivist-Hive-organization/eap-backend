@@ -7,8 +7,8 @@ from app.api.dependencies.security_dependencies import get_current_user, require
 from app.api.dependencies.service_dependency import get_user_service
 from app.api.schemas.user_schema import (
     AdminUserResponseSchema,
+    UserAdminUpdateRequestSchema,
     UserBaseResponseSchema,
-    UserSelfPartialUpdateRequestSchema,
     UserSelfUpdateRequestSchema,
 )
 from app.common.enums import UserRole
@@ -30,9 +30,9 @@ router = APIRouter(
 )
 def get_all_users(
     service: UserService = Depends(get_user_service),
-    current_user: CurrentUser = Depends(require_role(UserRole.ADMIN)),
+    current_user: CurrentUser = Depends(get_current_user),
 ):
-    return service.get_all_users()
+    return service.get_all_users(current_user=current_user)
 
 
 @router.get(
@@ -59,18 +59,16 @@ def get_user_info(
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    if current_user.role != UserRole.ADMIN and current_user.id != user_id:
-        raise BusinessException(
-            message="You do not have permission to access this user",
-            status_code=status.HTTP_403_FORBIDDEN,
-        )
-    return service.get_user_by_id(user_id=user_id)
+    return service.get_user_by_id_for_current_user(
+        user_id=user_id,
+        current_user=current_user,
+    )
 
 
-@router.put(
+@router.patch(
     "/me",
-    summary="Update current user profile",
-    description="Updates the current user's profile information such as first name and last name.",
+    summary="Self update user profile",
+    description="Updates one or more fields of the current user's profile. Only self fields are allowed.",
     response_model=UserBaseResponseSchema,
 )
 def update_current_user_profile(
@@ -78,25 +76,31 @@ def update_current_user_profile(
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    return service.update_current_user_profile(
-        user_id=current_user.id,
-        first_name=payload.first_name,
-        last_name=payload.last_name,
+    return service.current_user_update_profile(
+        current_user=current_user,
+        data=payload.model_dump(exclude_unset=True),
     )
 
 
 @router.patch(
-    "/me",
-    summary="Partially update current user profile",
-    description="Updates one or more fields of the current user's profile. Only provided fields will be changed.",
-    response_model=UserBaseResponseSchema,
+    "/{user_id}",
+    summary="Admin update user profile",
+    description="Allows an administrator to update fields of any user, including role and is_active.",
+    response_model=AdminUserResponseSchema,
 )
-def partially_update_current_user_profile(
-    payload: UserSelfPartialUpdateRequestSchema,
+def admin_update_user_profile(
+    user_id: int,
+    payload: UserAdminUpdateRequestSchema,
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    return service.partially_update_current_user_profile(
-        user_id=current_user.id,
+    if current_user.role != UserRole.ADMIN:
+        raise BusinessException(
+            message="You do not have permission to update other users",
+            status_code=status.HTTP_403_FORBIDDEN,
+        )
+    return service.admin_update_profile(
+        user_id=user_id,
         data=payload.model_dump(exclude_unset=True),
+        current_user=current_user,
     )
