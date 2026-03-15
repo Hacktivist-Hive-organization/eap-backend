@@ -10,6 +10,16 @@ from app.repositories.user_repository import UserRepository
 
 
 class UserService:
+    SELF_UPDATE_FIELDS = {"first_name", "last_name", "is_out_of_office"}
+    ADMIN_UPDATE_FIELDS = {
+        "first_name",
+        "last_name",
+        "is_out_of_office",
+        "role",
+        "is_active",
+    }
+    REQUIRED_FIELDS = {"first_name", "last_name"}
+
     def __init__(self, repo: UserRepository):
         self.repo = repo
 
@@ -85,10 +95,12 @@ class UserService:
                 message="User not found", status_code=status.HTTP_404_NOT_FOUND
             )
 
-        allowed_fields = {"first_name", "last_name", "is_out_of_office"}
-        required_fields = {"first_name", "last_name"}
-
-        return self._update_user_fields(user, data, allowed_fields, required_fields)
+        return self._update_user_fields(
+            user,
+            data,
+            self.SELF_UPDATE_FIELDS,
+            self.REQUIRED_FIELDS,
+        )
 
     def admin_update_profile(
         self, user_id: int, data: dict, current_user: CurrentUser
@@ -110,13 +122,9 @@ class UserService:
                 status_code=status.HTTP_403_FORBIDDEN,
             )
 
-        allowed_fields = {
-            "first_name",
-            "last_name",
-            "is_out_of_office",
-            "role",
-            "is_active",
-        }
-        required_fields = {"first_name", "last_name"}
-
-        return self._update_user_fields(user, data, allowed_fields, required_fields)
+        return self._update_user_fields(
+            user,
+            data,
+            self.ADMIN_UPDATE_FIELDS,
+            self.REQUIRED_FIELDS,
+        )
