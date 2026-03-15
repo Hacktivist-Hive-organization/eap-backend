@@ -32,12 +32,7 @@ def get_all_users(
     service: UserService = Depends(get_user_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    if current_user.role != UserRole.ADMIN:
-        raise BusinessException(
-            message="You do not have permission to access all users",
-            status_code=status.HTTP_403_FORBIDDEN,
-        )
-    return service.get_all_users()
+    return service.get_all_users(current_user=current_user)
 
 
 @router.get(

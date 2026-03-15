@@ -37,7 +37,15 @@ class UserService:
             )
         return self.get_user_by_id(user_id)
 
-    def get_all_users(self) -> list[DbUser]:
+    def get_all_users(
+        self,
+        current_user: CurrentUser,
+    ) -> list[DbUser]:
+        if current_user.role != UserRole.ADMIN:
+            raise BusinessException(
+                message="You do not have permission to access all users",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
         return self.repo.get_all_users()
 
     def _update_user_fields(
