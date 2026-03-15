@@ -23,17 +23,13 @@ class UserService:
     def __init__(self, repo: UserRepository):
         self.repo = repo
 
+    # PUBLIC METHODS
+
     def get_user_by_id(
         self,
         user_id: int,
     ) -> DbUser:
-        user = self.repo.get_user(user_id=user_id)
-        if not user:
-            raise BusinessException(
-                message="User not found",
-                status_code=status.HTTP_404_NOT_FOUND,
-            )
-        return user
+        return self._get_existing_user(user_id)
 
     def get_user_by_id_for_current_user(
         self,
@@ -57,6 +53,57 @@ class UserService:
                 status_code=status.HTTP_403_FORBIDDEN,
             )
         return self.repo.get_all_users()
+
+    def current_user_update_profile(
+        self, current_user: CurrentUser, data: dict
+    ) -> DbUser:
+        user = self._get_existing_user(current_user.id)
+
+        return self._update_user_fields(
+            user,
+            data,
+            self.SELF_UPDATE_FIELDS,
+            self.REQUIRED_FIELDS,
+        )
+
+    def admin_update_profile(
+        self, user_id: int, data: dict, current_user: CurrentUser
+    ) -> DbUser:
+        if current_user.role != UserRole.ADMIN:
+            raise BusinessException(
+                message="You do not have permission to update other users",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        user = self._get_existing_user(user_id)
+
+        if (
+            current_user.id == user_id
+            and data.get("role") is not None
+            and data["role"] != UserRole.ADMIN
+        ):
+            raise BusinessException(
+                message="You cannot downgrade your own admin role",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        return self._update_user_fields(
+            user,
+            data,
+            self.ADMIN_UPDATE_FIELDS,
+            self.REQUIRED_FIELDS,
+        )
+
+    # PRIVATE HELPERS
+
+    def _get_existing_user(self, user_id: int) -> DbUser:
+        user = self.repo.get_user(user_id=user_id)
+        if not user:
+            raise BusinessException(
+                message="User not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        return user
 
     def _update_user_fields(
         self,
@@ -85,46 +132,3 @@ class UserService:
             setattr(user, key, value)
 
         return self.repo.update_user(user)
-
-    def current_user_update_profile(
-        self, current_user: CurrentUser, data: dict
-    ) -> DbUser:
-        user = self.repo.get_user(current_user.id)
-        if not user:
-            raise BusinessException(
-                message="User not found", status_code=status.HTTP_404_NOT_FOUND
-            )
-
-        return self._update_user_fields(
-            user,
-            data,
-            self.SELF_UPDATE_FIELDS,
-            self.REQUIRED_FIELDS,
-        )
-
-    def admin_update_profile(
-        self, user_id: int, data: dict, current_user: CurrentUser
-    ) -> DbUser:
-        user = self.repo.get_user(user_id=user_id)
-        if not user:
-            raise BusinessException(
-                message="User not found",
-                status_code=status.HTTP_404_NOT_FOUND,
-            )
-
-        if (
-            current_user.id == user_id
-            and data.get("role") is not None
-            and data["role"] != UserRole.ADMIN
-        ):
-            raise BusinessException(
-                message="Cannot downgrade own admin",
-                status_code=status.HTTP_403_FORBIDDEN,
-            )
-
-        return self._update_user_fields(
-            user,
-            data,
-            self.ADMIN_UPDATE_FIELDS,
-            self.REQUIRED_FIELDS,
-        )
