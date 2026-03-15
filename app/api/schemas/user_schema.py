@@ -40,54 +40,19 @@ class UserSelfUpdateRequestSchema(BaseModel):
 
     model_config = dict(extra="ignore")
 
-    @field_validator("first_name")
+    @field_validator("first_name", "last_name")
     @classmethod
     def first_name_not_blank(cls, v):
         if v is not None:
             v = v.strip()
             if not v:
-                raise ValueError("first_name cannot be blank or whitespace")
-        return v
-
-    @field_validator("last_name")
-    @classmethod
-    def last_name_not_blank(cls, v):
-        if v is not None:
-            v = v.strip()
-            if not v:
-                raise ValueError("last_name cannot be blank or whitespace")
+                raise ValueError("field cannot be blank or whitespace")
         return v
 
 
-class UserAdminUpdateRequestSchema(BaseModel):
-    first_name: str | None = Field(default=None, min_length=1, max_length=255)
-    last_name: str | None = Field(default=None, min_length=1, max_length=255)
-    is_out_of_office: bool | None = None
+class UserAdminUpdateRequestSchema(UserSelfUpdateRequestSchema):
     role: UserRole | None = None
     is_active: bool | None = None
-
-    model_config = ConfigDict(extra="ignore")
-
-    @field_validator("first_name")
-    @classmethod
-    def first_name_not_blank(cls, v):
-        if v is not None and not v.strip():
-            raise ValueError("first_name cannot be blank or whitespace")
-        return v
-
-    @field_validator("last_name")
-    @classmethod
-    def last_name_not_blank(cls, v):
-        if v is not None and not v.strip():
-            raise ValueError("last_name cannot be blank or whitespace")
-        return v
-
-    @field_validator("is_out_of_office", mode="before")
-    @classmethod
-    def is_out_of_office_must_be_bool(cls, v):
-        if v is not None and not isinstance(v, bool):
-            raise ValueError("is_out_of_office must be a boolean")
-        return v
 
 
 class UserBaseResponseSchema(BaseModel):
