@@ -31,7 +31,7 @@ def test_process_request_approve_success(
     auth_as(approver)
 
     request_id = submitted_request_with_tracking.id
-    response = client.post(
+    response = client.patch(
         f"{API_PREFIX}/{request_id}/process?status=approved&comment=Looks good"
     )
 
@@ -47,7 +47,7 @@ def test_process_request_reject_success(
     auth_as(approver)
 
     request_id = submitted_request_with_tracking.id
-    response = client.post(
+    response = client.patch(
         f"{API_PREFIX}/{request_id}/process?status=rejected&comment=Insufficient info"
     )
 
@@ -63,7 +63,7 @@ def test_process_request_reject_missing_comment(
     auth_as(approver)
 
     request_id = submitted_request_with_tracking.id
-    response = client.post(f"{API_PREFIX}/{request_id}/process?status=rejected")
+    response = client.patch(f"{API_PREFIX}/{request_id}/process?status=rejected")
 
     assert response.status_code == 400
     assert response.json()["detail"] == "Comment is mandatory for rejection"
@@ -76,7 +76,7 @@ def test_process_request_cancel_success(
     auth_as(approver)
 
     request_id = submitted_request_with_tracking.id
-    response = client.post(
+    response = client.patch(
         f"{API_PREFIX}/{request_id}/process?status=cancelled&comment=Changed my mind"
     )
 
@@ -92,7 +92,7 @@ def test_process_request_unauthorized(
     auth_as(other_user)  # user1 is not assigned to the tracking record
 
     request_id = submitted_request_with_tracking.id
-    response = client.post(f"{API_PREFIX}/{request_id}/process?status=approved")
+    response = client.patch(f"{API_PREFIX}/{request_id}/process?status=approved")
 
     assert response.status_code == 403
     assert "not authorized to process this request" in response.json()["detail"]
@@ -105,7 +105,7 @@ def test_process_request_invalid_next_status(
     auth_as(approver)
 
     request_id = submitted_request_with_tracking.id
-    response = client.post(f"{API_PREFIX}/{request_id}/process?status=draft")
+    response = client.patch(f"{API_PREFIX}/{request_id}/process?status=draft")
 
     assert response.status_code == 400
     assert "Invalid status transition" in response.json()["detail"]
@@ -126,7 +126,7 @@ def test_process_request_invalid_current_status(
     db_session.add(tracking)
     db_session.commit()
 
-    response = client.post(f"{API_PREFIX}/{req.id}/process?status=approved")
+    response = client.patch(f"{API_PREFIX}/{req.id}/process?status=approved")
 
     assert response.status_code == 400
     assert (

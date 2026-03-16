@@ -80,12 +80,10 @@ def get_request_subtype_service(repo=Depends(get_request_subtype_repository)):
 def get_request_tracking_service(
     repo=Depends(get_request_tracking_repository),
     request_repo=Depends(get_request_repository),
-    email_service=Depends(get_email_service),
 ):
     return RequestTrackingService(
         repo=repo,
         request_repo=request_repo,
-        email_service=email_service,
     )
 
 
