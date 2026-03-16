@@ -156,7 +156,7 @@ class RequestTrackingService:
 
     def _send_email_task(self, request, status_in: Status):
         requester = request.requester
-        link = f"{settings.FRONTEND_URL}/requests/{request.id}"
+        link = f"{settings.FRONTEND_URL}/dashboard/all?requestId={request.id}"
         template = (
             REQUEST_REJECTED if status_in == Status.REJECTED else REQUEST_APPROVED
         )
