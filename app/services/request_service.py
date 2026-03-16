@@ -320,7 +320,11 @@ class RequestService:
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        if request.current_status in [Status.REJECTED, Status.COMPLETED, Status.CANCELLED]:
+        if request.current_status in [
+            Status.REJECTED,
+            Status.COMPLETED,
+            Status.CANCELLED,
+        ]:
             raise BusinessException(
                 message=f"Request already {request.current_status.value}",
                 status_code=status.HTTP_400_BAD_REQUEST,
