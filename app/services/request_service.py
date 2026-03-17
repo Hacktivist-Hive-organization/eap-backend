@@ -228,8 +228,8 @@ class RequestService:
         )
 
         if status_in == Status.CANCELLED:
-            # Requester (owner) or assigned approver can cancel
-            if user_id != request.requester_id and not request_tracking:
+            # Requester (owner) can cancel
+            if user_id != request.requester_id:
                 raise BusinessException(
                     message="You are not authorized to cancel this request",
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -241,6 +241,12 @@ class RequestService:
                     message="You are not authorized to process this request",
                     status_code=status.HTTP_403_FORBIDDEN,
                 )
+
+        if status_in not in [Status.APPROVED, Status.REJECTED, Status.CANCELLED]:
+            raise BusinessException(
+                message="Invalid status transition",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
 
         # check if request status = submitted
         if request.current_status != Status.SUBMITTED:
@@ -256,11 +262,6 @@ class RequestService:
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        if status_in not in [Status.APPROVED, Status.REJECTED, Status.CANCELLED]:
-            raise BusinessException(
-                message="Invalid status transition",
-                status_code=status.HTTP_400_BAD_REQUEST,
-            )
         try:
             updated_req = self.request_repo.update_request_status(
                 request, status_in, commit=False

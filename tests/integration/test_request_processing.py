@@ -69,11 +69,25 @@ def test_process_request_reject_missing_comment(
     assert response.json()["detail"] == "Comment is mandatory for rejection"
 
 
-def test_process_request_cancel_success(
+def test_process_request_cancel_approver(
     client, users, auth_as, submitted_request_with_tracking
 ):
     approver = users["user2"]
     auth_as(approver)
+
+    request_id = submitted_request_with_tracking.id
+    response = client.patch(
+        f"{API_PREFIX}/{request_id}/process?status=cancelled&comment=Changed my mind"
+    )
+
+    assert response.status_code == 403
+
+
+def test_process_request_cancel_success(
+    client, users, auth_as, submitted_request_with_tracking
+):
+    owner = users["user1"]
+    auth_as(owner)
 
     request_id = submitted_request_with_tracking.id
     response = client.patch(
