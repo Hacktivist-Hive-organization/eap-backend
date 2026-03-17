@@ -132,7 +132,7 @@ Nginx main configuration file:
 /etc/nginx/nginx.conf
 ```
 
-The main config file imports this sub-configuration file and uses it:
+The main config file imports the sub-configuration file and uses it:
 
 ```
 /etc/nginx/sites-enabled/eap-it31.motoppdemo.nl
