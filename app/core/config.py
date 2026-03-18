@@ -39,10 +39,9 @@ class Settings(BaseSettings):
 
     # CORS
     CORS_ALLOWED_ORIGINS: list[str] = [
-        "http://localhost:3000",  # React dev server
-        "http://localhost:5173",  # Vite server
-        "http://localhost:8080",  # For browser access via Nginx
-        "http://127.0.0.1:8080",  # For browser access via Nginx
+        "https://eap-it31.motoppdemo.nl",
+        "http://eap-it31.motoppdemo.nl",
+        "http://localhost:5173",
     ]
     MIDDLEWARE_CORS: bool = True
     DEVELOPMENT_ENVIRONMENT: bool = False
