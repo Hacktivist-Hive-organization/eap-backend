@@ -1,6 +1,6 @@
 # app/repositories/request_repository.py
 
-from typing import List, Optional, cast
+from typing import List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -19,7 +19,7 @@ class RequestRepository:
         request: DBRequest,
         current_user_id: int,
         current_status: Optional[Status] = Status.DRAFT,
-    ) -> DBRequest:
+    ):
         db_request = DBRequest(
             type_id=request.type_id,
             subtype_id=request.subtype_id,
@@ -35,40 +35,32 @@ class RequestRepository:
         self.db.refresh(db_request)
         return db_request
 
-    def get_all_requests(self) -> List[DBRequest]:
+    def get_all_requests(self):
         query = self.db.query(DBRequest).filter(
-            DBRequest.current_status != Status.DRAFT.value
+            DBRequest.current_status != Status.DRAFT
         )
-        return cast(List[DBRequest], query.order_by(DBRequest.updated_at.desc()).all())
+        return query.order_by(DBRequest.updated_at.desc()).all()
 
-    def get_requests_by_statuses(self, statuses: List[Status]) -> List[DBRequest]:
-        query = self.db.query(DBRequest).filter(
-            DBRequest.current_status.in_([s.value for s in statuses])
-        )
-        return cast(List[DBRequest], query.order_by(DBRequest.updated_at.desc()).all())
+    def get_requests_by_statuses(self, statuses: List[Status]):
+        query = self.db.query(DBRequest).filter(DBRequest.current_status.in_(statuses))
+        return query.order_by(DBRequest.updated_at.desc()).all()
 
-    def get_requests_by_user(
-        self, user_id: int, statuses: Optional[List[Status]] = None
-    ) -> List[DBRequest]:
+    def get_requests_by_user(self, user_id: int, statuses: List[Status]):
         query = self.db.query(DBRequest).filter(DBRequest.requester_id == user_id)
         if statuses:
-            query = query.filter(
-                DBRequest.current_status.in_([s.value for s in statuses])
-            )
-        return cast(List[DBRequest], query.order_by(DBRequest.updated_at.desc()).all())
+            query = query.filter(DBRequest.current_status.in_(statuses))
+        return query.order_by(DBRequest.updated_at.desc()).all()
 
-    def get_request_details(self, request_id: int) -> Optional[DBRequest]:
-        return cast(
-            Optional[DBRequest],
+    def get_request_details(self, request_id: int):
+        return (
             self.db.query(DBRequest)
             .options(
                 selectinload(DBRequest.requester),
                 selectinload(DBRequest.type),
                 selectinload(DBRequest.subtype),
-                selectinload(DBRequest.req_tracking),
             )
             .filter(DBRequest.id == request_id)
-            .first(),
+            .first()
         )
 
     def is_request_owned_by_user(self, request_id: int, user_id: int) -> bool:
@@ -79,9 +71,7 @@ class RequestRepository:
             is not None
         )
 
-    def update_request_status(
-        self, request: DBRequest, status: Status, commit: bool = True
-    ) -> DBRequest:
+    def update_request_status(self, request, status: Status, commit: bool = True):
         request.current_status = status
         if commit:
             self.db.commit()
@@ -96,7 +86,11 @@ class RequestRepository:
 
     def get_requests_by_assignee_and_status(
         self, approver_id: int, statuses: Optional[List[Status]] = None
-    ) -> List[DBRequest]:
+    ) -> list[DBRequest]:
+        """
+        Returns all requests assigned to the approver via tracking entries,
+        optionally filtered by request statuses.
+        """
         stmt = (
             select(DBRequest)
             .join(DBRequestTracking)
@@ -112,6 +106,6 @@ class RequestRepository:
         )
 
         if statuses:
-            stmt = stmt.where(DBRequest.current_status.in_([s.value for s in statuses]))
+            stmt = stmt.where(DBRequest.current_status.in_(statuses))
 
-        return cast(List[DBRequest], self.db.execute(stmt).scalars().all())
+        return self.db.execute(stmt).scalars().all()

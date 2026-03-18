@@ -1,79 +1,148 @@
-# tests/integration/requests/test_request_transitions_atomic.py
+# tests/integration/test_request_processing.py
 
 import pytest
 
-from app.common.enums import Status, UserRole
+from app.common.enums import Status
+from app.core.config import settings
 from app.models import DBRequestTracking
-from app.repositories.request_repository import RequestRepository
-from app.repositories.request_tracking_repository import RequestTrackingRepository
-from app.services.email_service import EmailService
-from app.services.request_tracking_service import RequestTrackingService
+
+API_PREFIX = f"{settings.API_V1_PREFIX}/requests"
 
 
 @pytest.fixture
-def tracking_service(db_session, real_email_manager):
-    req_repo = RequestRepository(db_session)
-    track_repo = RequestTrackingRepository(db_session)
-    email_service = EmailService(manager=real_email_manager)
-    return RequestTrackingService(track_repo, req_repo, email_service)
+def submitted_request_with_tracking(db_session, users, seeded_requests_for_user):
+    req = seeded_requests_for_user[1]
+    approver = users["user2"]
+    tracking = DBRequestTracking(
+        request_id=req.id,
+        user_id=approver.id,
+        status=Status.SUBMITTED,
+        comment="Initial submission",
+    )
+    db_session.add(tracking)
+    db_session.commit()
+    return req
 
 
-@pytest.fixture
-def users_for_test(users):
-    return {
-        UserRole.REQUESTER: users["user1"],
-        UserRole.APPROVER: users["user2"],
-        UserRole.ADMIN: users["admin1"],
-    }
-
-
-def test_transition_draft_to_submitted(
-    db_session, tracking_service, users_for_test, seeded_requests_for_user
+def test_process_request_approve_success(
+    client, users, auth_as, submitted_request_with_tracking
 ):
-    requester = users_for_test[UserRole.REQUESTER]
-    request = seeded_requests_for_user[0]  # DRAFT request
+    approver = users["user2"]
+    auth_as(approver)
 
-    tracking_service.transition_request(
-        request=request,
-        next_status=Status.SUBMITTED,
-        current_user=requester,
-        comment="Submitting request",
+    request_id = submitted_request_with_tracking.id
+    response = client.patch(
+        f"{API_PREFIX}/{request_id}/process?status=approved&comment=Looks good"
     )
 
-    db_session.refresh(request)
-    assert request.current_status == Status.SUBMITTED
-
-    tracking = (
-        db_session.query(DBRequestTracking)
-        .filter_by(request_id=request.id)
-        .order_by(DBRequestTracking.created_at.desc())
-        .first()
-    )
-    assert tracking.status == Status.SUBMITTED
-    assert tracking.user_id == requester.id
+    assert response.status_code == 200
+    body = response.json()
+    assert body["current_status"] == Status.APPROVED
 
 
-def test_transition_submitted_to_cancelled(
-    db_session, tracking_service, users_for_test, seeded_requests_for_user
+def test_process_request_reject_success(
+    client, users, auth_as, submitted_request_with_tracking
 ):
-    requester = users_for_test[UserRole.REQUESTER]
-    request = seeded_requests_for_user[1]  # SUBMITTED request
+    approver = users["user2"]
+    auth_as(approver)
 
-    tracking_service.transition_request(
-        request=request,
-        next_status=Status.CANCELLED,
-        current_user=requester,
-        comment="Cancelling request",
+    request_id = submitted_request_with_tracking.id
+    response = client.patch(
+        f"{API_PREFIX}/{request_id}/process?status=rejected&comment=Insufficient info"
     )
 
-    db_session.refresh(request)
-    assert request.current_status == Status.CANCELLED
+    assert response.status_code == 200
+    body = response.json()
+    assert body["current_status"] == Status.REJECTED
 
-    tracking = (
-        db_session.query(DBRequestTracking)
-        .filter_by(request_id=request.id)
-        .order_by(DBRequestTracking.created_at.desc())
-        .first()
+
+def test_process_request_reject_missing_comment(
+    client, users, auth_as, submitted_request_with_tracking
+):
+    approver = users["user2"]
+    auth_as(approver)
+
+    request_id = submitted_request_with_tracking.id
+    response = client.patch(f"{API_PREFIX}/{request_id}/process?status=rejected")
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Comment is mandatory for rejection"
+
+
+def test_process_request_cancel_approver(
+    client, users, auth_as, submitted_request_with_tracking
+):
+    approver = users["user2"]
+    auth_as(approver)
+
+    request_id = submitted_request_with_tracking.id
+    response = client.patch(
+        f"{API_PREFIX}/{request_id}/process?status=cancelled&comment=Changed my mind"
     )
-    assert tracking.status == Status.CANCELLED
-    assert tracking.user_id == requester.id
+
+    assert response.status_code == 403
+
+
+def test_process_request_cancel_success(
+    client, users, auth_as, submitted_request_with_tracking
+):
+    owner = users["user1"]
+    auth_as(owner)
+
+    request_id = submitted_request_with_tracking.id
+    response = client.patch(
+        f"{API_PREFIX}/{request_id}/process?status=cancelled&comment=Changed my mind"
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["current_status"] == Status.CANCELLED
+
+
+def test_process_request_unauthorized(
+    client, users, auth_as, submitted_request_with_tracking
+):
+    other_user = users["user1"]
+    auth_as(other_user)  # user1 is not assigned to the tracking record
+
+    request_id = submitted_request_with_tracking.id
+    response = client.patch(f"{API_PREFIX}/{request_id}/process?status=approved")
+
+    assert response.status_code == 403
+    assert "not authorized to process this request" in response.json()["detail"]
+
+
+def test_process_request_invalid_next_status(
+    client, users, auth_as, submitted_request_with_tracking
+):
+    approver = users["user2"]
+    auth_as(approver)
+
+    request_id = submitted_request_with_tracking.id
+    response = client.patch(f"{API_PREFIX}/{request_id}/process?status=draft")
+
+    assert response.status_code == 400
+    assert "Invalid status transition" in response.json()["detail"]
+
+
+def test_process_request_invalid_current_status(
+    client, users, auth_as, seeded_requests_for_user, db_session
+):
+    # draft is index 0
+    req = seeded_requests_for_user[0]
+    approver = users["user2"]
+    auth_as(approver)
+
+    # Add tracking
+    tracking = DBRequestTracking(
+        request_id=req.id, user_id=approver.id, status=Status.DRAFT, comment="Drafting"
+    )
+    db_session.add(tracking)
+    db_session.commit()
+
+    response = client.patch(f"{API_PREFIX}/{req.id}/process?status=approved")
+
+    assert response.status_code == 400
+    assert (
+        "cannot be approved because it is in draft status" in response.json()["detail"]
+    )
