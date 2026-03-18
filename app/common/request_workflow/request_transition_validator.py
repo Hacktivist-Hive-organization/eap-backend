@@ -21,21 +21,11 @@ class RequestTransitionValidator:
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        request_tracking = self.repo.get_tracking_by_request_user_id(
-            request.id, user_id
-        )
-
-        user = None
-
-        # try to resolve user from request relations
-        if request.requester_id == user_id:
-            user = request.requester
-
+        user = request.requester if request.requester_id == user_id else None
         if not user:
-            for t in request.req_tracking:
-                if t.user_id == user_id:
-                    user = t.user
-                    break
+            user = next(
+                (t.user for t in request.req_tracking if t.user_id == user_id), None
+            )
 
         if not user:
             raise BusinessException(
@@ -43,20 +33,7 @@ class RequestTransitionValidator:
                 status_code=status.HTTP_403_FORBIDDEN,
             )
 
-        # determine role correctly
-        if user.role == UserRole.ADMIN:
-            user_role = UserRole.ADMIN
-        elif user_id == request.requester_id:
-            user_role = UserRole.REQUESTER
-        elif request_tracking:
-            user_role = UserRole.APPROVER
-        else:
-            raise BusinessException(
-                message="You are not authorized to process this request",
-                status_code=status.HTTP_403_FORBIDDEN,
-            )
-
-        if user_role not in rule["roles"]:
+        if user.role not in rule["roles"]:
             raise BusinessException(
                 message="You are not authorized to process this request",
                 status_code=status.HTTP_403_FORBIDDEN,
