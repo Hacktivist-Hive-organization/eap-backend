@@ -3,12 +3,11 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
-from starlette import status
+from starlette import status as http_status
 
 from app.api.dependencies.security_dependencies import get_current_user
 from app.api.dependencies.service_dependency import (
     get_request_service,
-    get_request_tracking_service,
 )
 from app.api.schemas.request_schema import (
     RequestCreateSchema,
@@ -16,14 +15,22 @@ from app.api.schemas.request_schema import (
     RequestResponseListSchema,
     RequestResponseSchema,
 )
-from app.common.enums import Status
+from app.common.enums import Status, UserRole
+from app.common.exceptions import BusinessException
 from app.common.security_models import CurrentUser
 
 router = APIRouter(tags=["Requests"])
 
 
 @router.post(
-    "/", response_model=RequestResponseSchema, status_code=status.HTTP_201_CREATED
+    "/",
+    summary="Create new draft request",
+    description=""""
+    Creates a new request in draft status after validating the provided request type and subtype. 
+    The request is not submitted for processing yet and can be updated or submitted later by the requester.
+    """,
+    response_model=RequestResponseSchema,
+    status_code=http_status.HTTP_201_CREATED,
 )
 def create_request(
     request_in: RequestCreateSchema,
@@ -34,9 +41,58 @@ def create_request(
 
 
 @router.get(
+    "/",
+    summary="Retrieve all non-draft requests (Admin only)",
+    description=""""
+    Returns a list of all requests whose status is not draft, ordered by the last updated date.
+    This endpoint is restricted to users with the ADMIN role.
+    Optionally filter results using the status query parameter.
+    """,
+    response_model=list[RequestResponseListSchema],
+)
+def get_requests(
+    status: Optional[List[Status]] = Query(None),
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    if current_user.role != UserRole.ADMIN:
+        raise BusinessException(
+            message="You do not have permission to perform this action",
+            status_code=http_status.HTTP_403_FORBIDDEN,
+        )
+    return service.get_requests_by_statuses(
+        [s.value for s in status] if status else None
+    )
+
+
+@router.get(
+    "/pending",
+    summary="Retrieve requests assigned to the current approver",
+    description="""
+    Returns all requests assigned to the logged-in approver.
+    Optionally filter results by providing one or more statuses.
+    Only users with the APPROVER role can access this endpoint.
+    """,
+    response_model=list[RequestResponseListSchema],
+)
+def get_approver_requests(
+    statuses: Optional[List[Status]] = Query(None, description="Filter by statuses"),
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.get_requests_for_approver(
+        current_user=current_user, statuses=statuses
+    )
+
+
+@router.get(
     "/my-requests",
-    summary="Get all requests by user",
-    description="Get all user requests by status order by creation date",
+    summary="Retrieve requests created by the current user",
+    description=""""
+    Returns all requests created by the logged-in requester.
+    Optionally filter results using the statuses query parameter.
+    This endpoint is intended for users with the REQUESTER role.
+    """,
     response_model=List[RequestResponseListSchema],
 )
 def get_requests_by_user(
@@ -51,8 +107,13 @@ def get_requests_by_user(
 
 @router.post(
     "/submit",
+    summary="create and submit new request",
+    description=""""
+    Creates a new request and immediately submits it for processing. 
+    The request is automatically assigned to the approver with the lowest workload based on the request type.
+    """,
     response_model=RequestProcessResponseSchema,
-    status_code=status.HTTP_201_CREATED,
+    status_code=http_status.HTTP_201_CREATED,
 )
 def create_and_submit_request(
     request_in: RequestCreateSchema,
@@ -64,8 +125,14 @@ def create_and_submit_request(
 
 @router.patch(
     "/{request_id}/submit",
+    summary="Submit an existing draft request",
+    description=""""
+    Submits a previously created draft request.
+                Upon submission, the request is assigned to the approver with the lowest workload based on its type.
+    Only the requester who created the request can perform this action.
+    """,
     response_model=RequestProcessResponseSchema,
-    status_code=status.HTTP_200_OK,
+    status_code=http_status.HTTP_200_OK,
 )
 def submit_request(
     request_id: int,
@@ -80,8 +147,14 @@ def submit_request(
 
 @router.get(
     "/{request_id}",
-    summary="Get request details",
-    description="Get full request details by id (requester only)",
+    summary="Retrieve request details by ID",
+    description=""""
+    Returns the full details of a specific request.
+    **Access is restricted to:**
+    -The requester who created the request
+    -The assigned approver
+    -Users with the ADMIN role
+    """,
     response_model=RequestResponseSchema,
 )
 def get_request_details(
@@ -92,24 +165,31 @@ def get_request_details(
     return service.get_request_details(request_id, current_user)
 
 
-@router.post(
+@router.patch(
     "/{request_id}/process",
-    summary="Process request (approve, reject, cancel)",
-    description="Process a submitted request by changing its status and creating a tracking record. Rejecting requires a mandatory comment. Requests must be in SUBMITTED status.",
-    response_model=RequestResponseSchema,
+    summary="Process a request (status update)",
+    description=""""
+    Updates the status of a request and creates a tracking record for the action.
+    Supported actions depend on the user role:
+    -Requester: can cancel a submitted request
+    -Approver: can approve or reject requests
+    -Admin: can assign, complete, or reject approved requests.
+    A comment is required when rejecting a request.
+    """,
+    response_model=RequestProcessResponseSchema,
 )
-def approve_request(
+def process_request(
     background_tasks: BackgroundTasks,
     request_id: int,
     status: Status = Query(...),
     comment: Optional[str] = Query(None),
-    service=Depends(get_request_tracking_service),
+    service=Depends(get_request_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
     return service.process_request(
         request_id=request_id,
         status_in=status,
-        user_id=current_user.id,
+        current_user=current_user,
         comment=comment,
         background_tasks=background_tasks,
     )

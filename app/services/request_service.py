@@ -1,13 +1,16 @@
 # app/services/request_service.py
 
+import asyncio
+import time
 from typing import List, Optional
 
 from fastapi import BackgroundTasks, status
-from sqlalchemy.orm import Session
 
 from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
 from app.common.security_models import CurrentUser
+from app.core.config import settings
+from app.infrastructure.email.templates import REQUEST_APPROVED, REQUEST_REJECTED
 from app.repositories import (
     RequestRepository,
     RequestSubtypeRepository,
@@ -74,32 +77,39 @@ class RequestService:
 
     def get_request_details(self, request_id: int, current_user: CurrentUser):
         request = self.request_repo.get_request_details(request_id)
-
         if not request:
             raise BusinessException(
                 message="Request not found",
                 status_code=status.HTTP_404_NOT_FOUND,
             )
+        self._validate_view_permissions(request, current_user)
+        return request
 
-        if (
-            request.requester_id != current_user.id
-            and current_user.role != UserRole.ADMIN
-        ):
+    def _validate_view_permissions(self, request, current_user: CurrentUser):
+        # Request owner
+        if request.requester_id == current_user.id:
+            return
+
+        # Admin restriction
+        if current_user.role == UserRole.ADMIN:
+            if request.current_status == Status.DRAFT:
+                raise BusinessException(
+                    message="Request is still in draft state",
+                    status_code=status.HTTP_403_FORBIDDEN,
+                )
+            else:
+                return
+
+        # Assigned users
+        tracking = self.tracking_repo.get_tracking_by_request_user_id(
+            request.id, current_user.id
+        )
+
+        if not tracking:
             raise BusinessException(
                 message="Not authorized to view this request",
                 status_code=status.HTTP_403_FORBIDDEN,
             )
-
-        if (
-            current_user.role == UserRole.ADMIN
-            and request.current_status == Status.DRAFT
-        ):
-            raise BusinessException(
-                message="Request is still in draft state",
-                status_code=status.HTTP_403_FORBIDDEN,
-            )
-
-        return request
 
     def submit_existing_request(
         self,
@@ -178,7 +188,103 @@ class RequestService:
         )
         return request
 
-    def admin_process_request(
+    def process_request(
+        self,
+        request_id: int,
+        status_in: Status,
+        current_user: CurrentUser,
+        comment: str,
+        background_tasks: BackgroundTasks | None = None,
+    ):
+        if current_user.role == UserRole.ADMIN:
+            return self._admin_process_request(
+                request_id, status_in, current_user, comment, background_tasks
+            )
+        else:
+            return self._process_request(
+                request_id, status_in, current_user.id, comment, background_tasks
+            )
+
+    def _process_request(
+        self,
+        request_id: int,
+        status_in: Status,
+        user_id: int,
+        comment: str,
+        background_tasks: BackgroundTasks | None = None,
+    ):
+        request = self.request_repo.get_request_details(request_id)
+
+        # check if the request exists
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        # check if the request is already assigned to the user
+        request_tracking = self.tracking_repo.get_tracking_by_request_user_id(
+            request_id, user_id
+        )
+
+        if status_in == Status.CANCELLED:
+            # Requester (owner) can cancel
+            if user_id != request.requester_id:
+                raise BusinessException(
+                    message="You are not authorized to cancel this request",
+                    status_code=status.HTTP_403_FORBIDDEN,
+                )
+        else:
+            # Only the assigned approver can approve or reject
+            if not request_tracking:
+                raise BusinessException(
+                    message="You are not authorized to process this request",
+                    status_code=status.HTTP_403_FORBIDDEN,
+                )
+
+        if status_in not in [Status.APPROVED, Status.REJECTED, Status.CANCELLED]:
+            raise BusinessException(
+                message="Invalid status transition",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # check if request status = submitted
+        if request.current_status != Status.SUBMITTED:
+            raise BusinessException(
+                message=f"Request cannot be {status_in.value} because it is in {request.current_status.value} status",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # for reject request, comment must be mandatory
+        if status_in == Status.REJECTED and not comment:
+            raise BusinessException(
+                message="Comment is mandatory for rejection",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            updated_req = self.request_repo.update_request_status(
+                request, status_in, commit=False
+            )
+            self.tracking_repo.create(
+                comment, request_id, status_in, user_id, commit=False
+            )
+
+            self.request_repo.db.commit()
+            self.request_repo.db.refresh(updated_req)
+        except Exception:
+            self.request_repo.db.rollback()
+            raise BusinessException(
+                message="Database error, Please contact your administrator",
+                status_code=status.HTTP_417_EXPECTATION_FAILED,
+            )
+
+        if status_in in [Status.REJECTED, Status.APPROVED] and background_tasks:
+            background_tasks.add_task(self._send_email_task, request, status_in)
+
+        return request
+
+    def _admin_process_request(
         self,
         request_id: int,
         status_in: Status,
@@ -215,7 +321,11 @@ class RequestService:
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        if request.current_status in [Status.REJECTED, Status.COMPLETED]:
+        if request.current_status in [
+            Status.REJECTED,
+            Status.COMPLETED,
+            Status.CANCELLED,
+        ]:
             raise BusinessException(
                 message=f"Request already {request.current_status.value}",
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -275,3 +385,52 @@ class RequestService:
             )
 
         return updated_request
+
+    def _send_email_task(self, request, status_in: Status):
+        requester = request.requester
+        link = f"{settings.FRONTEND_URL}/dashboard/all?requestId={request.id}"
+        template = (
+            REQUEST_REJECTED if status_in == Status.REJECTED else REQUEST_APPROVED
+        )
+
+        email_body = template.substitute(
+            request_code=f"REQ-{request.id}",
+            request_title=request.title,
+            user_name=f"{requester.first_name} {requester.last_name}",
+            request_id=request.id,
+            request_type=f"{request.type.name} > {request.subtype.name}",
+            priority=request.priority.value,
+            submitted_at=request.created_at.strftime("%B %d, %Y at %I:%M %p"),
+            status=status_in.value,
+            link=link,
+        )
+
+        subject_prefix = (
+            "Request Rejected" if status_in == Status.REJECTED else "Request Approved"
+        )
+
+        time.sleep(10)
+
+        asyncio.run(
+            self.email_service.send_email(
+                to=requester.email,
+                subject=f"{subject_prefix} - REQ-{request.id} - {request.title}",
+                body=email_body,
+            )
+        )
+
+    def get_requests_for_approver(
+        self, current_user, statuses: Optional[List[Status]] = None
+    ) -> list:
+        """
+        Returns requests assigned to the current approver, optionally filtered by statuses.
+        """
+        if current_user.role != UserRole.APPROVER:
+            raise BusinessException(
+                message="User is not an approver",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        return self.request_repo.get_requests_by_assignee_and_status(
+            approver_id=current_user.id, statuses=statuses
+        )
