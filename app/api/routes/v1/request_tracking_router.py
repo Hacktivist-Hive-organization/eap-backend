@@ -14,7 +14,18 @@ router = APIRouter(tags=["Request tracking"])
 
 @router.get(
     "/{id}",
-    summary="Get request tracking for specific request",
+    summary="Retrieve request tracking for specific request",
+    description="""
+Returns all tracking records for a specific request.
+
+Tracking records are created only after a request is submitted and assigned to an approver. 
+Draft requests do not have any tracking history.
+
+**Access is restricted to:**
+- The requester who created the request
+- The assigned approver
+- Users with the ADMIN role
+""",
     response_model=List[RequestTrackingResponseSchema],
 )
 def get_request_tracking_by_request_id(

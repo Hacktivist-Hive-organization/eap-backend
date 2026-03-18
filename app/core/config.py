@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     CORS_ALLOWED_ORIGINS: list[str] = [
         "https://eap-it31.motoppdemo.nl",
         "http://eap-it31.motoppdemo.nl",
+        "http://localhost:5173",
     ]
     MIDDLEWARE_CORS: bool = True
     DEVELOPMENT_ENVIRONMENT: bool = False
