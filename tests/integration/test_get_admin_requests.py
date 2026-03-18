@@ -2,7 +2,7 @@
 
 from app.core.config import settings
 
-API_PREFIX = f"{settings.API_V1_PREFIX}/admin"
+API_PREFIX = f"{settings.API_V1_PREFIX}"
 
 
 def test_get_all_requests_except_draft(

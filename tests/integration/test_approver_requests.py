@@ -8,7 +8,7 @@ from app.common.enums import Status
 from app.core.config import settings
 from app.models import DBRequestTracking
 
-API_PREFIX = f"{settings.API_V1_PREFIX}/approver/requests"
+API_PREFIX = f"{settings.API_V1_PREFIX}/requests/pending"
 
 pytestmark = pytest.mark.skipif(
     os.getenv("CI") == "true",

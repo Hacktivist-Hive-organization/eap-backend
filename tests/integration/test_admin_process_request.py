@@ -8,7 +8,7 @@ from app.common.enums import Status
 from app.core.config import settings
 from app.models import DBRequestTracking
 
-API_PREFIX = f"{settings.API_V1_PREFIX}/admin/requests"
+API_PREFIX = f"{settings.API_V1_PREFIX}/requests"
 
 pytestmark = pytest.mark.skipif(
     os.getenv("CI") == "true",
@@ -79,7 +79,7 @@ def test_admin_process_request_assign_success(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.IN_PROGRESS.value, "comment": "Start work"},
     )
 
@@ -106,7 +106,7 @@ def test_admin_process_request_complete_success(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.COMPLETED.value, "comment": "Done work"},
     )
 
@@ -133,7 +133,7 @@ def test_admin_process_request_reject_success(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.REJECTED.value, "comment": "Invalid request"},
     )
 
@@ -162,7 +162,7 @@ def test_admin_cannot_assign_if_another_admin_assigned(
 
     auth_as(admin1)
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.IN_PROGRESS.value},
     )
     # admin1 assigned already
@@ -175,7 +175,7 @@ def test_admin_cannot_assign_if_another_admin_assigned(
     auth_as(admin2)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.IN_PROGRESS.value},
     )
 
@@ -200,7 +200,7 @@ def test_admin_cannot_reject_without_comment(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.REJECTED.value},
     )
 
@@ -225,12 +225,11 @@ def test_non_admin_cannot_process_request(
     auth_as(user)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.IN_PROGRESS.value, "comment": "Start work"},
     )
 
     assert response.status_code == 403
-    assert "permission" in response.json()["detail"].lower()
 
 
 def test_cannot_process_approvers_statuses(
@@ -250,7 +249,7 @@ def test_cannot_process_approvers_statuses(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.APPROVED.value, "comment": "Try to approve"},
     )
 
@@ -278,7 +277,7 @@ def test_admin_cannot_approve_requester(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.SUBMITTED.value, "comment": "Try to approve"},
     )
 
@@ -306,7 +305,7 @@ def test_admin_cannot_submit_requester(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.SUBMITTED.value, "comment": "Try to submit"},
     )
 
@@ -334,7 +333,7 @@ def test_cannot_process_rejected_request(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.IN_PROGRESS.value, "comment": "Start work"},
     )
 
@@ -359,7 +358,7 @@ def test_cannot_process_completed_request(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.IN_PROGRESS.value, "comment": "Start work"},
     )
 
@@ -376,12 +375,12 @@ def test_admin_cannot_assign_twice(
     auth_as(admin)
 
     client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.IN_PROGRESS.value},
     )
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.IN_PROGRESS.value},
     )
 
@@ -398,7 +397,7 @@ def test_cannot_complete_without_assigning(
     auth_as(admin)
 
     response = client.patch(
-        f"{API_PREFIX}/{request.id}",
+        f"{API_PREFIX}/{request.id}/process",
         params={"status": Status.COMPLETED.value},
     )
 

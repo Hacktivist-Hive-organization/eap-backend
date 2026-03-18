@@ -1,7 +1,7 @@
 # app/common/request_workflow/request_state_machine.py
 
 from app.common.enums import Status
-from app.common.request_state_config import REQUEST_STATE_CONFIG
+from app.common.request_workflow.request_state_config import REQUEST_STATE_CONFIG
 
 
 class RequestStateMachine:
