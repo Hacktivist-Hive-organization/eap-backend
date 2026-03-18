@@ -13,7 +13,6 @@ class RequestTransitionValidator:
         self.repo = repo
 
     def validate(self, request, next_status, user_id, comment):
-
         rule = RequestStateMachine.get_rule(request.current_status, next_status)
 
         if not rule:
@@ -26,13 +25,36 @@ class RequestTransitionValidator:
             request.id, user_id
         )
 
-        user_role = None
+        user = None
 
-        if user_id == request.requester_id:
+        # try to resolve user from request relations
+        if request.requester_id == user_id:
+            user = request.requester
+
+        if not user:
+            for t in request.req_tracking:
+                if t.user_id == user_id:
+                    user = t.user
+                    break
+
+        if not user:
+            raise BusinessException(
+                message="User not related to this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        # determine role correctly
+        if user.role == UserRole.ADMIN:
+            user_role = UserRole.ADMIN
+        elif user_id == request.requester_id:
             user_role = UserRole.REQUESTER
-
-        if request_tracking:
+        elif request_tracking:
             user_role = UserRole.APPROVER
+        else:
+            raise BusinessException(
+                message="You are not authorized to process this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
 
         if user_role not in rule["roles"]:
             raise BusinessException(
