@@ -1,4 +1,4 @@
-# app/common/request_state_config.py
+# app/common/request_workflow/request_state_config.py
 
 from app.common.enums import Status, UserRole
 
