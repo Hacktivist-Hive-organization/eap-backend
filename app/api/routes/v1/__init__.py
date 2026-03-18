@@ -2,8 +2,6 @@
 
 from fastapi import APIRouter
 
-from app.api.routes.v1.admin_router import router as admin_router
-from app.api.routes.v1.approver_router import router as approver_router
 from app.api.routes.v1.auth_router import router as auth_router
 from app.api.routes.v1.email_router import router as email_router
 from app.api.routes.v1.health_router import router as health_router
@@ -17,9 +15,6 @@ router = APIRouter()
 
 router.include_router(auth_router, prefix="/auth")
 router.include_router(user_router, prefix="/users")
-
-router.include_router(approver_router, prefix="/approver")
-router.include_router(admin_router, prefix="/admin")
 
 router.include_router(request_router, prefix="/requests")
 router.include_router(tracking_router, prefix="/tracking")
