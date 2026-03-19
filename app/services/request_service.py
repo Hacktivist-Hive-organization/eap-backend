@@ -434,3 +434,45 @@ class RequestService:
         return self.request_repo.get_requests_by_assignee_and_status(
             approver_id=current_user.id, statuses=statuses
         )
+
+    def reopen_request(self, request_id: int, user_id: int):
+        request = self.request_repo.get_request_details(request_id)
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+        if request.requester_id != user_id:
+            raise BusinessException(
+                message="You do not have permission to perform this action",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        if request.current_status != Status.CANCELLED:
+            raise BusinessException(
+                message=f"you can not reopen {request.current_status} requests",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+        updated_request = self.request_repo.update_request_status(
+            request, Status.DRAFT, commit=False
+        )
+
+        try:
+            self.tracking_repo.create(
+                "reopen cancelled request",
+                request_id,
+                Status.DRAFT,
+                user_id,
+                commit=False,
+            )
+
+            self.tracking_repo.db.commit()
+            self.request_repo.db.refresh(updated_request)
+        except Exception:
+            self.request_repo.db.rollback()
+            raise BusinessException(
+                message="Database error, Please contact your administrator",
+                status_code=status.HTTP_417_EXPECTATION_FAILED,
+            )
+
+        return updated_request
