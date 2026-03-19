@@ -193,3 +193,29 @@ def process_request(
         comment=comment,
         background_tasks=background_tasks,
     )
+
+
+@router.patch(
+    "/{request_id}/reopen",
+    summary="Reopen a cancelled request as draft",
+    description="""
+    Reopens a cancelled request and sets its status back to Draft.
+
+This allows the original requester to review, modify, and resubmit the request without creating a new one.
+
+Conditions:
+- The request must be in "Cancelled" status
+- Only the user who originally created the request can perform this action
+    """,
+    response_model=RequestResponseSchema,
+    status_code=http_status.HTTP_200_OK,
+)
+def reopen_request(
+    request_id: int,
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.reopen_request(
+        request_id,
+        current_user.id,
+    )
