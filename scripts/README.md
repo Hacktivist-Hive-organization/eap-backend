@@ -33,7 +33,7 @@ This keeps file headers consistent across the project.
 
 Place the script inside the project, for example:
 
-scripts/add_file_path_header.py
+scripts/path_header.py
 
 Run the script from the project root directory.
 
@@ -45,7 +45,7 @@ project_root/
 ├─ app/
 ├─ tests/
 └─ scripts/
-      └─ add_file_path_header.py
+      └─ path_header.py
 ```
 
 ## Basic Usage
@@ -56,7 +56,7 @@ Default behavior processes the `app` directory.
 In this case, all matching Python files inside the `app` directory and its subdirectories will be processed.
 
 ```bash
-  python scripts/add_file_path_header.py
+  python scripts/path_header.py
 ```
 
 ## Processing a Specific Directory
@@ -66,11 +66,11 @@ You can pass a directory path relative to the project root.
 Example:
 
 ```bash
-  python scripts/add_file_path_header.py tests
+  python scripts/path_header.py tests
 ```
 
 ```bash
-  python scripts/add_file_path_header.py tests/integration
+  python scripts/path_header.py tests/integration
 ```
 
 ## Processing a Single File
@@ -79,7 +79,7 @@ You can also pass a specific Python file.
 
 Example:
 ```bash
-  python scripts/add_file_path_header.py   tests/integration/users/test_users_read.py
+  python scripts/path_header.py   tests/integration/users/test_users_read.py
 ````
 
 ## Example Transformation
@@ -123,7 +123,7 @@ from sqlalchemy.orm import relationship
 To prevent concurrent execution, the script creates a lock file:
 
 ```bash
-  .add_path_header.lock
+  .path_header.lock
 ```
 If the script is already running, another execution will exit with a message:
 
@@ -135,13 +135,13 @@ If the script crashes unexpectedly, you may need to remove the lock file manuall
 Linux / macOS:
 
 ```bash
-    rm .add_path_header.lock
+    rm .path_header.lock
 ```
 
 Windows:
 
 ```bash
-    del .add_path_header.lock
+    del .path_header.lock
 ```
 
 ## Notes

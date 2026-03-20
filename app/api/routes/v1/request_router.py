@@ -25,7 +25,7 @@ router = APIRouter(tags=["Requests"])
 @router.post(
     "/",
     summary="Create new draft request",
-    description=""""
+    description="""
     Creates a new request in draft status after validating the provided request type and subtype. 
     The request is not submitted for processing yet and can be updated or submitted later by the requester.
     """,
@@ -43,7 +43,7 @@ def create_request(
 @router.get(
     "/",
     summary="Retrieve all non-draft requests (Admin only)",
-    description=""""
+    description="""
     Returns a list of all requests whose status is not draft, ordered by the last updated date.
     This endpoint is restricted to users with the ADMIN role.
     Optionally filter results using the status query parameter.
@@ -88,7 +88,7 @@ def get_approver_requests(
 @router.get(
     "/my-requests",
     summary="Retrieve requests created by the current user",
-    description=""""
+    description="""
     Returns all requests created by the logged-in requester.
     Optionally filter results using the statuses query parameter.
     This endpoint is intended for users with the REQUESTER role.
@@ -108,7 +108,7 @@ def get_requests_by_user(
 @router.post(
     "/submit",
     summary="create and submit new request",
-    description=""""
+    description="""
     Creates a new request and immediately submits it for processing. 
     The request is automatically assigned to the approver with the lowest workload based on the request type.
     """,
@@ -126,7 +126,7 @@ def create_and_submit_request(
 @router.patch(
     "/{request_id}/submit",
     summary="Submit an existing draft request",
-    description=""""
+    description="""
     Submits a previously created draft request.
                 Upon submission, the request is assigned to the approver with the lowest workload based on its type.
     Only the requester who created the request can perform this action.
@@ -148,7 +148,7 @@ def submit_request(
 @router.get(
     "/{request_id}",
     summary="Retrieve request details by ID",
-    description=""""
+    description="""
     Returns the full details of a specific request.
     **Access is restricted to:**
     -The requester who created the request
@@ -168,7 +168,7 @@ def get_request_details(
 @router.patch(
     "/{request_id}/process",
     summary="Process a request (status update)",
-    description=""""
+    description="""
     Updates the status of a request and creates a tracking record for the action.
     Supported actions depend on the user role:
     -Requester: can cancel a submitted request
