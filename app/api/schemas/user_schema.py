@@ -62,6 +62,7 @@ class UserBaseResponseSchema(BaseModel):
     last_name: str
     role: UserRole
     is_out_of_office: bool | None = None
+    avatar_url: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

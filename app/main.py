@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.middlewares.http_logging_middleware import HttpLoggingMiddleware
 from app.api.routes.routes import router
@@ -77,3 +78,5 @@ app.add_exception_handler(
     ExternalServiceException,
     external_service_exception_handler,
 )
+
+app.mount("/images", StaticFiles(directory="images"), name="images")

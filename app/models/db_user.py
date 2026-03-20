@@ -21,6 +21,7 @@ class DbUser(TimestampMixin, Base):
     is_active = Column(Boolean, default=True)
     is_out_of_office = Column(Boolean, default=False)
     last_login = Column(DateTime(timezone=True), nullable=True)
+    avatar_url = Column(String, nullable=True)
 
     # Relationships
     user_reqs = relationship(
