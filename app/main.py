@@ -44,7 +44,11 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     lifespan=lifespan,
-    swagger_ui_parameters={"docExpansion": "none"},
+    swagger_ui_parameters={
+        "docExpansion": "none",
+        "operationsSorter": "method",
+        # "tagsSorter": "alpha",
+    },
 )
 
 if settings.MIDDLEWARE_CORS:
