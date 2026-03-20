@@ -11,8 +11,8 @@ from app.common.security_models import CurrentUser
 from app.models.db_user import DbUser
 from app.repositories.user_repository import UserRepository
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-IMAGES_DIR = PROJECT_ROOT / "images"
+BASE_DIR = Path(__file__).resolve().parents[2]
+IMAGES_DIR = BASE_DIR / "images"
 
 
 class UserService:
@@ -153,8 +153,6 @@ class UserService:
                 message="Invalid file type",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
-
-        IMAGES_DIR.mkdir(parents=True, exist_ok=True)  # ensures folder exists
 
         # Generate unique filename
         ext = file.filename.split(".")[-1]

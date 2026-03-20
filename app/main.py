@@ -1,5 +1,5 @@
 # app/main.py
-
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -79,4 +79,7 @@ app.add_exception_handler(
     external_service_exception_handler,
 )
 
-app.mount("/images", StaticFiles(directory="images"), name="images")
+BASE_DIR = Path(__file__).resolve().parents[1]
+images_dir = BASE_DIR / "images"
+images_dir.mkdir(exist_ok=True)  # ensure it exists
+app.mount("/images", StaticFiles(directory=images_dir), name="images")
