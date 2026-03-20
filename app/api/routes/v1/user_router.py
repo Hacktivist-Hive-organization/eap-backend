@@ -1,6 +1,6 @@
 # app/api/routes/v1/user_router.py
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 from starlette import status
 
 from app.api.dependencies.security_dependencies import get_current_user, require_role
@@ -104,3 +104,17 @@ def admin_update_user_profile(
         data=payload.model_dump(exclude_unset=True),
         current_user=current_user,
     )
+
+
+@router.post(
+    "/me/avatar",
+    summary="Upload user avatar",
+    description="Uploads or replaces the current user's avatar image.",
+    response_model=UserBaseResponseSchema,
+)
+def upload_avatar(
+    file: UploadFile = File(...),
+    service: UserService = Depends(get_user_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.upload_avatar(current_user=current_user, file=file)

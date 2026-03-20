@@ -1,12 +1,18 @@
 # app/services/user_service.py
+import shutil
+from pathlib import Path
+from uuid import uuid4
 
-from fastapi import status
+from fastapi import UploadFile, status
 
 from app.common.enums import UserRole
 from app.common.exceptions import BusinessException
 from app.common.security_models import CurrentUser
 from app.models.db_user import DbUser
 from app.repositories.user_repository import UserRepository
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+IMAGES_DIR = BASE_DIR / "images"
 
 
 class UserService:
@@ -132,3 +138,33 @@ class UserService:
             setattr(user, key, value)
 
         return self.repo.update_user(user)
+
+    def upload_avatar(self, current_user: CurrentUser, file: UploadFile):
+        user = self.repo.get_user(user_id=current_user.id)
+        if not user:
+            raise BusinessException(
+                message="You do not have permission to change this user's avatar",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        # Validate file type
+        if file.content_type not in ["image/jpeg", "image/png"]:
+            raise BusinessException(
+                message="Invalid file type",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Generate unique filename
+        ext = file.filename.split(".")[-1]
+        filename = f"{uuid4()}.{ext}"
+        file_path = IMAGES_DIR / filename
+
+        # Save file
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Update DB
+        user.avatar_url = f"/images/{filename}"
+        self.repo.update_user(user)
+
+        return user

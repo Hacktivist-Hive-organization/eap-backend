@@ -1,10 +1,11 @@
 # app/main.py
-
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.middlewares.http_logging_middleware import HttpLoggingMiddleware
 from app.api.routes.routes import router
@@ -77,3 +78,8 @@ app.add_exception_handler(
     ExternalServiceException,
     external_service_exception_handler,
 )
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+images_dir = BASE_DIR / "images"
+images_dir.mkdir(exist_ok=True)  # ensure it exists
+app.mount("/images", StaticFiles(directory=images_dir), name="images")
