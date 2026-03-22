@@ -12,11 +12,11 @@ class Priority(str, Enum):
 class Status(str, Enum):
     DRAFT = "draft"
     SUBMITTED = "submitted"
-    IN_PROGRESS = "in_progress"
     APPROVED = "approved"
-    REJECTED = "rejected"
+    IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+    REJECTED = "rejected"
 
 
 class UserRole(str, Enum):
