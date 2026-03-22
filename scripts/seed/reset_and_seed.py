@@ -6,15 +6,16 @@ from pathlib import Path
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-# Setup project root
+# Project root
 BASE_DIR = Path(__file__).resolve()
 while not (BASE_DIR / "app").exists():
     BASE_DIR = BASE_DIR.parent
 sys.path.insert(0, str(BASE_DIR))
 
 from app.database.session import SessionLocal
-from scripts.seed.demo_data_full import seed_demo_data
-from scripts.seed.request_types_full import seed_request_type_subtype_data
+from scripts.seed.demo_data_n import seed_demo_data
+from scripts.seed.request_type_approvers_n import seed_request_type_approvers
+from scripts.seed.request_types_n import seed_request_type_subtype_data
 from scripts.seed.users import seed_users
 
 
@@ -22,7 +23,7 @@ def reset_database(db: Session):
     tables = [
         "request_tracking",
         "requests",
-        "request_type_approver",
+        "request_type_approvers",
         "request_subtype",
         "request_type",
         "users",
@@ -36,13 +37,9 @@ def reset_database(db: Session):
 
 
 def run_seed(db: Session):
-    # Seed users first
     seed_users(db)
-
-    # Seed request types, subtypes and assign approvers
     seed_request_type_subtype_data(db)
-
-    # Seed demo requests
+    seed_request_type_approvers(db)
     seed_demo_data()
 
 
