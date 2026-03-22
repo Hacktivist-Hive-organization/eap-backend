@@ -1,3 +1,5 @@
+# scripts/seed/users.py
+
 from sqlalchemy.orm import Session
 
 from app.common.enums import UserRole

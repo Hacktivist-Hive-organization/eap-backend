@@ -1,3 +1,5 @@
+# scripts/path_header.py
+
 import re
 import sys
 from pathlib import Path
