@@ -1,3 +1,5 @@
+# scripts/seed/run.py
+
 import sys
 from pathlib import Path
 
