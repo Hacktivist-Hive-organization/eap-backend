@@ -6,9 +6,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from starlette import status as http_status
 
 from app.api.dependencies.security_dependencies import get_current_user
-from app.api.dependencies.service_dependency import (
-    get_request_service,
-)
+from app.api.dependencies.service_dependency import get_request_service
 from app.api.schemas.request_schema import (
     RequestCreateSchema,
     RequestProcessResponseSchema,
@@ -107,41 +105,29 @@ def get_requests_by_user(
 
 @router.post(
     "/submit",
-    summary="create and submit new request",
+    summary="Create and submit new request",
     description="""
     Creates a new request and immediately submits it for processing. 
     The request is automatically assigned to the approver with the lowest workload based on the request type.
+    Uses the unified process_request method internally.
     """,
     response_model=RequestProcessResponseSchema,
     status_code=http_status.HTTP_201_CREATED,
 )
 def create_and_submit_request(
+    background_tasks: BackgroundTasks,
     request_in: RequestCreateSchema,
     service=Depends(get_request_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    return service.create_and_submit_request(request_in, current_user.id)
+    request = service.create_request(request_in, current_user.id)
 
-
-@router.patch(
-    "/{request_id}/submit",
-    summary="Submit an existing draft request",
-    description="""
-    Submits a previously created draft request.
-                Upon submission, the request is assigned to the approver with the lowest workload based on its type.
-    Only the requester who created the request can perform this action.
-    """,
-    response_model=RequestProcessResponseSchema,
-    status_code=http_status.HTTP_200_OK,
-)
-def submit_request(
-    request_id: int,
-    service=Depends(get_request_service),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    return service.submit_existing_request(
-        request_id=request_id,
-        current_user_id=current_user.id,
+    return service.process_request(
+        request_id=request.id,
+        status_in=Status.SUBMITTED,
+        current_user=current_user,
+        comment="Request submitted on creation",
+        background_tasks=background_tasks,
     )
 
 
@@ -151,9 +137,9 @@ def submit_request(
     description="""
     Returns the full details of a specific request.
     **Access is restricted to:**
-    -The requester who created the request
-    -The assigned approver
-    -Users with the ADMIN role
+    - The requester who created the request
+    - The assigned approver
+    - Users with the ADMIN role
     """,
     response_model=RequestResponseSchema,
 )
@@ -171,9 +157,9 @@ def get_request_details(
     description="""
     Updates the status of a request and creates a tracking record for the action.
     Supported actions depend on the user role:
-    -Requester: can cancel a submitted request
-    -Approver: can approve or reject requests
-    -Admin: can assign, complete, or reject approved requests.
+    - Requester: can cancel or reopen a cancelled request
+    - Approver: can approve or reject requests
+    - Admin: can assign, mark in_progress, complete, or reject approved requests
     A comment is required when rejecting a request.
     """,
     response_model=RequestProcessResponseSchema,
@@ -192,30 +178,4 @@ def process_request(
         current_user=current_user,
         comment=comment,
         background_tasks=background_tasks,
-    )
-
-
-@router.patch(
-    "/{request_id}/reopen",
-    summary="Reopen a cancelled request as draft",
-    description="""
-    Reopens a cancelled request and sets its status back to Draft.
-
-This allows the original requester to review, modify, and resubmit the request without creating a new one.
-
-Conditions:
-- The request must be in "Cancelled" status
-- Only the user who originally created the request can perform this action
-    """,
-    response_model=RequestResponseSchema,
-    status_code=http_status.HTTP_200_OK,
-)
-def reopen_request(
-    request_id: int,
-    service=Depends(get_request_service),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    return service.reopen_request(
-        request_id,
-        current_user.id,
     )
