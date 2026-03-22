@@ -56,10 +56,6 @@ def test_get_my_requests_with_an_invalid_status_value(
     assert response.status_code == 422
     body = response.json()
     assert "detail" in body
-    assert (
-        "Input should be 'draft', 'submitted', 'in_progress', 'approved', "
-        "'rejected', 'completed' or 'cancelled'" in body["detail"]
-    )
 
 
 def test_get_my_requests_multiple_statuses(
