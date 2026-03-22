@@ -67,7 +67,7 @@ REQUEST_STATE_CONFIG = {
         },
         Status.REJECTED: {
             "roles": [UserRole.ADMIN],
-            "comment_required": False,
+            "comment_required": True,
             "template": "REQUEST_REJECTED",
             "notify_roles": [],
         },
@@ -153,6 +153,24 @@ class RequestService:
             )
 
         self._validate_transition_and_role(request, status_in, current_user, comment)
+
+        if status_in == Status.IN_PROGRESS:
+            current_assignee = getattr(request, "assignee", None)
+
+            if current_assignee:
+                if current_assignee.id != current_user.id:
+                    raise BusinessException(
+                        message="Another admin already working on this request",
+                        status_code=400,
+                    )
+                else:
+                    raise BusinessException(
+                        message="Request already assigned to you",
+                        status_code=400,
+                    )
+
+            # Assign current admin as assignee
+            request.assignee_id = current_user.id
 
         if status_in == Status.SUBMITTED:
             approver = self.approver_repo.get_least_busy(request.type_id)
