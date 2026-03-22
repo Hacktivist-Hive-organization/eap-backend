@@ -1,4 +1,5 @@
-# demo_data.py
+# scripts/seed/demo_data.py
+
 from app.common.enums import Priority, Status, UserRole
 from app.common.security import hash_password
 from app.database.session import SessionLocal
