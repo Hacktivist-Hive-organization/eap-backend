@@ -109,3 +109,21 @@ class RequestRepository:
             stmt = stmt.where(DBRequest.current_status.in_(statuses))
 
         return self.db.execute(stmt).scalars().all()
+
+    def delete_by_id(self, request_id: int, commit: bool = True) -> bool:
+        """
+        Deletes a request by its ID directly.
+        Returns True if deleted, False if not found.
+        Raises DB errors if commit fails.
+        """
+        request = self.db.get(DBRequest, request_id)
+        if not request:
+            return False
+        try:
+            self.db.delete(request)
+            if commit:
+                self.db.commit()
+            return True
+        except Exception:
+            self.db.rollback()
+            raise

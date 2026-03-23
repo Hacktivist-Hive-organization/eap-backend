@@ -219,3 +219,22 @@ def reopen_request(
         request_id,
         current_user.id,
     )
+
+
+@router.delete(
+    "/{request_id}",
+    summary="Delete a draft request",
+    description="""
+    Requester can delete a draft request
+    """,
+    status_code=http_status.HTTP_204_NO_CONTENT,
+)
+def delete_request(
+    request_id: int,
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    service.delete_draft_request(
+        request_id,
+        current_user,
+    )
