@@ -159,20 +159,6 @@ class RequestService:
                 background_tasks=background_tasks,
             )
 
-        # DEBUG
-        new_assignee = getattr(result, "assignee", None)
-        print(
-            "--------\n"
-            f"[DEBUG] Request {result.id}:\n "
-            f"old_status={old_status.value},\n "
-            f"old_assignee_id={old_assignee.id if old_assignee else 'None'}, \n"
-            f"new_status={result.current_status.value}\n, "
-            f"new_assignee_id={new_assignee.id if new_assignee else 'None'}, \n"
-            f"changed_by_user_id={current_user.id}, \n"
-            f"role={current_user.role.value} \n"
-            "--------\n"
-        )
-
         return result
 
     # ----------------------- PRIVATE METHODS -----------------------
@@ -254,13 +240,6 @@ class RequestService:
                 assignee = getattr(request, "assignee", None)
                 if assignee:
                     recipients.add(assignee.email)
-
-        print(
-            "--------\n"
-            f"[DEBUG]\n "
-            f" Email recipients for request {request.id}: {list(recipients)}\n "
-            "--------\n"
-        )
 
         for to in recipients:
             email_body = template.substitute(
