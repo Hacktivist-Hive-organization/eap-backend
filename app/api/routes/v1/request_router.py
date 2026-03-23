@@ -35,7 +35,7 @@ def create_request(
     service=Depends(get_request_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    return service.create_request(request_in, current_user.id)
+    return service.create_request(request_in, current_user=current_user)
 
 
 @router.get(
@@ -120,7 +120,7 @@ def create_and_submit_request(
     service=Depends(get_request_service),
     current_user: CurrentUser = Depends(get_current_user),
 ):
-    request = service.create_request(request_in, current_user.id)
+    request = service.create_request(request_in, current_user=current_user)
 
     return service.process_request(
         request_id=request.id,

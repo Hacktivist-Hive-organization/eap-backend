@@ -3,7 +3,9 @@
 from typing import List, Optional
 
 from fastapi import BackgroundTasks, status
+from starlette.status import HTTP_403_FORBIDDEN
 
+from app.api.schemas.request_schema import RequestCreateSchema
 from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
 from app.common.request_workflow.request_transition_validator import (
@@ -65,7 +67,13 @@ class RequestService:
 
     # ----------------------- PUBLIC METHODS -----------------------
 
-    def create_request(self, request_in, current_user_id: int):
+    def create_request(self, request_in, current_user):
+        current_user_id = current_user.id
+        if current_user.role != UserRole.REQUESTER:
+            raise BusinessException(
+                message="Only requesters can create requests",
+                status_code=HTTP_403_FORBIDDEN,
+            )
         self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)
         return self.request_repo.create(request_in, current_user_id)
 
@@ -117,11 +125,12 @@ class RequestService:
                 status_code=status.HTTP_404_NOT_FOUND,
             )
 
-        # DEBUG
-        old_status = request.current_status
-        old_assignee = getattr(request, "assignee", None)
+        if comment and len(comment.strip()) < 5:
+            raise BusinessException(
+                message="Comment must be at least 5 characters long",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
 
-        # validate transition and get rule
         rule = self.transition_validator.validate(
             request=request,
             new_status=status_in,
@@ -129,10 +138,8 @@ class RequestService:
             comment=comment,
         )
 
-        # pick handler
         handler = self.transition_handlers.get(status_in, self.default_handler)
 
-        # handle with rollback/commit
         try:
             result = handler.handle(
                 request=request,
@@ -150,7 +157,6 @@ class RequestService:
                 status_code=500,
             )
 
-        # schedule email if needed
         if background_tasks and rule.get("notify_roles"):
             self._send_email_task(
                 request=result,
