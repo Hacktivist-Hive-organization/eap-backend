@@ -198,9 +198,9 @@ def process_request(
 
 @router.patch(
     "/{request_id}/edit",
-    summary="edit a draft request as draft",
+    summary="edit a draft request",
     description="""
-  requester can  edit his draft request before it's submitted
+  requester can edit his draft request before it's submitted
     """,
     response_model=RequestResponseSchema,
     status_code=http_status.HTTP_200_OK,
