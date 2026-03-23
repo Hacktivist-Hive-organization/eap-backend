@@ -109,7 +109,6 @@ def get_requests_by_user(
     description="""
     Creates a new request and immediately submits it for processing. 
     The request is automatically assigned to the approver with the lowest workload based on the request type.
-    Uses the unified process_request method internally.
     """,
     response_model=RequestProcessResponseSchema,
     status_code=http_status.HTTP_201_CREATED,
