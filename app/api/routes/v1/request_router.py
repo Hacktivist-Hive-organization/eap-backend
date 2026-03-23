@@ -14,6 +14,7 @@ from app.api.schemas.request_schema import (
     RequestProcessResponseSchema,
     RequestResponseListSchema,
     RequestResponseSchema,
+    RequestUpdateSchema,
 )
 from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
@@ -192,6 +193,28 @@ def process_request(
         current_user=current_user,
         comment=comment,
         background_tasks=background_tasks,
+    )
+
+
+@router.patch(
+    "/{request_id}/edit",
+    summary="edit a draft request as draft",
+    description="""
+  requester can  edit his draft request before it's submitted
+    """,
+    response_model=RequestResponseSchema,
+    status_code=http_status.HTTP_200_OK,
+)
+def edit_request(
+    request_id: int,
+    request_in: RequestUpdateSchema,
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.edit_draft_request(
+        request_id,
+        request_in,
+        current_user,
     )
 
 

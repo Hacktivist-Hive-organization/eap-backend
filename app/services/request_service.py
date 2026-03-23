@@ -477,6 +477,60 @@ class RequestService:
 
         return updated_request
 
+    def edit_draft_request(
+        self, request_id: int, request_in, current_user: CurrentUser
+    ):
+
+        request = self.request_repo.get_request_details(request_id)
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.requester_id != current_user.id:
+            raise BusinessException(
+                message="Not authorized to submit this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        if request.current_status != Status.DRAFT:
+            raise BusinessException(
+                message="Only draft requests can be edited",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+        # Convert input to dict, exclude unset
+        update_data = request_in.model_dump(exclude_unset=True)
+
+        # Business rule: status cannot be edited here
+        if "current_status" in update_data:
+            raise BusinessException(
+                message="Updating request status is not allowed via this endpoint",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+        # Validate type/subtype if they are provided
+        type_id = update_data.get("type_id", request.type_id)
+        subtype_id = update_data.get("subtype_id", request.subtype_id)
+        self._validate_type_and_subtype(type_id, subtype_id)
+
+        # Remove restricted fields
+        restricted_fields = {"id", "requester_id", "created_at"}
+        for field in restricted_fields:
+            update_data.pop(field, None)
+
+        try:
+            updated_request = self.request_repo.update_request_fields(
+                request, update_data
+            )
+        except Exception:
+            raise BusinessException(
+                message="Database error, Please contact your administrator",
+                status_code=status.HTTP_417_EXPECTATION_FAILED,
+            )
+
+        # Re-fetch fully-loaded object to avoid detached relationships
+        return self.request_repo.get_request_details(updated_request.id)
+
     def delete_draft_request(self, request_id: int, current_user: CurrentUser):
         """
         Deletes a draft request. Only the owner can delete, and only if it is in DRAFT status.
