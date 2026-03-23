@@ -2,7 +2,7 @@
 
 import re
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -93,3 +93,18 @@ class RequestProcessResponseSchema(BaseModel):
 
     class ConfigDict:
         from_attributes = True
+
+
+class RequestUpdateSchema(BaseModel):
+    type_id: Optional[int] = None
+    subtype_id: Optional[int] = None
+    title: Optional[str] = Field(None, min_length=5, max_length=200)
+    description: Optional[str] = Field(None, min_length=20, max_length=2000)
+    business_justification: Optional[str] = Field(None, min_length=20, max_length=1000)
+    priority: Optional[Priority] = None
+
+    @field_validator("title", "description", "business_justification")
+    def must_contain_letters(cls, v, info):
+        if v is not None and not re.search(r"[A-Za-z]", v):
+            raise ValueError(f"{info.field_name} must contain at least one letter")
+        return v
