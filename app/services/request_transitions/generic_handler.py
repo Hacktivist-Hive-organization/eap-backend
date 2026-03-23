@@ -13,21 +13,15 @@ class GenericStatusHandler:
         self.request_repo = request_repo
         self.tracking_repo = tracking_repo
 
-    def handle(self, request, user, comment, new_status=None, rule=None):
-        current_assignee = getattr(request, "assignee", None)
-
-        if current_assignee:
-            if current_assignee.id == user.id:
-                raise BusinessException(
-                    message="Request already assigned to you",
-                    status_code=status.HTTP_409_CONFLICT,
-                )
-            else:
-                raise BusinessException(
-                    message="Another admin already working on this request",
-                    status_code=status.HTTP_409_CONFLICT,
-                )
-
+    def handle(
+        self,
+        request,
+        user,
+        comment,
+        new_status=None,
+        rule=None,
+        background_tasks=None,
+    ):
         request.assignee_id = user.id
 
         try:

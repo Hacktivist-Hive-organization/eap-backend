@@ -2,6 +2,7 @@
 
 from starlette import status
 
+from app.common.enums import Status
 from app.common.exceptions import BusinessException
 
 
@@ -10,22 +11,32 @@ class InProgressHandler:
         self.tracking_repo = tracking_repo
         self.request_repo = request_repo
 
-    def handle(self, request, user, comment, new_status=None, rule=None):
+    def handle(
+        self,
+        request,
+        user,
+        comment,
+        new_status=None,
+        rule=None,
+        background_tasks=None,
+    ):
         current_assignee = getattr(request, "assignee", None)
 
-        if current_assignee:
-            if current_assignee.id == user.id:
-                raise BusinessException(
-                    message="Request already assigned to you",
-                    status_code=status.HTTP_409_CONFLICT,
-                )
-            else:
-                raise BusinessException(
-                    message="Another admin already working on this request",
-                    status_code=status.HTTP_409_CONFLICT,
-                )
+        if request.current_status == Status.IN_PROGRESS:
+            if current_assignee:
+                if current_assignee.id == user.id:
+                    raise BusinessException(
+                        message="Request already assigned to you",
+                        status_code=status.HTTP_409_CONFLICT,
+                    )
+                else:
+                    raise BusinessException(
+                        message="Another admin already working on this request",
+                        status_code=status.HTTP_409_CONFLICT,
+                    )
 
-        request.assignee_id = user.id
+        if request.current_status == Status.APPROVED:
+            request.assignee_id = user.id
 
         try:
             updated_req = self.request_repo.update_request_status(

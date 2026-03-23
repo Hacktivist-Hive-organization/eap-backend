@@ -1,7 +1,5 @@
 # app/services/request_service.py
 
-import asyncio
-import time
 from typing import List, Optional
 
 from fastapi import BackgroundTasks, status
@@ -147,7 +145,6 @@ class RequestService:
         except BusinessException:
             raise
         except Exception:
-            print(f"[DEBUG] request_service")
             raise BusinessException(
                 message="Internal server error",
                 status_code=500,
@@ -155,7 +152,7 @@ class RequestService:
 
         # schedule email if needed
         if background_tasks and rule.get("notify_roles"):
-            self._schedule_email(
+            self._send_email_task(
                 request=result,
                 template_name=rule.get("template"),
                 notify_roles=rule.get("notify_roles"),
@@ -165,13 +162,15 @@ class RequestService:
         # DEBUG
         new_assignee = getattr(result, "assignee", None)
         print(
-            f"[DEBUG] Request {result.id}: "
+            "--------\n"
+            f"[DEBUG] Request {result.id}:\n "
             f"old_status={old_status.value},\n "
             f"old_assignee_id={old_assignee.id if old_assignee else 'None'}, \n"
-            f"new_status={result.current_status.value}, "
+            f"new_status={result.current_status.value}\n, "
             f"new_assignee_id={new_assignee.id if new_assignee else 'None'}, \n"
             f"changed_by_user_id={current_user.id}, \n"
             f"role={current_user.role.value} \n"
+            "--------\n"
         )
 
         return result
@@ -234,41 +233,36 @@ class RequestService:
                 status_code=status.HTTP_417_EXPECTATION_FAILED,
             )
 
-    def _schedule_email(self, request, template_name, notify_roles, background_tasks):
-        if not background_tasks:
-            return
-        background_tasks.add_task(
-            self._send_email_task, request, template_name, notify_roles
-        )
-
-    def _send_email_task(self, request, template_name: str, notify_roles: list):
+    def _send_email_task(self, request, template_name, notify_roles, background_tasks):
         from app.infrastructure.email.templates import TEMPLATE_REGISTRY
-
-        print(f"[DEBUG] _send_email_task 1")
 
         template = TEMPLATE_REGISTRY.get(template_name)
         if not template:
             return
-
-        print(f"[DEBUG] _send_email_task 2")
 
         recipients = set()
 
         for role in notify_roles:
             if role == UserRole.REQUESTER:
                 recipients.add(request.requester.email)
+
             elif role == UserRole.ADMIN:
                 admins = self.user_repo.get_by_role(UserRole.ADMIN)
                 recipients.update([u.email for u in admins])
+
             elif role == UserRole.APPROVER:
                 assignee = getattr(request, "assignee", None)
                 if assignee:
                     recipients.add(assignee.email)
 
-        print(f"[DEBUG] Email recipients for request {request.id}: {list(recipients)}")
+        print(
+            "--------\n"
+            f"[DEBUG]\n "
+            f" Email recipients for request {request.id}: {list(recipients)}\n "
+            "--------\n"
+        )
 
         for to in recipients:
-            print(f"\n[DEBUG] \nWill send email to: {to}")
             email_body = template.substitute(
                 request_code=f"REQ-{request.id}",
                 request_title=request.title,
@@ -285,12 +279,9 @@ class RequestService:
                 f"{request.current_status.value} - REQ-{request.id} - {request.title}"
             )
 
-            import asyncio
-
-            asyncio.run(
-                self.email_service.send_email(
-                    to=to,
-                    subject=subject_line,
-                    body=email_body,
-                )
+            background_tasks.add_task(
+                self.email_service.send_email,
+                to=to,
+                subject=subject_line,
+                body=email_body,
             )

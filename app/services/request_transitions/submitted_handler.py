@@ -16,8 +16,22 @@ class SubmittedHandler:
         self.email_service = email_service
 
     def handle(
-        self, request, user, comment, new_status=None, rule=None, background_tasks=None
+        self,
+        request,
+        user,
+        comment,
+        new_status=None,
+        rule=None,
+        background_tasks=None,
     ):
+        assignee = getattr(request, "assignee", None)
+        if new_status in [Status.APPROVED, Status.REJECTED]:
+            if not assignee or assignee.user_id != user.id:
+                raise BusinessException(
+                    message="You are not assigned to approve this request",
+                    status_code=status.HTTP_403_FORBIDDEN,
+                )
+
         approver = self.approver_repo.get_least_busy(request.type_id)
         if not approver:
             raise BusinessException(
