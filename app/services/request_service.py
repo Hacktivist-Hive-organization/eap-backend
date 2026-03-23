@@ -5,7 +5,6 @@ import time
 from typing import List, Optional
 
 from fastapi import BackgroundTasks, status
-from sqlalchemy.exc import IntegrityError
 
 from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
@@ -14,15 +13,18 @@ from app.common.request_workflow.request_transition_validator import (
 )
 from app.common.security_models import CurrentUser
 from app.core.config import settings
-from app.infrastructure.email.templates import REQUEST_APPROVED, REQUEST_REJECTED
 from app.repositories import (
     RequestRepository,
     RequestSubtypeRepository,
     RequestTrackingRepository,
     RequestTypeApproverRepository,
     RequestTypeRepository,
+    UserRepository,
 )
 from app.services.email_service import EmailService
+from app.services.request_transitions.generic_handler import GenericStatusHandler
+from app.services.request_transitions.in_progress_handler import InProgressHandler
+from app.services.request_transitions.submitted_handler import SubmittedHandler
 
 
 class RequestService:
@@ -34,14 +36,36 @@ class RequestService:
         email_service: EmailService,
         approver_repo: RequestTypeApproverRepository,
         tracking_repo: RequestTrackingRepository,
+        user_repo: UserRepository,
     ):
         self.request_repo = request_repo
         self.type_repo = type_repo
         self.subtype_repo = subtype_repo
+        self.user_repo = user_repo
         self.approver_repo = approver_repo
         self.tracking_repo = tracking_repo
         self.email_service = email_service
         self.transition_validator = RequestTransitionValidator(tracking_repo)
+
+        # default generic handler for all statuses without a specific handler
+        self.default_handler = GenericStatusHandler(
+            request_repo=self.request_repo,
+            tracking_repo=self.tracking_repo,
+        )
+
+        self.transition_handlers = {
+            Status.SUBMITTED: SubmittedHandler(
+                approver_repo=self.approver_repo,
+                tracking_repo=self.tracking_repo,
+                request_repo=self.request_repo,
+            ),
+            Status.IN_PROGRESS: InProgressHandler(
+                tracking_repo=self.tracking_repo,
+                request_repo=self.request_repo,
+            ),
+        }
+
+    # ----------------------- PUBLIC METHODS -----------------------
 
     def create_request(self, request_in, current_user_id: int):
         self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)
@@ -85,7 +109,7 @@ class RequestService:
         request_id: int,
         status_in: Status,
         current_user: CurrentUser,
-        comment: Optional[str] = None,
+        comment: str | None = None,
         background_tasks: BackgroundTasks | None = None,
     ):
         request = self.request_repo.get_request_details(request_id)
@@ -95,6 +119,11 @@ class RequestService:
                 status_code=status.HTTP_404_NOT_FOUND,
             )
 
+        # DEBUG
+        old_status = request.current_status
+        old_assignee = getattr(request, "assignee", None)
+
+        # validate transition and get rule
         rule = self.transition_validator.validate(
             request=request,
             new_status=status_in,
@@ -102,69 +131,50 @@ class RequestService:
             comment=comment,
         )
 
-        if status_in == Status.IN_PROGRESS:
-            current_assignee = getattr(request, "assignee", None)
+        # pick handler
+        handler = self.transition_handlers.get(status_in, self.default_handler)
 
-            if current_assignee:
-                if current_assignee.id != current_user.id:
-                    raise BusinessException(
-                        message="Another admin already working on this request",
-                        status_code=400,
-                    )
-                else:
-                    raise BusinessException(
-                        message="Request already assigned to you",
-                        status_code=400,
-                    )
+        # handle with rollback/commit
+        try:
+            result = handler.handle(
+                request=request,
+                user=current_user,
+                comment=comment,
+                new_status=status_in,
+                rule=rule,
+                background_tasks=background_tasks,
+            )
+        except BusinessException:
+            raise
+        except Exception:
+            print(f"[DEBUG] request_service")
+            raise BusinessException(
+                message="Internal server error",
+                status_code=500,
+            )
 
-            # Assign current admin as assignee
-            request.assignee_id = current_user.id
+        # schedule email if needed
+        if background_tasks and rule.get("notify_roles"):
+            self._schedule_email(
+                request=result,
+                template_name=rule.get("template"),
+                notify_roles=rule.get("notify_roles"),
+                background_tasks=background_tasks,
+            )
 
-        if status_in == Status.SUBMITTED:
-            approver = self.approver_repo.get_least_busy(request.type_id)
-            if not approver:
-                raise BusinessException(
-                    message="No approver configured for this request type",
-                    status_code=status.HTTP_409_CONFLICT,
-                )
-
-            self.approver_repo.increment_workload(approver)
-
-            try:
-                request.current_status = Status.SUBMITTED
-                self.request_repo.save(request)
-
-                self.tracking_repo.create(
-                    request_id=request.id,
-                    user_id=approver.user_id,
-                    status=Status.SUBMITTED,
-                    comment="Request submitted and assigned to approver",
-                    commit=False,
-                )
-
-                self.request_repo.db.commit()
-                self.request_repo.db.refresh(request)
-
-            except IntegrityError:
-                self.request_repo.db.rollback()
-                raise BusinessException(
-                    message="Request cannot be submitted due to data conflict",
-                    status_code=status.HTTP_409_CONFLICT,
-                )
-            except Exception:
-                self.request_repo.db.rollback()
-                raise BusinessException(
-                    message="Internal server error",
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
-
-            return self.request_repo.get_request_details(request.id)
-
-        updated_request = self._update_request_status(
-            request, status_in, comment, current_user.id
+        # DEBUG
+        new_assignee = getattr(result, "assignee", None)
+        print(
+            f"[DEBUG] Request {result.id}: "
+            f"old_status={old_status.value},\n "
+            f"old_assignee_id={old_assignee.id if old_assignee else 'None'}, \n"
+            f"new_status={result.current_status.value}, "
+            f"new_assignee_id={new_assignee.id if new_assignee else 'None'}, \n"
+            f"changed_by_user_id={current_user.id}, \n"
+            f"role={current_user.role.value} \n"
         )
-        self._send_email_if_required(updated_request, status_in, background_tasks)
-        return updated_request
+
+        return result
 
     # ----------------------- PRIVATE METHODS -----------------------
 
@@ -185,7 +195,7 @@ class RequestService:
                     status_code=status.HTTP_403_FORBIDDEN,
                 )
         elif current_user.role == UserRole.ADMIN:
-            pass  # Admin can view any request
+            pass
         else:
             raise BusinessException(
                 message="You cannot view this request",
@@ -224,41 +234,63 @@ class RequestService:
                 status_code=status.HTTP_417_EXPECTATION_FAILED,
             )
 
-    def _send_email_if_required(
-        self,
-        request,
-        status_in: Status,
-        background_tasks: BackgroundTasks | None = None,
-    ):
-        if status_in not in [Status.APPROVED, Status.REJECTED] or not background_tasks:
+    def _schedule_email(self, request, template_name, notify_roles, background_tasks):
+        if not background_tasks:
             return
-        background_tasks.add_task(self._send_email_task, request, status_in)
+        background_tasks.add_task(
+            self._send_email_task, request, template_name, notify_roles
+        )
 
-    def _send_email_task(self, request, status_in: Status):
-        requester = request.requester
-        link = f"{settings.FRONTEND_URL}/dashboard/all?requestId={request.id}"
-        template = (
-            REQUEST_REJECTED if status_in == Status.REJECTED else REQUEST_APPROVED
-        )
-        email_body = template.substitute(
-            request_code=f"REQ-{request.id}",
-            request_title=request.title,
-            user_name=f"{requester.first_name} {requester.last_name}",
-            request_id=request.id,
-            request_type=f"{request.type.name} > {request.subtype.name}",
-            priority=request.priority.value,
-            submitted_at=request.created_at.strftime("%B %d, %Y at %I:%M %p"),
-            status=status_in.value,
-            link=link,
-        )
-        subject_prefix = (
-            "Request Rejected" if status_in == Status.REJECTED else "Request Approved"
-        )
-        time.sleep(10)
-        asyncio.run(
-            self.email_service.send_email(
-                to=requester.email,
-                subject=f"{subject_prefix} - REQ-{request.id} - {request.title}",
-                body=email_body,
+    def _send_email_task(self, request, template_name: str, notify_roles: list):
+        from app.infrastructure.email.templates import TEMPLATE_REGISTRY
+
+        print(f"[DEBUG] _send_email_task 1")
+
+        template = TEMPLATE_REGISTRY.get(template_name)
+        if not template:
+            return
+
+        print(f"[DEBUG] _send_email_task 2")
+
+        recipients = set()
+
+        for role in notify_roles:
+            if role == UserRole.REQUESTER:
+                recipients.add(request.requester.email)
+            elif role == UserRole.ADMIN:
+                admins = self.user_repo.get_by_role(UserRole.ADMIN)
+                recipients.update([u.email for u in admins])
+            elif role == UserRole.APPROVER:
+                assignee = getattr(request, "assignee", None)
+                if assignee:
+                    recipients.add(assignee.email)
+
+        print(f"[DEBUG] Email recipients for request {request.id}: {list(recipients)}")
+
+        for to in recipients:
+            print(f"\n[DEBUG] \nWill send email to: {to}")
+            email_body = template.substitute(
+                request_code=f"REQ-{request.id}",
+                request_title=request.title,
+                user_name=f"{request.requester.first_name} {request.requester.last_name}",
+                request_id=request.id,
+                request_type=f"{request.type.name} > {request.subtype.name}",
+                priority=request.priority.value,
+                submitted_at=request.created_at.strftime("%B %d, %Y at %I:%M %p"),
+                status=request.current_status.value,
+                link=f"{settings.FRONTEND_URL}/dashboard/all?requestId={request.id}",
             )
-        )
+
+            subject_line = (
+                f"{request.current_status.value} - REQ-{request.id} - {request.title}"
+            )
+
+            import asyncio
+
+            asyncio.run(
+                self.email_service.send_email(
+                    to=to,
+                    subject=subject_line,
+                    body=email_body,
+                )
+            )

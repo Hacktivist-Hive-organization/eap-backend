@@ -1,0 +1,56 @@
+# app/services/request_transitions/generic_handler.py
+
+from starlette import status
+
+from app.common.enums import Status
+from app.common.exceptions import BusinessException
+
+
+class GenericStatusHandler:
+    """Handles simple status transitions according to config."""
+
+    def __init__(self, request_repo, tracking_repo):
+        self.request_repo = request_repo
+        self.tracking_repo = tracking_repo
+
+    def handle(self, request, user, comment, new_status=None, rule=None):
+        current_assignee = getattr(request, "assignee", None)
+
+        if current_assignee:
+            if current_assignee.id == user.id:
+                raise BusinessException(
+                    message="Request already assigned to you",
+                    status_code=status.HTTP_409_CONFLICT,
+                )
+            else:
+                raise BusinessException(
+                    message="Another admin already working on this request",
+                    status_code=status.HTTP_409_CONFLICT,
+                )
+
+        request.assignee_id = user.id
+
+        try:
+            updated_req = self.request_repo.update_request_status(
+                request, new_status, commit=False
+            )
+
+            self.tracking_repo.create(
+                comment or f"Status changed to {new_status.value}",
+                request.id,
+                new_status,
+                user.id,
+                commit=False,
+            )
+
+            self.request_repo.db.commit()
+            self.request_repo.db.refresh(updated_req)
+
+            return updated_req
+
+        except Exception:
+            self.request_repo.db.rollback()
+            raise BusinessException(
+                message="Database error, Please contact your administrator",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

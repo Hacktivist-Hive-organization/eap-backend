@@ -16,11 +16,11 @@ class RequestTransitionValidator:
     def validate(self, request, new_status: Status, user, comment):
         current_status = request.current_status
 
-        allowed_transitions = REQUEST_STATE_CONFIG.get(current_status, {})
-
-        # check if role has any access to current status
+        # 1. Check if role has any access to current status
         roles_allowed_any = {
-            role for cfg in allowed_transitions.values() for role in cfg["roles"]
+            role
+            for cfg in REQUEST_STATE_CONFIG.get(current_status, {}).values()
+            for role in cfg["roles"]
         }
         if user.role not in roles_allowed_any:
             raise BusinessException(
@@ -28,7 +28,7 @@ class RequestTransitionValidator:
                 status_code=status.HTTP_403_FORBIDDEN,
             )
 
-        # check approver assignment
+        # 2. Check user-specific access
         if user.role == UserRole.APPROVER:
             tracking = self.tracking_repo.get_tracking_by_request_user_id(
                 request.id, user.id
@@ -38,8 +38,13 @@ class RequestTransitionValidator:
                     message="Approver is not assigned to this request",
                     status_code=status.HTTP_403_FORBIDDEN,
                 )
+        elif user.role == UserRole.REQUESTER and request.requester_id != user.id:
+            raise BusinessException(
+                message="You cannot view this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
 
-        # check transition existence
+        # 3. Check role allowed for the specific transition
         transition_config = RequestStateMachine.get_rule(current_status, new_status)
         if not transition_config:
             raise BusinessException(
@@ -47,7 +52,6 @@ class RequestTransitionValidator:
                 status_code=status.HTTP_409_CONFLICT,
             )
 
-        # check role allowed for transition
         if user.role not in transition_config["roles"]:
             raise BusinessException(
                 message=f"Role '{user.role.value}' is not allowed to perform transition "
@@ -55,7 +59,7 @@ class RequestTransitionValidator:
                 status_code=status.HTTP_403_FORBIDDEN,
             )
 
-        # check comment requirement
+        # 4. Check comment requirement
         if transition_config.get("comment_required") and not comment:
             raise BusinessException(
                 message="Comment is mandatory for this action",
