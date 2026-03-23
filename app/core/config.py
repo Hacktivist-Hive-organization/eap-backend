@@ -38,11 +38,7 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
 
     # CORS
-    CORS_ALLOWED_ORIGINS: list[str] = [
-        "https://eap-it31.motoppdemo.nl",
-        "http://eap-it31.motoppdemo.nl",
-        "http://localhost:5173",
-    ]
+    CORS_ALLOWED_ORIGINS: list[str] = []
     MIDDLEWARE_CORS: bool = True
     DEVELOPMENT_ENVIRONMENT: bool = False
 
@@ -78,7 +74,7 @@ class Settings(BaseSettings):
         origins = self.CORS_ALLOWED_ORIGINS.copy()
         if self.FRONTEND_URL:
             origins.append(self.FRONTEND_URL)
-        return origins
+        return list(set(origins))
 
 
 def get_settings() -> Settings:
