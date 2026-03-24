@@ -555,10 +555,11 @@ class RequestService:
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Delete directly by ID
-        deleted = self.request_repo.delete_by_id(request.id)
-        if not deleted:
+        try:
+            self.request_repo.delete(request)
+
+        except Exception:
             raise BusinessException(
-                message="Failed to delete request",
+                message="Database error while deleting request. Please contact your administrator",
                 status_code=status.HTTP_417_EXPECTATION_FAILED,
             )
