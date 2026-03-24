@@ -1,9 +1,6 @@
-# scripts/seed/reset_and_seed.py
-
 import sys
 from pathlib import Path
 
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 # Project root
@@ -19,23 +16,6 @@ from scripts.seed.data.request_types import seed_request_type_subtype_data
 from scripts.seed.data.users import seed_users
 
 
-def reset_database(db: Session):
-    tables = [
-        "request_tracking",
-        "requests",
-        "request_type_approvers",
-        "request_subtype",
-        "request_type",
-        "users",
-    ]
-    for table in tables:
-        try:
-            db.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE"))
-        except Exception:
-            db.rollback()
-    db.commit()
-
-
 def run_seed(db: Session):
     seed_users(db)
     seed_request_type_subtype_data(db)
@@ -46,9 +26,8 @@ def run_seed(db: Session):
 def main():
     db: Session = SessionLocal()
     try:
-        reset_database(db)
         run_seed(db)
-        print("Database reset and seed completed successfully")
+        print("Database seeding completed successfully")
     except Exception as e:
         db.rollback()
         print(f"Error during seeding: {e}")
