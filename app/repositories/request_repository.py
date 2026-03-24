@@ -35,6 +35,19 @@ class RequestRepository:
         self.db.refresh(db_request)
         return db_request
 
+    def update_request_fields(self, request, update_data: dict):
+        try:
+            for field, value in update_data.items():
+                setattr(request, field, value)
+
+            self.db.commit()
+            self.db.refresh(request)
+            return request
+
+        except Exception:
+            self.db.rollback()
+            raise
+
     def get_all_requests(self):
         query = self.db.query(DBRequest).filter(
             DBRequest.current_status != Status.DRAFT
