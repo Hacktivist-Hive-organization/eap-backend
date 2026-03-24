@@ -10,7 +10,12 @@ from app.api.schemas.request_type_schema import RequestTypeResponseSchema
 router = APIRouter(tags=["Request Types"])
 
 
-@router.get("/", response_model=List[RequestTypeResponseSchema])
+@router.get(
+    "/",
+    summary="Retrieve all the request types",
+    description="Returns all request types with their nested subtypes",
+    response_model=List[RequestTypeResponseSchema],
+)
 def get_all_types(service=Depends(get_request_type_service)):
     """
     Return all request types with their nested subtypes.

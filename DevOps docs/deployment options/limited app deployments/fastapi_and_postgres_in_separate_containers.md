@@ -15,12 +15,12 @@
        - DATABASE_PASSWORD=user123  
        - DATABASE_USER=postgres  
        - DATABASE_PASSWORD=12345  
-       - DATABASE_NAME=eap_db  
+       - DATABASE_NAME=eap_db
        - JWT_SECRET_KEY="my secret key"  
 
  - Run the following commands:
-   - docker build -t eap_backend_image .   
-   - docker run --name another-eap-backend --network eap-docker-net -it -p 8000:8000 eap_backend_image
+   - docker build --no-cache -t eap-backend-image .   
+   - docker run --name eap-backend-container --network eap-docker-net -it -p 8000:8000 eap-backend-image
    - Go to pgAdmin to confirm the database was created with the tables that are defined in the app.
 
 Note - The DB name itself does not matter. We can use the default DB name that's automatically generated when running

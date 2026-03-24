@@ -1,4 +1,4 @@
-# app/models/security_models.py
+# app/common/security_models.py
 
 from dataclasses import dataclass
 

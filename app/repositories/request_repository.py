@@ -1,11 +1,12 @@
 # app/repositories/request_repository.py
 
-from typing import List
+from typing import List, Optional
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.common.enums import Status
-from app.models import DBRequest
+from app.models import DBRequest, DBRequestTracking
 
 
 class RequestRepository:
@@ -13,7 +14,12 @@ class RequestRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def create(self, request: DBRequest, current_user_id: int):
+    def create(
+        self,
+        request: DBRequest,
+        current_user_id: int,
+        current_status: Optional[Status] = Status.DRAFT,
+    ):
         db_request = DBRequest(
             type_id=request.type_id,
             subtype_id=request.subtype_id,
@@ -21,7 +27,7 @@ class RequestRepository:
             description=request.description,
             business_justification=request.business_justification,
             priority=request.priority,
-            status=Status.DRAFT,
+            current_status=current_status,
             requester_id=current_user_id,
         )
         self.db.add(db_request)
@@ -29,11 +35,34 @@ class RequestRepository:
         self.db.refresh(db_request)
         return db_request
 
-    def get_requests_by_user(self, user_id: int, statuses: List[str]):
+    def update_request_fields(self, request, update_data: dict):
+        try:
+            for field, value in update_data.items():
+                setattr(request, field, value)
+
+            self.db.commit()
+            self.db.refresh(request)
+            return request
+
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def get_all_requests(self):
+        query = self.db.query(DBRequest).filter(
+            DBRequest.current_status != Status.DRAFT
+        )
+        return query.order_by(DBRequest.updated_at.desc()).all()
+
+    def get_requests_by_statuses(self, statuses: List[Status]):
+        query = self.db.query(DBRequest).filter(DBRequest.current_status.in_(statuses))
+        return query.order_by(DBRequest.updated_at.desc()).all()
+
+    def get_requests_by_user(self, user_id: int, statuses: List[Status]):
         query = self.db.query(DBRequest).filter(DBRequest.requester_id == user_id)
         if statuses:
-            query = query.filter(DBRequest.status.in_(statuses))
-        return query.order_by(DBRequest.created_at.desc()).all()
+            query = query.filter(DBRequest.current_status.in_(statuses))
+        return query.order_by(DBRequest.updated_at.desc()).all()
 
     def get_request_details(self, request_id: int):
         return (
@@ -46,3 +75,62 @@ class RequestRepository:
             .filter(DBRequest.id == request_id)
             .first()
         )
+
+    def is_request_owned_by_user(self, request_id: int, user_id: int) -> bool:
+        return (
+            self.db.query(DBRequest.id)
+            .filter(DBRequest.id == request_id, DBRequest.requester_id == user_id)
+            .first()
+            is not None
+        )
+
+    def update_request_status(self, request, status: Status, commit: bool = True):
+        request.current_status = status
+        if commit:
+            self.db.commit()
+            self.db.refresh(request)
+        return request
+
+    def save(self, request: DBRequest) -> DBRequest:
+        self.db.add(request)
+        self.db.commit()
+        self.db.refresh(request)
+        return request
+
+    def get_requests_by_assignee_and_status(
+        self, approver_id: int, statuses: Optional[List[Status]] = None
+    ) -> list[DBRequest]:
+        """
+        Returns all requests assigned to the approver via tracking entries,
+        optionally filtered by request statuses.
+        """
+        stmt = (
+            select(DBRequest)
+            .join(DBRequestTracking)
+            .where(DBRequestTracking.user_id == approver_id)
+            .distinct()
+            .options(
+                selectinload(DBRequest.requester),
+                selectinload(DBRequest.type),
+                selectinload(DBRequest.subtype),
+                selectinload(DBRequest.req_tracking),
+            )
+            .order_by(DBRequest.updated_at.asc())
+        )
+
+        if statuses:
+            stmt = stmt.where(DBRequest.current_status.in_(statuses))
+
+        return self.db.execute(stmt).scalars().all()
+
+    def delete(self, request: DBRequest, commit: bool = True) -> None:
+        """
+        Deletes a given request instance.
+        """
+        try:
+            self.db.delete(request)
+            if commit:
+                self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise

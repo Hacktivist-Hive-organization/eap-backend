@@ -1,3 +1,5 @@
+# tests/integration/test_request_details.py
+
 import os
 
 import pytest
@@ -7,6 +9,7 @@ from app.core.config import settings
 from app.main import app
 
 API_PREFIX = f"{settings.API_V1_PREFIX}/requests"
+API_SUBMIT = f"{settings.API_V1_PREFIX}/requests/submit"
 
 pytestmark = pytest.mark.skipif(
     os.getenv("CI") == "true",
@@ -14,23 +17,16 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def test_get_request_details_success(client, seeded_request_types, users, auth_as):
-    data = seeded_request_types
+def test_get_request_details_success(
+    client, seeded_request_types, users, auth_as, valid_request_payload
+):
     owner = users["user1"]
     auth_as(owner)
     # Create request
-    payload = {
-        "type_id": data["hardware"].id,
-        "subtype_id": data["laptop"].id,
-        "title": "New laptop",
-        "description": "Need a laptop with 32GB RAM for development work.",
-        "business_justification": "Current machine cannot run required tools.",
-        "priority": "medium",
-        "requester_id": owner.id,
-    }
+    payload = valid_request_payload(title="New laptop")
 
     create_response = client.post(f"{API_PREFIX}", json=payload)
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
 
     request_id = create_response.json()["id"]
 
@@ -42,7 +38,7 @@ def test_get_request_details_success(client, seeded_request_types, users, auth_a
 
     assert body["id"] == request_id
     assert body["title"] == payload["title"]
-    assert body["status"] == Status.DRAFT
+    assert body["current_status"] == Status.DRAFT
 
     # requester info
     assert body["requester"]["id"] == owner.id
@@ -50,7 +46,7 @@ def test_get_request_details_success(client, seeded_request_types, users, auth_a
 
     # timestamps
     assert body["created_at"] is not None
-    assert body["updated_at"] is None
+    assert body["updated_at"] is not None
 
 
 def test_get_request_details_not_found(client, seeded_request_types, users, auth_as):
@@ -62,25 +58,18 @@ def test_get_request_details_not_found(client, seeded_request_types, users, auth
     assert response.json() == {"detail": "Request not found"}
 
 
-def test_get_request_details_forbidden(client, seeded_request_types, users, auth_as):
-    data = seeded_request_types
+def test_get_request_details_forbidden(
+    client, seeded_request_types, users, auth_as, valid_request_payload
+):
     owner = users["user1"]
     other_user = users["user2"]
 
     # --- Owner creates request ---
     auth_as(owner)
-
-    payload = {
-        "type_id": data["hardware"].id,
-        "subtype_id": data["laptop"].id,
-        "title": "Private request",
-        "description": "Need a laptop with 32GB RAM for development work.",
-        "business_justification": "Current machine cannot run required tools.",
-        "priority": "low",
-    }
+    payload = valid_request_payload(title="Private request")
 
     create_response = client.post(API_PREFIX, json=payload)
-    assert create_response.status_code == 200
+    assert create_response.status_code == 201
     request_id = create_response.json()["id"]
 
     # --- Switch auth context to another user ---
@@ -89,4 +78,61 @@ def test_get_request_details_forbidden(client, seeded_request_types, users, auth
 
     assert response.status_code == 403
     assert response.json() == {"detail": "Not authorized to view this request"}
+    app.dependency_overrides.clear()
+
+
+def test_get_request_details_admin_succeed(
+    client,
+    seeded_request_types,
+    users,
+    auth_as,
+    valid_request_payload,
+    dashboard_admin,
+    db_session,
+):
+    owner = users["user1"]
+    admin = dashboard_admin["admin1"]
+
+    # --- Owner creates request ---
+    auth_as(owner)
+
+    payload = valid_request_payload(current_status=Status.SUBMITTED)
+
+    submit_request = client.post(API_SUBMIT, json=payload)
+    assert submit_request.status_code == 201
+    request_id = submit_request.json()["id"]
+
+    # --- Switch auth context to another user ---
+    auth_as(admin)
+    # fetch request
+    response = client.get(f"{API_PREFIX}/{request_id}")
+
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["id"] == request_id
+    assert body["title"] == payload["title"]
+
+
+def test_get_draft_request_details_admin_forbidden(
+    client, seeded_request_types, users, auth_as, valid_request_payload, dashboard_admin
+):
+    owner = users["user1"]
+    admin = dashboard_admin["admin1"]
+
+    # --- Owner creates request ---
+    auth_as(owner)
+    payload = valid_request_payload(title="Private request")
+
+    create_response = client.post(API_PREFIX, json=payload)
+    assert create_response.status_code == 201
+    request_id = create_response.json()["id"]
+
+    # --- Switch auth context to another user ---
+    auth_as(admin)
+    # fetch request
+    response = client.get(f"{API_PREFIX}/{request_id}")
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Request is still in draft state"}
     app.dependency_overrides.clear()

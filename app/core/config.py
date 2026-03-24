@@ -1,4 +1,7 @@
+# app/core/config.py
+
 import os
+from typing import List
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -6,7 +9,6 @@ from app.core.static_conf import *
 
 
 class Settings(BaseSettings):
-
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE_PATH", ".env"),  # Default to .env,
         env_file_encoding="utf-8",
@@ -36,12 +38,43 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str
 
     # CORS
-    CORS_ALLOWED_ORIGINS: list[str] = [
-        "http://localhost:3000",  # React dev server
-        "http://localhost:5173",  # Vite server
-    ]
+    CORS_ALLOWED_ORIGINS: list[str] = []
     MIDDLEWARE_CORS: bool = True
     DEVELOPMENT_ENVIRONMENT: bool = False
+
+    # Email
+    EMAIL_SERVICE: str = "dummy"
+
+    # Sender
+    MAIL_FROM_EMAIL: str | None = None
+    MAIL_FROM_NAME: str | None = None
+
+    # Mailtrap
+    MAILTRAP_USER: str | None = None
+    MAILTRAP_SMTP_PASSWORD: str | None = None
+
+    MAILTRAP_SMTP_HOST: str | None = None
+    MAILTRAP_SMTP_PORT: int = 587
+    MAILTRAP_USE_TLS: bool = True
+
+    # Mailjet
+    MAILJET_API_KEY: str | None = None
+    MAILJET_SECRET_KEY: str | None = None
+
+    # Frontend
+    FRONTEND_URL: str | None = None
+
+    EMAIL_VERIFICATION_REQUIRED: bool = True
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 15
+    EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 60
+
+    @property
+    def cors_origins(self) -> List[str]:
+        origins = self.CORS_ALLOWED_ORIGINS.copy()
+        if self.FRONTEND_URL:
+            origins.append(self.FRONTEND_URL)
+        return list(set(origins))
 
 
 def get_settings() -> Settings:

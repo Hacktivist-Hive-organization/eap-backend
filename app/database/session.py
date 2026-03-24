@@ -1,3 +1,5 @@
+# app/database/session.py
+
 from typing import Annotated
 
 from fastapi import Depends
@@ -6,7 +8,6 @@ from sqlalchemy.engine import URL
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
-from app.database.base import Base
 
 
 # -------------------------------------------------
@@ -92,6 +93,3 @@ def get_db():
 
 
 DBSession = Annotated[Session, Depends(get_db)]
-
-# SQLAlchemy DB URL
-SQLALCHEMY_DATABASE_URL = create_database_url()

@@ -13,7 +13,15 @@ def seed_users(db: Session):
         email="admin@eap.local",
         first_name="System",
         last_name="Admin",
-        hashed_password=hash_password("admin123!"),
+        hashed_password=hash_password("Password123!"),
+        role=UserRole.ADMIN,
+        is_active=True,
+    )
+    admin2 = DbUser(
+        email="admin2@eap.local",
+        first_name="System",
+        last_name="Admin",
+        hashed_password=hash_password("Password123!"),
         role=UserRole.ADMIN,
         is_active=True,
     )
@@ -22,7 +30,15 @@ def seed_users(db: Session):
         email="approver-hardware@eap.local",
         first_name="Hardware",
         last_name="Approver",
-        hashed_password=hash_password("hardware123!"),
+        hashed_password=hash_password("Password123!"),
+        role=UserRole.APPROVER,
+        is_active=True,
+    )
+    approver_hardware_2 = DbUser(
+        email="approver-hardware-2@eap.local",
+        first_name="Hardware",
+        last_name="Approver",
+        hashed_password=hash_password("Password123!"),
         role=UserRole.APPROVER,
         is_active=True,
     )
@@ -31,7 +47,16 @@ def seed_users(db: Session):
         email="approver-software@eap.local",
         first_name="Software",
         last_name="Approver",
-        hashed_password=hash_password("software123!"),
+        hashed_password=hash_password("Password123!"),
+        role=UserRole.APPROVER,
+        is_active=True,
+    )
+
+    approver_software_2 = DbUser(
+        email="approver-software-2@eap.local",
+        first_name="Software",
+        last_name="Approver",
+        hashed_password=hash_password("Password123!"),
         role=UserRole.APPROVER,
         is_active=True,
     )
@@ -40,9 +65,29 @@ def seed_users(db: Session):
         email="approver-services@eap.local",
         first_name="Services",
         last_name="Approver",
-        hashed_password=hash_password("services123!"),
+        hashed_password=hash_password("Password123!"),
         role=UserRole.APPROVER,
         is_active=True,
     )
-    db.add_all([admin, approver_hardware, approver_software, approver_services])
+
+    approver_services_2 = DbUser(
+        email="approver-services-2@eap.local",
+        first_name="Services",
+        last_name="Approver",
+        hashed_password=hash_password("Password123!"),
+        role=UserRole.APPROVER,
+        is_active=True,
+    )
+    db.add_all(
+        [
+            admin,
+            admin2,
+            approver_hardware,
+            approver_hardware_2,
+            approver_software,
+            approver_software_2,
+            approver_services,
+            approver_services_2,
+        ]
+    )
     db.commit()

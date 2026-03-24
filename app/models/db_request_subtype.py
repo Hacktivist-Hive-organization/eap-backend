@@ -1,4 +1,5 @@
 # app/models/db_request_subtype.py
+
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 

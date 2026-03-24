@@ -1,3 +1,5 @@
+# tests/integration/test_request_types.py
+
 from app.core.config import settings
 
 API_PREFIX = f"{settings.API_V1_PREFIX}/types"

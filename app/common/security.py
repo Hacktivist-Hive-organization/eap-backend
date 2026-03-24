@@ -1,6 +1,5 @@
 # app/common/security.py
 
-import re
 from datetime import datetime, timedelta, timezone
 
 from fastapi import status
@@ -15,7 +14,6 @@ pwd_context = CryptContext(
     deprecated="auto",
 )
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
 def hash_password(password: str) -> str:
@@ -26,8 +24,8 @@ def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
 
 
-def create_access_token(
-    data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES
+def create_token(
+    data: dict, expires_minutes: int = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 ) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
