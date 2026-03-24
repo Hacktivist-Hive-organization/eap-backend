@@ -12,8 +12,9 @@ if str(PROJECT_ROOT) not in sys.path:
 
 # Now imports from the project's root folder can be made
 from app.database.session import SessionLocal
-from scripts.seed.request_types import seed_request_type_subtype_data
-from scripts.seed.users import seed_users
+from scripts.seed.data.request_type_approvers import seed_request_type_approvers
+from scripts.seed.data.request_types import seed_request_type_subtype_data
+from scripts.seed.data.users import seed_users
 
 
 def run_seeds():
@@ -21,6 +22,7 @@ def run_seeds():
     try:
         seed_users(db)
         seed_request_type_subtype_data(db)
+        seed_request_type_approvers(db)
     except Exception:
         db.rollback()
         raise
