@@ -87,6 +87,26 @@ def get_requests(
 
 
 @router.get(
+    "/my-requests",
+    summary="Retrieve requests created by the current user",
+    description="""
+    Returns all requests created by the logged-in requester.
+    Optionally filter results using the statuses query parameter.
+    This endpoint is intended for users with the REQUESTER role.
+    """,
+    response_model=List[RequestResponseListSchema],
+)
+def get_requests_by_user(
+    statuses: Optional[List[Status]] = Query(None),
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.get_requests_by_user(
+        current_user.id, [s.value for s in statuses] if statuses else None
+    )
+
+
+@router.get(
     "/pending",
     summary="Retrieve requests assigned to the current approver",
     description="""
@@ -108,66 +128,6 @@ def get_approver_requests(
 
 
 @router.get(
-    "/my-requests",
-    summary="Retrieve requests created by the current user",
-    description="""
-    Returns all requests created by the logged-in requester.
-    Optionally filter results using the statuses query parameter.
-    This endpoint is intended for users with the REQUESTER role.
-    """,
-    response_model=List[RequestResponseListSchema],
-)
-def get_requests_by_user(
-    statuses: Optional[List[Status]] = Query(None),
-    service=Depends(get_request_service),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    return service.get_requests_by_user(
-        current_user.id, [s.value for s in statuses] if statuses else None
-    )
-
-
-@router.post(
-    "/submit",
-    summary="create and submit new request",
-    description="""
-    Creates a new request and immediately submits it for processing. 
-    The request is automatically assigned to the approver with the lowest workload based on the request type.
-    """,
-    response_model=RequestProcessResponseSchema,
-    status_code=http_status.HTTP_201_CREATED,
-)
-def create_and_submit_request(
-    request_in: RequestCreateSchema,
-    service=Depends(get_request_service),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    return service.create_and_submit_request(request_in, current_user.id)
-
-
-@router.patch(
-    "/{request_id}/submit",
-    summary="Submit an existing draft request",
-    description="""
-    Submits a previously created draft request.
-                Upon submission, the request is assigned to the approver with the lowest workload based on its type.
-    Only the requester who created the request can perform this action.
-    """,
-    response_model=RequestProcessResponseSchema,
-    status_code=http_status.HTTP_200_OK,
-)
-def submit_request(
-    request_id: int,
-    service=Depends(get_request_service),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    return service.submit_existing_request(
-        request_id=request_id,
-        current_user_id=current_user.id,
-    )
-
-
-@router.get(
     "/{request_id}",
     summary="Retrieve request details by ID",
     description="""
@@ -185,6 +145,28 @@ def get_request_details(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     return service.get_request_details(request_id, current_user)
+
+
+@router.patch(
+    "/{request_id}/edit",
+    summary="edit a draft request",
+    description="""
+  requester can edit his draft request before it's submitted
+    """,
+    response_model=RequestResponseSchema,
+    status_code=http_status.HTTP_200_OK,
+)
+def edit_request(
+    request_id: int,
+    request_in: RequestUpdateSchema,
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.edit_draft_request(
+        request_id,
+        request_in,
+        current_user,
+    )
 
 
 @router.patch(
@@ -214,54 +196,6 @@ def process_request(
         current_user=current_user,
         comment=comment,
         background_tasks=background_tasks,
-    )
-
-
-@router.patch(
-    "/{request_id}/edit",
-    summary="edit a draft request",
-    description="""
-  requester can edit his draft request before it's submitted
-    """,
-    response_model=RequestResponseSchema,
-    status_code=http_status.HTTP_200_OK,
-)
-def edit_request(
-    request_id: int,
-    request_in: RequestUpdateSchema,
-    service=Depends(get_request_service),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    return service.edit_draft_request(
-        request_id,
-        request_in,
-        current_user,
-    )
-
-
-@router.patch(
-    "/{request_id}/reopen",
-    summary="Reopen a cancelled request as draft",
-    description="""
-    Reopens a cancelled request and sets its status back to Draft.
-
-This allows the original requester to review, modify, and resubmit the request without creating a new one.
-
-Conditions:
-- The request must be in "Cancelled" status
-- Only the user who originally created the request can perform this action
-    """,
-    response_model=RequestResponseSchema,
-    status_code=http_status.HTTP_200_OK,
-)
-def reopen_request(
-    request_id: int,
-    service=Depends(get_request_service),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    return service.reopen_request(
-        request_id,
-        current_user.id,
     )
 
 
