@@ -3,9 +3,7 @@
 from typing import List, Optional
 
 from fastapi import BackgroundTasks, status
-from starlette.status import HTTP_403_FORBIDDEN
 
-from app.api.schemas.request_schema import RequestCreateSchema
 from app.common.enums import Status, UserRole
 from app.common.exceptions import BusinessException
 from app.common.request_workflow.request_transition_validator import (
@@ -13,6 +11,7 @@ from app.common.request_workflow.request_transition_validator import (
 )
 from app.common.security_models import CurrentUser
 from app.core.config import settings
+from app.infrastructure.email.templates import TEMPLATE_REGISTRY
 from app.repositories import (
     RequestRepository,
     RequestSubtypeRepository,
@@ -72,7 +71,7 @@ class RequestService:
         if current_user.role != UserRole.REQUESTER:
             raise BusinessException(
                 message="Only requesters can create requests",
-                status_code=HTTP_403_FORBIDDEN,
+                status_code=status.HTTP_403_FORBIDDEN,
             )
         self._validate_type_and_subtype(request_in.type_id, request_in.subtype_id)
         return self.request_repo.create(request_in, current_user_id)
@@ -93,15 +92,17 @@ class RequestService:
     ) -> list:
         if current_user.role != UserRole.APPROVER:
             raise BusinessException(
-                message="User is not an approver",
+                message="Not authorized to view this request",
                 status_code=status.HTTP_403_FORBIDDEN,
             )
         return self.request_repo.get_requests_by_assignee_and_status(
-            approver_id=current_user.id, statuses=statuses
+            approver_id=current_user.id,
+            statuses=statuses,
         )
 
     def get_request_details(self, request_id: int, current_user: CurrentUser):
         request = self.request_repo.get_request_details(request_id)
+
         if not request:
             raise BusinessException(
                 message="Request not found",
@@ -127,7 +128,7 @@ class RequestService:
 
         if comment and len(comment.strip()) < 5:
             raise BusinessException(
-                message="Comment must be at least 5 characters long",
+                message="Comment is mandatory and must be at least 5 characters long",
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -166,6 +167,93 @@ class RequestService:
             )
 
         return result
+
+    def edit_draft_request(
+        self, request_id: int, request_in, current_user: CurrentUser
+    ):
+
+        request = self.request_repo.get_request_details(request_id)
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.requester_id != current_user.id:
+            raise BusinessException(
+                message="Not authorized to submit this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        if request.current_status != Status.DRAFT:
+            raise BusinessException(
+                message="Only draft requests can be edited",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+        # Convert input to dict, exclude unset
+        update_data = request_in.model_dump(exclude_unset=True)
+
+        # Business rule: status cannot be edited here
+        if "current_status" in update_data:
+            raise BusinessException(
+                message="Updating request status is not allowed via this endpoint",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+        # Validate type/subtype if they are provided
+        type_id = update_data.get("type_id", request.type_id)
+        subtype_id = update_data.get("subtype_id", request.subtype_id)
+        self._validate_type_and_subtype(type_id, subtype_id)
+
+        # Remove restricted fields
+        restricted_fields = {"id", "requester_id", "created_at"}
+        for field in restricted_fields:
+            update_data.pop(field, None)
+
+        try:
+            updated_request = self.request_repo.update_request_fields(
+                request, update_data
+            )
+        except Exception:
+            raise BusinessException(
+                message="Database error, Please contact your administrator",
+                status_code=status.HTTP_417_EXPECTATION_FAILED,
+            )
+
+        # Re-fetch fully-loaded object to avoid detached relationships
+        return self.request_repo.get_request_details(updated_request.id)
+
+    def delete_draft_request(self, request_id: int, current_user: CurrentUser):
+        """
+        Deletes a draft request. Only the owner can delete, and only if it is in DRAFT status.
+        """
+        # Fetch the request to check ownership and status
+        request = self.request_repo.get_request_details(request_id)
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.requester_id != current_user.id:
+            raise BusinessException(
+                message="You do not have permission to delete this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        if request.current_status != Status.DRAFT:
+            raise BusinessException(
+                message="Only draft requests can be deleted",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            self.request_repo.delete(request)
+
+        except Exception:
+            raise BusinessException(
+                message="Database error while deleting request. Please contact your administrator",
+                status_code=status.HTTP_417_EXPECTATION_FAILED,
+            )
 
     # ----------------------- PRIVATE METHODS -----------------------
 
@@ -226,7 +314,6 @@ class RequestService:
             )
 
     def _send_email_task(self, request, template_name, notify_roles, background_tasks):
-        from app.infrastructure.email.templates import TEMPLATE_REGISTRY
 
         template = TEMPLATE_REGISTRY.get(template_name)
         if not template:

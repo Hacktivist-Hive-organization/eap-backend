@@ -35,6 +35,19 @@ class RequestRepository:
         self.db.refresh(db_request)
         return db_request
 
+    def update_request_fields(self, request, update_data: dict):
+        try:
+            for field, value in update_data.items():
+                setattr(request, field, value)
+
+            self.db.commit()
+            self.db.refresh(request)
+            return request
+
+        except Exception:
+            self.db.rollback()
+            raise
+
     def get_all_requests(self):
         query = self.db.query(DBRequest).filter(
             DBRequest.current_status != Status.DRAFT
@@ -109,3 +122,15 @@ class RequestRepository:
             stmt = stmt.where(DBRequest.current_status.in_(statuses))
 
         return self.db.execute(stmt).scalars().all()
+
+    def delete(self, request: DBRequest, commit: bool = True) -> None:
+        """
+        Deletes a given request instance.
+        """
+        try:
+            self.db.delete(request)
+            if commit:
+                self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
