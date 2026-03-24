@@ -12,6 +12,7 @@ from app.api.schemas.request_schema import (
     RequestProcessResponseSchema,
     RequestResponseListSchema,
     RequestResponseSchema,
+    RequestUpdateSchema,
 )
 from app.common.enums import Status, UserRole
 from app.common.security_models import CurrentUser
