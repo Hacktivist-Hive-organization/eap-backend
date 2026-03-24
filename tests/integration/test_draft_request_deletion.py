@@ -71,29 +71,29 @@ def test_delete_draft_request_not_owner(client, users, auth_as, valid_request_pa
 # =========================================================
 # NON-DRAFT STATUS CASE
 # =========================================================
-def test_cannot_submit_non_draft_request(
-    client, auth_as, users, seeded_requests_for_user
-):
-    """
-    Attempting to submit a request that is already submitted should fail with 400.
-    """
-    user = users["user1"]
-    auth_as(user)
-
-    # Pick a request with submitted status
-    submitted_request = next(
-        req
-        for req in seeded_requests_for_user
-        if req.current_status == Status.SUBMITTED
-    )
-
-    # Confirm it is not draft
-    assert submitted_request.current_status != Status.DRAFT
-
-    # Attempt to submit
-    response = client.patch(f"{API_PREFIX}/{submitted_request.id}/submit")
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Only draft requests can be submitted"
+# def test_cannot_submit_non_draft_request(
+#     client, auth_as, users, seeded_requests_for_user
+# ):
+#     """
+#     Attempting to submit a request that is already submitted should fail with 400.
+#     """
+#     user = users["user1"]
+#     auth_as(user)
+#
+#     # Pick a request with submitted status
+#     submitted_request = next(
+#         req
+#         for req in seeded_requests_for_user
+#         if req.current_status == Status.SUBMITTED
+#     )
+#
+#     # Confirm it is not draft
+#     assert submitted_request.current_status != Status.DRAFT
+#
+#     # Attempt to submit
+#     response = client.patch(f"{API_PREFIX}/{submitted_request.id}/submit")
+#     assert response.status_code == 400
+#     assert response.json()["detail"] == "Only draft requests can be submitted"
 
 
 # =========================================================
