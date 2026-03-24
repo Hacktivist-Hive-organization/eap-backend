@@ -15,6 +15,7 @@ from app.api.schemas.request_schema import (
     RequestUpdateSchema,
 )
 from app.common.enums import Status, UserRole
+from app.common.exceptions import BusinessException
 from app.common.security_models import CurrentUser
 
 router = APIRouter(tags=["Requests"])
@@ -86,27 +87,6 @@ def get_requests(
 
 
 @router.get(
-    "/pending",
-    summary="Retrieve requests assigned to the current approver",
-    description="""
-    Returns all requests assigned to the logged-in approver.
-    Optionally filter results by providing one or more statuses.
-    Only users with the APPROVER role can access this endpoint.
-    """,
-    response_model=list[RequestResponseListSchema],
-)
-def get_approver_requests(
-    statuses: Optional[List[Status]] = Query(None, description="Filter by statuses"),
-    service=Depends(get_request_service),
-    current_user: CurrentUser = Depends(get_current_user),
-    _: CurrentUser = Depends(require_role(UserRole.APPROVER)),
-):
-    return service.get_requests_for_approver(
-        current_user=current_user, statuses=statuses
-    )
-
-
-@router.get(
     "/my-requests",
     summary="Retrieve requests created by the current user",
     description="""
@@ -123,6 +103,27 @@ def get_requests_by_user(
 ):
     return service.get_requests_by_user(
         current_user.id, [s.value for s in statuses] if statuses else None
+    )
+
+
+@router.get(
+    "/pending",
+    summary="Retrieve requests assigned to the current approver",
+    description="""
+    Returns all requests assigned to the logged-in approver.
+    Optionally filter results by providing one or more statuses.
+    Only users with the APPROVER role can access this endpoint.
+    """,
+    response_model=list[RequestResponseListSchema],
+)
+def get_approver_requests(
+    statuses: Optional[List[Status]] = Query(None, description="Filter by statuses"),
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.get_requests_for_approver(
+        current_user=current_user,
+        statuses=statuses,
     )
 
 
@@ -147,14 +148,36 @@ def get_request_details(
 
 
 @router.patch(
+    "/{request_id}/edit",
+    summary="edit a draft request",
+    description="""
+  requester can edit his draft request before it's submitted
+    """,
+    response_model=RequestResponseSchema,
+    status_code=http_status.HTTP_200_OK,
+)
+def edit_request(
+    request_id: int,
+    request_in: RequestUpdateSchema,
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    return service.edit_draft_request(
+        request_id,
+        request_in,
+        current_user,
+    )
+
+
+@router.patch(
     "/{request_id}/process",
     summary="Process a request (status update)",
     description="""
     Updates the status of a request and creates a tracking record for the action.
     Supported actions depend on the user role:
-    - Requester: can cancel or reopen a cancelled request
-    - Approver: can approve or reject requests
-    - Admin: can assign, mark in_progress, complete, or reject approved requests
+    -Requester: can cancel a submitted request, reopen a cancelled request
+    -Approver: can approve or reject requests
+    -Admin: can complete or reject approved requests.
     A comment is required when rejecting a request.
     """,
     response_model=RequestProcessResponseSchema,
@@ -173,4 +196,23 @@ def process_request(
         current_user=current_user,
         comment=comment,
         background_tasks=background_tasks,
+    )
+
+
+@router.delete(
+    "/{request_id}",
+    summary="Delete a draft request",
+    description="""
+    Requester can delete a draft request
+    """,
+    status_code=http_status.HTTP_204_NO_CONTENT,
+)
+def delete_request(
+    request_id: int,
+    service=Depends(get_request_service),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    service.delete_draft_request(
+        request_id,
+        current_user,
     )
