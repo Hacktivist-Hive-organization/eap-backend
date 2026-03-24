@@ -122,3 +122,15 @@ class RequestRepository:
             stmt = stmt.where(DBRequest.current_status.in_(statuses))
 
         return self.db.execute(stmt).scalars().all()
+
+    def delete(self, request: DBRequest, commit: bool = True) -> None:
+        """
+        Deletes a given request instance.
+        """
+        try:
+            self.db.delete(request)
+            if commit:
+                self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise

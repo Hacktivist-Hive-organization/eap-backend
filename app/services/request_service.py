@@ -530,3 +530,36 @@ class RequestService:
 
         # Re-fetch fully-loaded object to avoid detached relationships
         return self.request_repo.get_request_details(updated_request.id)
+
+    def delete_draft_request(self, request_id: int, current_user: CurrentUser):
+        """
+        Deletes a draft request. Only the owner can delete, and only if it is in DRAFT status.
+        """
+        # Fetch the request to check ownership and status
+        request = self.request_repo.get_request_details(request_id)
+        if not request:
+            raise BusinessException(
+                message="Request not found",
+                status_code=status.HTTP_404_NOT_FOUND,
+            )
+
+        if request.requester_id != current_user.id:
+            raise BusinessException(
+                message="You do not have permission to delete this request",
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+
+        if request.current_status != Status.DRAFT:
+            raise BusinessException(
+                message="Only draft requests can be deleted",
+                status_code=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            self.request_repo.delete(request)
+
+        except Exception:
+            raise BusinessException(
+                message="Database error while deleting request. Please contact your administrator",
+                status_code=status.HTTP_417_EXPECTATION_FAILED,
+            )
