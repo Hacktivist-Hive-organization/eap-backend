@@ -12,11 +12,13 @@ def seed_request_type_approvers(db: Session):
     if db.query(DBRequestTypeApprover).count() > 0:
         return
 
-    types = db.query(DBRequestType).all()
-    approvers = db.query(DbUser).filter(DbUser.role == UserRole.APPROVER).all()
-
-    if len(approvers) < len(types) * 2:
-        raise ValueError("Not enough approvers to assign 2 per type")
+    types = db.query(DBRequestType).order_by(DBRequestType.id).all()
+    approvers = (
+        db.query(DbUser)
+        .filter(DbUser.role == UserRole.APPROVER)
+        .order_by(DbUser.id)
+        .all()
+    )
 
     for i, rt in enumerate(types):
         a1 = approvers[i * 2]
