@@ -1,3 +1,5 @@
+# scripts/run_migrations.py
+
 import sys
 
 from alembic import command

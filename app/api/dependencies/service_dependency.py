@@ -58,6 +58,7 @@ def get_request_service(
     approver_repo=Depends(get_request_type_approver_repository),
     tracking_repo=Depends(get_request_tracking_repository),
     email_service=Depends(get_email_service),
+    user_repo=Depends(get_user_repository),
 ):
     return RequestService(
         request_repo=request_repo,
@@ -66,6 +67,7 @@ def get_request_service(
         email_service=email_service,
         approver_repo=approver_repo,
         tracking_repo=tracking_repo,
+        user_repo=user_repo,
     )
 
 

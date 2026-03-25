@@ -9,15 +9,18 @@ class UserRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    def get_all_users(self):
+        return self.db.query(DbUser).all()
+
     def get_user(self, user_id: int):
         user = self.db.query(DbUser).filter(DbUser.id == user_id).first()  # type: ignore
         return user
 
-    def get_all_users(self):
-        return self.db.query(DbUser).all()
-
     def get_by_email(self, email: str):
         return self.db.query(DbUser).filter(DbUser.email == email).first()  # type: ignore
+
+    def get_by_role(self, role):
+        return self.db.query(DbUser).filter(DbUser.role == role.value).all()  # type: ignore
 
     def create(
         self,

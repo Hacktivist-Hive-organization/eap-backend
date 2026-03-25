@@ -1,3 +1,5 @@
+# scripts/seed/request_types.py
+
 from sqlalchemy.orm import Session
 
 from app.models.db_request_subtype import DBRequestSubtype

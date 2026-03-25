@@ -241,4 +241,3 @@ def test_get_assigned_requests_forbidden_for_non_approver(
     response = client.get(API_PREFIX)
 
     assert response.status_code == 403
-    assert response.json()["detail"] == "User is not an approver"

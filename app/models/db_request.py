@@ -1,7 +1,7 @@
 # app/models/db_request.py
 
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, String, func
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship
 
 from app.common.enums import Priority, Status
 from app.database.base import Base
@@ -47,6 +47,8 @@ class DBRequest(Base):
         "DBRequestTracking",
         foreign_keys="[DBRequestTracking.request_id]",
         back_populates="request",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     @property

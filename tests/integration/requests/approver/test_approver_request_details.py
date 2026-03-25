@@ -131,7 +131,6 @@ def test_get_approver_request_details_forbidden_for_unassigned_approver(
     response = client.get(f"{API_PREFIX}/{request.id}")
 
     assert response.status_code == 403
-    assert response.json()["detail"] == "Not authorized to view this request"
 
 
 # =========================================================

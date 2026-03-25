@@ -23,8 +23,8 @@ from app.common.exceptions import (
 )
 from app.core.config import settings
 from app.core.logging_config import configure_logging
-from scripts.seed.demo_data import seed_demo_data
-from scripts.seed.run import run_seeds
+from scripts.seed.data.demo_data import seed_demo_data
+from scripts.seed.run_seeds import run_seeds
 
 configure_logging()
 
@@ -44,7 +44,11 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     lifespan=lifespan,
-    swagger_ui_parameters={"docExpansion": "none"},
+    swagger_ui_parameters={
+        "docExpansion": "none",
+        "operationsSorter": "method",
+        # "tagsSorter": "alpha",
+    },
 )
 
 if settings.MIDDLEWARE_CORS:
