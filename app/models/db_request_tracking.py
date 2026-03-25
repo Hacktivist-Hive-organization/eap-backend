@@ -14,7 +14,9 @@ class DBRequestTracking(Base):
     comment = Column(String(2000))
     status = Column(Enum(Status), nullable=False, default=Status.SUBMITTED)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    request_id = Column(Integer, ForeignKey("requests.id"), nullable=False)
+    request_id = Column(
+        Integer, ForeignKey("requests.id", ondelete="CASCADE"), nullable=False
+    )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     #  relationships
