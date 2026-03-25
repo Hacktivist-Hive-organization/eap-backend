@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 8000
 
-CMD sh -c "alembic upgrade head && python3 scripts/seed/run.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+CMD sh -c "alembic upgrade head && python3 scripts/seed/run_seed.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"
