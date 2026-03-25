@@ -1,3 +1,5 @@
+# scripts/seed/users.py
+
 from sqlalchemy.orm import Session
 
 from app.common.enums import UserRole
@@ -17,7 +19,7 @@ def seed_users(db: Session):
         role=UserRole.ADMIN,
         is_active=True,
     )
-    admin2 = DbUser(
+    admin_2 = DbUser(
         email="admin2@eap.local",
         first_name="System",
         last_name="Admin",
@@ -78,16 +80,37 @@ def seed_users(db: Session):
         role=UserRole.APPROVER,
         is_active=True,
     )
+
+    requester = DbUser(
+        email="requester@eap.local",
+        first_name="System",
+        last_name="Admin",
+        hashed_password=hash_password("Password123!"),
+        role=UserRole.REQUESTER,
+        is_active=True,
+    )
+
+    requester_2 = DbUser(
+        email="requester-2@eap.local",
+        first_name="System",
+        last_name="Admin",
+        hashed_password=hash_password("Password123!"),
+        role=UserRole.REQUESTER,
+        is_active=True,
+    )
+
     db.add_all(
         [
             admin,
-            admin2,
+            admin_2,
             approver_hardware,
             approver_hardware_2,
             approver_software,
             approver_software_2,
             approver_services,
             approver_services_2,
+            requester,
+            requester_2,
         ]
     )
     db.commit()

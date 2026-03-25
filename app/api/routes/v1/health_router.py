@@ -9,7 +9,10 @@ from app.services.health_service import HealthService
 router = APIRouter(prefix="", tags=["health"])
 
 
-@router.get("/")
+@router.get(
+    "/",
+    include_in_schema=False,
+)
 def health_check(service: HealthService = Depends(get_health_service)):
     try:
         db_status = service.get_health()

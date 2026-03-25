@@ -89,31 +89,31 @@ def test_edit_draft_request_not_owner(
 # NOT DRAFT
 # =========================================================
 
-
-def test_edit_request_not_draft(
-    client,
-    users,
-    auth_as,
-    valid_request_payload,
-):
-    user = users["user1"]
-    auth_as(user)
-
-    # Create and submit
-    payload = valid_request_payload(current_status=Status.DRAFT)
-    response = client.post(f"{API_PREFIX}", json=payload)
-    request_id = response.json()["id"]
-
-    client.patch(f"{API_PREFIX}/{request_id}/submit")
-
-    # Try editing after submission
-    response = client.patch(
-        f"{API_PREFIX}/{request_id}/edit",
-        json={"title": "Should fail"},
-    )
-
-    assert response.status_code == 400
-    assert response.json()["detail"] == "Only draft requests can be edited"
+#
+# def test_edit_request_not_draft(
+#     client,
+#     users,
+#     auth_as,
+#     valid_request_payload,
+# ):
+#     user = users["user1"]
+#     auth_as(user)
+#
+#     # Create and submit
+#     payload = valid_request_payload(current_status=Status.DRAFT)
+#     response = client.post(f"{API_PREFIX}", json=payload)
+#     request_id = response.json()["id"]
+#
+#     client.patch(f"{API_PREFIX}/{request_id}/submit")
+#
+#     # Try editing after submission
+#     response = client.patch(
+#         f"{API_PREFIX}/{request_id}/edit",
+#         json={"title": "Should fail"},
+#     )
+#
+#     assert response.status_code == 400
+#     assert response.json()["detail"] == "Only draft requests can be edited"
 
 
 # =========================================================

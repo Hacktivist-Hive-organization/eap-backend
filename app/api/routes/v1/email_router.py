@@ -12,7 +12,11 @@ from app.services.email_service import EmailService
 router = APIRouter(prefix="", tags=["email"])
 
 
-@router.post("/send", response_model=EmailTestResponse)
+@router.post(
+    "/send",
+    response_model=EmailTestResponse,
+    include_in_schema=False,
+)
 async def send_test_email(
     request: EmailTestRequest,
     service: EmailService = Depends(get_email_service),

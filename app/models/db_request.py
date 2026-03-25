@@ -1,7 +1,7 @@
 # app/models/db_request.py
 
 from sqlalchemy import Column, DateTime, Enum, ForeignKey, Index, Integer, String, func
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship
 
 from app.common.enums import Priority, Status
 from app.database.base import Base
