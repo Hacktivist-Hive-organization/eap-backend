@@ -21,6 +21,9 @@ from app.common.exceptions import (
     ConfigurationException,
     ExternalServiceException,
 )
+
+# Initialize Cloudinary (runs on import)
+from app.core import cloudinary_config
 from app.core.config import settings
 from app.core.logging_config import configure_logging
 from scripts.seed.data.demo_data import seed_demo_data
@@ -83,8 +86,3 @@ app.add_exception_handler(
     ExternalServiceException,
     external_service_exception_handler,
 )
-
-BASE_DIR = Path(__file__).resolve().parents[1]
-images_dir = BASE_DIR / "images"
-images_dir.mkdir(exist_ok=True)  # ensure it exists
-app.mount("/images", StaticFiles(directory=images_dir), name="images")
