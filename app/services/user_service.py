@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 from uuid import uuid4
 
+import cloudinary.uploader
 from fastapi import UploadFile, status
 
 from app.common.enums import UserRole
@@ -155,17 +156,41 @@ class UserService:
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Generate unique filename
-        ext = file.filename.split(".")[-1]
-        filename = f"{uuid4()}.{ext}"
-        file_path = IMAGES_DIR / filename
+        try:
+            # Upload to Cloudinary
+            result = cloudinary.uploader.upload(
+                file.file,
+                folder="avatars",
+                resource_type="image",
+            )
 
-        # Save file
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        except Exception as e:
+            raise BusinessException(
+                message="Failed to upload avatar",
+                status_code=status.HTTP_502_BAD_GATEWAY,
+            ) from e
 
-        # Update DB
-        user.avatar_url = f"/images/{filename}"
-        self.repo.update_user(user)
+            # delete old avatar
+        if user.avatar_url:
+            try:
+                public_id = self._extract_public_id(user.avatar_url)
+                if public_id:
+                    cloudinary.uploader.destroy(public_id)
+            except Exception:
+                pass  # don't fail the request if delete fails
 
-        return user
+            # Save new URL
+        user.avatar_url = result["secure_url"]
+
+        return self.repo.update_user(user)
+
+    # Helper to extract Cloudinary public_id from URL
+    def _extract_public_id(self, url: str) -> str | None:
+        try:
+            # Example:
+            # https://res.cloudinary.com/<cloud>/image/upload/v123/avatars/abc.jpg
+            parts = url.split("/upload/")[-1]
+            public_id = parts.split(".")[0]
+            return public_id
+        except Exception:
+            return None

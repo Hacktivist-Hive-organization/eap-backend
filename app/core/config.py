@@ -69,6 +69,11 @@ class Settings(BaseSettings):
     PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 15
     EMAIL_VERIFICATION_TOKEN_EXPIRE_MINUTES: int = 60
 
+    # CLOUDINARY
+    CLOUDINARY_CLOUD_NAME: str
+    CLOUDINARY_API_KEY: str
+    CLOUDINARY_API_SECRET: str
+
     @property
     def cors_origins(self) -> List[str]:
         origins = self.CORS_ALLOWED_ORIGINS.copy()
